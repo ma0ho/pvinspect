@@ -7,8 +7,6 @@ Use: import variable 'exit' in target script with 'from ipython_exit import exit
 
 import sys
 from io import StringIO
-from IPython import get_ipython
-
 
 class IpyExit(SystemExit):
     """Exit Exception for IPython.
@@ -29,7 +27,8 @@ def ipy_exit():
     raise IpyExit
 
 
-if get_ipython():    # ...run with IPython
+try:
+    __IPYTHON__
     exit = ipy_exit  # rebind to custom exit
-else:
+except:
     exit = exit      # just make exit importable
