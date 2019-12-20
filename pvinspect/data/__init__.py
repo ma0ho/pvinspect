@@ -5,5 +5,5 @@ from .image import EL_IMAGE, PL_IMAGE
 from . import demo
 
 __all__ = [
-        'read_module_image', 'read_module_images', 'save_images', 'demo'
+        'read_module_image', 'read_module_images', 'save_images', 'demo', 'EL_IMAGE', 'PL_IMAGE'
     ]
