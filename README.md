@@ -38,3 +38,7 @@ In case you encounter anything that does not work, please [open an issue](https:
 ## Citations
 
 In case you use methods from this package for research purposes, please make sure to cite the the corresponding papers correctly. Please refer to the [documentation](https://ma0ho.github.io/pvinspect/) for the correct references.
+
+## Acknowledgement
+
+We greatly acknowledge the [HI-ERN](http://www.hi-ern.de/hi-ern/EN/home.html) for providing us a demo dataset of electroluminescense images that is published along with this package.
