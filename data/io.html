@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
 <title>pvinspect.data.io API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Read and write images" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,11 +20,14 @@
 <h1 class="title">Module <code>pvinspect.data.io</code></h1>
 </header>
 <section id="section-intro">
+<p>Read and write images</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .image import ModuleImage, ModuleImageSequence, ImageSequence, CellImage
+<pre><code class="python">&#39;&#39;&#39;Read and write images&#39;&#39;&#39;
+
+from .image import ModuleImage, ModuleImageSequence, ImageSequence, CellImage
 from pathlib import Path
 import numpy as np
 from typing import Union, Tuple
