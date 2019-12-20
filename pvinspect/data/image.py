@@ -1,7 +1,6 @@
 import numpy as np
 from skimage import io
 from pvinspect.common import Transform
-from ipywidgets import interact
 from matplotlib import pyplot as plt
 from pathlib import Path
 from typing import List, Tuple, Union, Callable
