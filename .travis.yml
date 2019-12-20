@@ -4,14 +4,10 @@ python:
   - "3.7"
 install:
   - pip install .
-  - pip install pdoc
+  - pip install pdoc3
 script:
   - pytest
-  # generate the docs
-  - mkdir docs
-  - cd docs
-  - pdoc --html pvinspect
-  - cd ..
+  - pdoc3 --html pvinspect
 
 deploy:
   provider: pages
@@ -20,4 +16,4 @@ deploy:
   keep_history: true
   on:
     branch: master
-  local_dir: docs/pvinspect/
+  local_dir: html/
