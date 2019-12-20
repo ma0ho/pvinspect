@@ -10,10 +10,8 @@ script:
   # generate the docs
   - mkdir docs
   - cd docs
-  - pdoc --html --output-dir . pvinspect
-  - mv pvinspect/*.html .
-  - rm -rf pvinspect/
-  - cd ../
+  - pdoc --html pvinspect
+  - cd ..
 
 deploy:
   provider: pages
@@ -22,4 +20,4 @@ deploy:
   keep_history: true
   on:
     branch: master
-  local_dir: docs/
+  local_dir: docs/pvinspect/
