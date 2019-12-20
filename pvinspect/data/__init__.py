@@ -1,3 +1,5 @@
+'''Data loading and viewing'''
+
 from .io import save_images, read_module_image, read_module_images
 from .image import EL_IMAGE, PL_IMAGE
 from . import demo

@@ -13,6 +13,11 @@ import numpy as np
 def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion: bool = True) -> ModuleImageOrSequence:
     '''Locate a single module and its cells
 
+    Note:
+        This methods implements the following paper:
+        Hoffmann, Mathis, et al. "Fast and robust detection of solar modules in electroluminescence images."
+        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.
+
     Args:
         sequence (ModuleImageOrSequence): A single module image or a sequence of module images 
         estimate_distortion (bool): Set True to estimate lens distortion, else False 

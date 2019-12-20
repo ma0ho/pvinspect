@@ -29,4 +29,12 @@ conda activate pvinspect
 jupyter lab
 ```
 
-This package contains [example notebooks](examples) that demonstate the most common use cases (to be extended soon). In addition, you may refer to the TODO: [TODO](API docs).
+This package contains [example notebooks](examples) that demonstate the most common use cases (to be extended soon). For more details, please refer to the [API docs](https://ma0ho.github.io/pvinspect/).
+
+## Issues
+
+In case you encounter anything that does not work, please [open an issue](https://github.com/ma0ho/pvinspect/issues/new) and provide a precise description (include your OS version, python distribution and the like) as well as a minimal code example to reproduce the issue.
+
+## Citations
+
+In case you use methods from this package for research purposes, please make sure to cite the the corresponding papers correctly. Please refer to the [documentation](https://ma0ho.github.io/pvinspect/) for the correct references.
