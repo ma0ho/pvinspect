@@ -6,3 +6,19 @@ install:
   - pip install .
 script:
   - pytest
+  # generate the docs
+  - mkdir docs
+  - cd docs 
+  - pdoc --html -o . --force pvinspect
+  - mv pvinspect/*.html .
+  - rm -rf pvinspect/
+  - cd ../
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  keep_history: true
+  on:
+    branch: master
+  local_dir: docs/
