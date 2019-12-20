@@ -1,3 +1,5 @@
+'''Provides access to demo datasets'''
+
 from .image import ModuleImageSequence, ModuleImage, EL_IMAGE
 from .io import read_module_image, read_module_images
 from pathlib import Path

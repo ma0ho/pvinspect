@@ -1,3 +1,5 @@
+'''Read and write images'''
+
 from .image import ModuleImage, ModuleImageSequence, ImageSequence, CellImage
 from pathlib import Path
 import numpy as np

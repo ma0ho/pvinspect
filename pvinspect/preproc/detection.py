@@ -1,3 +1,5 @@
+'''Detection, localization and segmentation of solar modules'''
+
 from pvinspect.preproc._mdetect.locate import apply
 from pvinspect.common.transform import HomographyTransform, warp_image, FullMultiTransform, FullTransform
 from pvinspect.data.image import ModuleImageSequence, ModuleImage, ModuleImageOrSequence, _sequence, CellImage, CellImageSequence, EL_IMAGE

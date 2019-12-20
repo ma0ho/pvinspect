@@ -1,3 +1,5 @@
+'''Provides classes to store and visualize images with metadata'''
+
 import numpy as np
 from skimage import io
 from pvinspect.common import Transform
