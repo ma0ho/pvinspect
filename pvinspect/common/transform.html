@@ -1,0 +1,1877 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>pvinspect.common.transform API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pvinspect.common.transform</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+from copy import copy, deepcopy
+import scipy.optimize
+import scipy.interpolate
+from abc import ABC, abstractmethod, abstractproperty
+from functools import reduce
+import cv2
+from . import util
+
+def _brown(coords, coeffs):
+    N = len(coeffs)
+
+    radius = np.sqrt(np.sum(coords**2, axis = 1))
+    factor = 1 + np.expand_dims(np.sum([kn*(radius**(2*(n+1))) for n, kn in enumerate(coeffs)], axis = 0), axis = -1)
+    coords = coords*factor
+
+    return coords
+
+def _brown_oder1_inverse(coords, k):
+
+    if k == 0.0:
+        return coords
+
+    ru = np.sqrt(np.sum(coords**2, axis = 1))
+    D = (27*k**2*ru)**2 + 4*(3*k)**3
+
+    rd = np.empty_like(D)
+    g1 = D &gt;= 0
+    if np.any(g1):
+        tmp = np.sqrt((ru[g1]**2)/4 + 1/(27*k))
+        rd[g1] = np.cbrt(1/k * (ru[g1]/2 + tmp)) + np.cbrt(1/k * (ru[g1]/2 - tmp))
+    g2 = D &lt; 0
+    if np.any(g2):
+        rd[g2] = 2*np.sqrt(-3*k)/(3*k) * np.cos(1/3 * np.arccos(27*k**2*ru[g2] / (2*np.sqrt(-(3*k)**3))) + 4*np.pi/3)
+
+    factor = rd/ru
+    coords = coords*factor.reshape(-1, 1)
+
+    return coords
+
+def distort(coords, params):
+    return _brown(coords, params)
+
+def distort_inverse(coords, params):
+    if len(params) &gt; 1:
+        raise NotImplementedError(&#39;Inversion not implemented for more than 1 coefficient&#39;)
+    return _brown_oder1_inverse(coords, params[0])
+
+def _normalize_transform(coords, new_centroid = (0,0), new_mean_distance = np.sqrt(2)):
+    centroid = np.mean(coords, axis = 0)
+    scaling = new_mean_distance/np.mean(np.linalg.norm(coords-centroid.reshape(1,-1), axis = 1))
+    return np.array([[scaling, 0, -centroid[0]],
+                     [0, scaling, -centroid[1]],
+                     [0, 0, 1]])
+
+def find_homography(src, dest, compute_residual = False):
+    &#39;&#39;&#39;
+        Estimate homography using normalized DLT
+
+        TODO How handle cases where H[2,2] == 0?
+    &#39;&#39;&#39;
+    N = src.shape[0]
+    dt = src.dtype
+    normalize = N &gt; 4
+
+    if normalize:
+        # compute transforms that normalize coordinates such that
+        # centroid is at origin with average distance of sqrt(2)
+        src_T = _normalize_transform(src)
+        dest_T = _normalize_transform(dest)
+
+        # normalize
+        src_n = apply_homography(src, src_T)
+        dest_n = apply_homography(dest, dest_T)
+    else:
+        src_n = src
+        dest_n = dest
+
+    # DLT
+    A = np.zeros((2*N, 9), dtype = np.float64)
+    A[:N,0] = src_n[:,0]
+    A[:N,1] = src_n[:,1]
+    A[:N,2] = 1
+    A[:N,6] = -dest_n[:,0]*src_n[:,0]
+    A[:N,7] = -dest_n[:,0]*src_n[:,1]
+    A[:N,8] = -dest_n[:,0]
+    A[N:,3] = -src_n[:,0]
+    A[N:,4] = -src_n[:,1]
+    A[N:,5] = -1
+    A[N:,6] = dest_n[:,1]*src_n[:,0]
+    A[N:,7] = dest_n[:,1]*src_n[:,1]
+    A[N:,8] = dest_n[:,1]
+
+    U, sigma, VT = np.linalg.svd(A)
+    #residual = sigma[-1]
+    H = VT[-1].reshape(3,3)
+
+    # denormalize
+    if normalize:
+        H = np.linalg.inv(dest_T).dot(H).dot(src_T)
+
+    if np.abs(H[2,2]) != 0.0:
+        H /= H[2,2]
+    else:
+        H = None
+
+    if compute_residual and normalize:
+        if H is not None:
+            tmp = apply_homography(src, H)
+            residual = np.mean(np.linalg.norm(tmp-dest, ord = 2, axis = 1))
+            return H, residual
+        else:
+            return None, None
+    elif compute_residual:
+        return H, sigma[-1]
+    else:
+        return H
+
+def apply_homography(src, H):
+    assert src.shape[-1] == 2
+    src_flat = src.reshape(-1,2)
+    res = H[:,:2].dot(src_flat.T)
+    res += H[:,2].reshape(3,1)
+    with np.errstate(divide=&#39;ignore&#39;):
+        res[:2] /= res[2]
+    return res[:2].T.reshape(src.shape)
+
+def apply_pinhole(src, Rt, A, d, inverse = False):
+    if not inverse:
+        Rt = Rt[:,[0,1,3]]
+        src = apply_homography(src, Rt)
+        src = distort(src, d)
+        return apply_homography(src, A)
+    else:
+        Rt = np.linalg.pinv(Rt[:,[0,1,3]])
+        A = np.linalg.pinv(A)
+        src = apply_homography(src, A)
+        src = distort_inverse(src, d)
+        return apply_homography(src, Rt)
+
+def find_homography_ransac(src, dest, error_thresh_px, compute_residual = False):
+
+    def model_f(mask):
+        return find_homography(src[mask], dest[mask])
+
+    def err_f(model):
+        src_t = apply_homography(src, model)
+        return np.linalg.norm(src_t-dest, axis = 1) &lt; error_thresh_px
+
+    return util.ransac(src.shape[0], 4, model_f, err_f)
+
+def _solve_PnP_wrap(src, dest, A, dist, n_dist_coeff):
+    # coords in OpenCV compatible format
+    src2 = []
+    for src_i in src:
+        src_i = np.concatenate([src_i, np.zeros((src_i.shape[0], 1))], axis = 1)
+        src2.append(src_i.astype(np.float32))
+    dest2 = [x.astype(np.float32) for x in dest]
+
+    Rt = list()
+    if n_dist_coeff &lt;= 4:
+        k = np.zeros(4)
+    elif n_dist_coeff &lt;= 5:
+        k = np.zeros(5)
+    elif n_dist_coeff &lt;= 8:
+        k = np.zeros(8)
+    k[:n_dist_coeff] = dist
+
+    for s, d in zip(src2, dest2):
+        retval, rvec, tvec = cv2.solvePnP(s, d, A, k)
+        R = util.rodrigues2matrix(rvec)
+        Rt.append(np.concatenate([R, tvec.reshape(3,1)], axis = 1))
+
+    return Rt
+
+def _calibrate_camera_wrap(src, dest, image_width, image_height, n_dist_coeff, mask = None):
+    # coords in OpenCV compatible format
+    src2 = []
+    for src_i in src:
+        src_i = np.concatenate([src_i, np.zeros((src_i.shape[0], 1))], axis = 1)
+        src2.append(src_i.astype(np.float32))
+    dest2 = [x.astype(np.float32) for x in dest]
+
+    # mask
+    if mask is not None:
+        src2_m, dest2_m = util.filter_lists([src2, dest2], mask)
+    else:
+        src2_m, dest2_m = src2, dest2
+
+    # calibrate
+    if n_dist_coeff &gt; 4 or n_dist_coeff == 3:
+        raise NotImplementedError()
+    else:
+        flags = cv2.CALIB_FIX_K3
+        if n_dist_coeff &lt; 3:
+            flags += cv2.CALIB_ZERO_TANGENT_DIST
+        if n_dist_coeff &lt; 2:
+            flags += cv2.CALIB_FIX_K2
+        if n_dist_coeff == 0:
+            flags += cv2.CALIB_FIX_K1
+    _, A, k, rvecs, tvecs = cv2.calibrateCamera(
+        objectPoints = src2_m,
+        imagePoints = dest2_m,
+        imageSize = (image_width, image_height),
+        distCoeffs = np.zeros(6),
+        cameraMatrix = np.zeros((3,3)),
+        flags = flags
+    )
+
+    Rt = []
+    if mask is not None:
+        for s, d in zip(src2, dest2):
+            retval, rvec, tvec = cv2.solvePnP(s, d, A, k)
+            R = util.rodrigues2matrix(rvec)
+            Rt.append(np.concatenate([R, tvec.reshape(3,1)], axis = 1))
+    else:
+        for rvec, tvec in zip(rvecs, tvecs):
+            R = util.rodrigues2matrix(rvec)
+            Rt.append(np.concatenate([R, tvec.reshape(3,1)], axis = 1))
+
+    if n_dist_coeff &gt; 0:
+        return A, Rt, k.flatten()[:n_dist_coeff].tolist()
+    else:
+        return A, Rt
+
+def find_full_model(src, dest, n_dist_coeff, image_width, image_height, ransac = False):
+    N_images = len(src)
+
+    # initial homographies
+    H = [find_homography(s, d) for s, d in zip(src, dest)]
+    errs = [np.mean(np.linalg.norm(src_i-apply_homography(dest_i, np.linalg.pinv(H_i)), axis = 1)) for H_i, dest_i, src_i in zip(H, dest, src)]
+
+    # init intrinsics and extrinsics
+    if ransac:
+        thresh = 1.1*np.array(errs)    # reprojection error must not become worse..
+
+        def model_f(mask):
+            return _calibrate_camera_wrap(src, dest, image_width, image_height, 0, mask)
+
+        def err_f(model):
+            A, Rt = model[0], model[1]
+            dest_t = [apply_pinhole(dest_i, Rt_i, A, [0], inverse = True) for dest_i, Rt_i in zip(dest, Rt)]
+            err = [np.mean(np.linalg.norm(src_i-dest_t_i, axis = 1)) for src_i, dest_t_i in zip(src, dest_t)]
+            return np.array(err) &lt; thresh
+
+        model, inlier, _ = util.ransac(N_images, 3, model_f, err_f)
+        A, Rt = model[0], model[1]
+
+        Rt, src, dest = util.filter_lists([Rt, src, dest], inlier)
+
+    # estimate using all inliers / all views
+    A, Rt, k = _calibrate_camera_wrap(src, dest, image_width, image_height, n_dist_coeff)
+
+    if ransac:
+        return Rt, A, k, inlier
+    else:
+        return Rt, A, k
+
+def warp_image(img, transform, x0, y0, xstep, ystep, w, h, method = &#39;linear&#39;):
+    xi, yi = np.meshgrid(np.arange(x0, x0+w, xstep), np.arange(y0, y0+h, ystep))
+    samples = np.stack((xi.flatten(), yi.flatten()), axis = 1)
+    samples = transform(samples)
+    v = scipy.interpolate.interpn(
+        (np.arange(img.shape[0], dtype = np.float32), np.arange(img.shape[1], dtype = np.float32)),
+        img,
+        np.fliplr(samples),
+        method = method, bounds_error = False, fill_value = 0)
+    return v.reshape((xi.shape[0], xi.shape[1]))
+
+def warp_image_patches(img, transform, x0s, y0s, xstep, ystep, ws, hs, method = &#39;linear&#39;):
+    result = []
+    for x0, y0, w, h in zip(x0s, y0s, ws, hs):
+        result.append(warp_image(img, transform, x0, y0, xstep, ystep, w, h, method))
+    return result
+
+class Transform(ABC):
+    &#39;&#39;&#39;Base transform object&#39;&#39;&#39;
+
+    @abstractmethod
+    def __init__(self, src, dest, image_width = 0, image_height = 0, ransac = False):
+        pass
+
+    @abstractmethod
+    def __call__(self, coords):
+        pass
+
+    @abstractmethod
+    def inv(self):
+        pass
+
+    @abstractproperty
+    def mask(self):
+        pass
+
+    @abstractproperty
+    def reprojection_error(self):
+        pass
+
+    @abstractmethod
+    def get_parameter_handles(self):
+        pass
+
+    @abstractmethod
+    def update_parameters_by_handles(self):
+        pass
+
+    @abstractproperty
+    def valid(self):
+        pass
+
+    def mean_scale(self):
+        a = np.array([[0,0], [10,0], [10,10], [0,10]])
+        at = self(a)
+        s1 = 1/2 * (np.linalg.norm(at[1]-at[0]) + np.linalg.norm(at[3]-at[2])) / 10
+        s2 = 1/2 * (np.linalg.norm(at[2]-at[1]) + np.linalg.norm(at[0]-at[3])) / 10
+        s = 1/2 * (s1+s2)
+        d = np.round(s/8)   # ensure that it is divisible by 8
+        return float(d*8)
+
+class IdentityTransform(Transform):
+
+    def __init__(self):
+        pass
+
+    def __call__(self, coords):
+        return coords
+
+    def inv(self):
+        return self
+
+    @property
+    def mask(self):
+        return None
+
+    @property
+    def reprojection_error(self):
+        return 0.0
+
+    def get_parameter_handles(self):
+        return None
+
+    def update_parameters_by_handles(self):
+        return None
+
+    def valid(self):
+        return True
+
+
+class MultiTransform(Transform):
+
+    @abstractmethod
+    def __getitem__(self, i):
+        pass
+
+    @abstractmethod
+    def __len__(self):
+        pass
+
+
+class HomographyTransform(Transform):
+
+    def __init__(self, src, dest, image_width = 0, image_height = 0, ransac = False, ransac_thres = 0.1):
+        self._image_width = image_width
+        self._image_height = image_height
+        self._handles = None
+
+        if ransac:
+            # initial estimate to determine scale
+            H = find_homography(src, dest)
+            r = apply_homography(np.array([[0,0],[1,1]]), H)
+            scale = np.linalg.norm(r[1]-r[0])
+
+            H, self._mask, _ = find_homography_ransac(src, dest, ransac_thres*scale)
+            src = src[self._mask]
+            dest = dest[self._mask]
+        else:
+            self._mask = None
+
+        self._H = find_homography(src, dest)
+        self._err = np.mean(np.linalg.norm(apply_homography(src, self._H) - dest, axis = 1))
+
+    def __call__(self, coords):
+        return apply_homography(coords, self._H)
+
+    def _get_sensitivity(self, axis):
+        src = np.array([[0.0,0.0]])
+        t1 = self(src)
+        src[0,axis] = 1.0
+        t2 = self(src)
+        return np.linalg.norm([t1-t2])
+
+    def inv(self):
+        c = copy(self)
+        c._H = np.linalg.pinv(self._H)
+        c._H /= c._H[2,2]
+        return c
+
+    @property
+    def mask(self):
+        return self._mask
+
+    @property
+    def reprojection_error(self):
+        return self._err
+
+    def get_parameter_handles(self):
+        x_sens = self._get_sensitivity(0)
+        y_sens = self._get_sensitivity(1)
+        dx = 1/x_sens * self._image_width
+        dy = 1/y_sens * self._image_width
+        self._handles = np.array([[-dx,dy], [dx,dy], [dx,-dy], [-dx,-dy]])
+        return self(self._handles).flatten()
+
+    def update_parameters_by_handles(self, handles):
+        handles = handles.reshape(self._handles.shape)
+        self._H = find_homography(self._handles, handles)
+
+    @property
+    def valid(self):
+        return self._H is not None
+
+
+class FullTransform(Transform):
+
+    def __init__(self, src, dest, image_width = 0, image_height = 0, ransac = False, n_dist_coeff = 1):
+        Rt, self._A, self._dist = find_full_model([src], [dest], n_dist_coeff, image_width, image_height, ransac = ransac)
+        self._Rt = Rt[0]
+        self._is_inverse = False
+        self._success = True
+
+    def __call__(self, coords):
+        if self._success:
+            return apply_pinhole(coords, self._Rt, self._A, self._dist, self._is_inverse)
+        else:
+            return None
+
+    def inv(self):
+        if self._success:
+            c = copy(self)
+            c._A = self._A
+            c._Rt = self._Rt
+            c._is_inverse = True
+            return c
+        else:
+            return None
+
+    @property
+    def mask(self):
+        return self._mask
+
+    @property
+    def reprojection_error(self):
+        return None
+
+    def get_parameter_handles(self, extrinsic = True, intrinsic = False, distortion = False):
+        params = []
+
+        if extrinsic:
+            params.append(util.matrix2rodrigues(self._Rt[:,:3]))
+            params.append(self._Rt[:,3])
+        if intrinsic:
+            params.append(self._A[[0,0,1,1], [0,2,1,2]])
+        if distortion:
+            params.append(self._dist)
+
+        return np.concatenate(params, axis = 0)
+
+    def update_parameters_by_handles(self, handles, extrinsic = True, intrinsic = False, distortion = False):
+        if extrinsic:
+            self._Rt[:,:3] = util.rodrigues2matrix(handles[:3])
+            self._Rt[:,3] = handles[3:6]
+            handles = handles[6:] if handles.shape[0] &gt; 6 else None
+        if intrinsic:
+            self._A[[0,0,1,1], [0,2,1,2]] = handles[:4]
+            handles = handles[4:] if handles.shape[0] &gt; 4 else None
+        if distortion:
+            self._dist = handles
+
+    @property
+    def valid(self):
+        return self._success
+
+
+class FullMultiTransform(MultiTransform):
+
+    def __init__(self, src, dest, image_width = 0, image_height = 0, ransac = False, n_dist_coeff = 1, fixed_intrinsics = None):
+        if ransac:
+            assert fixed_intrinsics is None
+
+        if ransac:
+            self._Rt, self._A, self._dist,  self._mask = find_full_model(src, dest, n_dist_coeff, image_width, image_height, ransac = ransac)
+        else:
+            if fixed_intrinsics is None:
+                self._Rt, self._A, self._dist = find_full_model(src, dest, n_dist_coeff, image_width, image_height, ransac = ransac)
+            else:
+                self._A = fixed_intrinsics[0]
+                self._dist = fixed_intrinsics[1]
+                self._Rt = _solve_PnP_wrap(src, dest, self._A, self._dist, n_dist_coeff)
+        self._is_inverse = False
+        self._success = True
+
+    def __call__(self, coords):
+        if self._success:
+            return [apply_pinhole(x, rt, self._A, self._dist, self._is_inverse) for x, rt in zip(coords, self._Rt)]
+        else:
+            return None
+
+    def inv(self):
+        if self._success:
+            c = copy(self)
+            c._A = self._A
+            c._Rt = self._Rt
+            c._is_inverse = True
+            return c
+        else:
+            return None
+
+    def mask(self):
+        return self._mask
+
+    def reprojection_error(self):
+        return None
+
+    def __getitem__(self, i):
+        res = FullTransform.__new__(FullTransform)
+        res._success = self._success
+        res._A = self._A
+        res._dist = self._dist
+        res._Rt = self._Rt[i]
+        res._err = None
+        res._mask = None
+        res._is_inverse = self._is_inverse
+        return res
+
+    def __len__(self):
+        return len(self._Rt)
+
+    def get_subset(self, indicator):
+        res = FullMultiTransform.__new__(FullMultiTransform)
+        res._success = self._success
+        res._A = self._A
+        res._dist = self._dist
+        res._Rt = [x for i, x in enumerate(self._Rt) if indicator[i]]
+        res._mask = None
+        res._is_inverse = self._is_inverse
+        return res
+
+    def get_parameter_handles(self, items, extrinsic = True, intrinsic = False, distortion = False):
+        res = []
+        res.append(self[items[0]].get_parameter_handles(extrinsic = extrinsic, intrinsic = intrinsic, distortion = distortion))
+
+        if extrinsic:
+            for i in items[1:]:
+                res.append(self[i].get_parameter_handles(extrinsic = extrinsic, intrinsic = False, distortion = False))
+
+        return np.concatenate(res, axis = 0)
+
+    def update_parameters_by_handles(self, handles, items, extrinsic = True, intrinsic = False, distortion = False):
+        t = [self[i] for i in items]
+        l = t[0].get_parameter_handles(extrinsic = extrinsic, intrinsic = intrinsic, distortion = distortion).shape[0]
+        t[0].update_parameters_by_handles(handles[:l], extrinsic = extrinsic, intrinsic = intrinsic, distortion = distortion)
+        handles = handles[l:] if handles.shape[0] &gt; l else None
+        self._A = t[0]._A
+        self._dist = t[0]._dist
+        self._Rt[items[0]] = t[0]._Rt
+
+        if extrinsic and len(items) &gt; 1:
+            l = handles.shape[0] // (len(items)-1)
+            for ti, i in zip(t[1:], items[1:]):
+                ti.update_parameters_by_handles(handles[:l])
+                self._Rt[i] = ti._Rt
+                handles = handles[l:] if handles.shape[0] &gt; l else None
+
+    @property
+    def valid(self):
+        return self._success</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pvinspect.common.transform.apply_homography"><code class="name flex">
+<span>def <span class="ident">apply_homography</span></span>(<span>src, H)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply_homography(src, H):
+    assert src.shape[-1] == 2
+    src_flat = src.reshape(-1,2)
+    res = H[:,:2].dot(src_flat.T)
+    res += H[:,2].reshape(3,1)
+    with np.errstate(divide=&#39;ignore&#39;):
+        res[:2] /= res[2]
+    return res[:2].T.reshape(src.shape)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.apply_pinhole"><code class="name flex">
+<span>def <span class="ident">apply_pinhole</span></span>(<span>src, Rt, A, d, inverse=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply_pinhole(src, Rt, A, d, inverse = False):
+    if not inverse:
+        Rt = Rt[:,[0,1,3]]
+        src = apply_homography(src, Rt)
+        src = distort(src, d)
+        return apply_homography(src, A)
+    else:
+        Rt = np.linalg.pinv(Rt[:,[0,1,3]])
+        A = np.linalg.pinv(A)
+        src = apply_homography(src, A)
+        src = distort_inverse(src, d)
+        return apply_homography(src, Rt)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.distort"><code class="name flex">
+<span>def <span class="ident">distort</span></span>(<span>coords, params)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def distort(coords, params):
+    return _brown(coords, params)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.distort_inverse"><code class="name flex">
+<span>def <span class="ident">distort_inverse</span></span>(<span>coords, params)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def distort_inverse(coords, params):
+    if len(params) &gt; 1:
+        raise NotImplementedError(&#39;Inversion not implemented for more than 1 coefficient&#39;)
+    return _brown_oder1_inverse(coords, params[0])</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.find_full_model"><code class="name flex">
+<span>def <span class="ident">find_full_model</span></span>(<span>src, dest, n_dist_coeff, image_width, image_height, ransac=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_full_model(src, dest, n_dist_coeff, image_width, image_height, ransac = False):
+    N_images = len(src)
+
+    # initial homographies
+    H = [find_homography(s, d) for s, d in zip(src, dest)]
+    errs = [np.mean(np.linalg.norm(src_i-apply_homography(dest_i, np.linalg.pinv(H_i)), axis = 1)) for H_i, dest_i, src_i in zip(H, dest, src)]
+
+    # init intrinsics and extrinsics
+    if ransac:
+        thresh = 1.1*np.array(errs)    # reprojection error must not become worse..
+
+        def model_f(mask):
+            return _calibrate_camera_wrap(src, dest, image_width, image_height, 0, mask)
+
+        def err_f(model):
+            A, Rt = model[0], model[1]
+            dest_t = [apply_pinhole(dest_i, Rt_i, A, [0], inverse = True) for dest_i, Rt_i in zip(dest, Rt)]
+            err = [np.mean(np.linalg.norm(src_i-dest_t_i, axis = 1)) for src_i, dest_t_i in zip(src, dest_t)]
+            return np.array(err) &lt; thresh
+
+        model, inlier, _ = util.ransac(N_images, 3, model_f, err_f)
+        A, Rt = model[0], model[1]
+
+        Rt, src, dest = util.filter_lists([Rt, src, dest], inlier)
+
+    # estimate using all inliers / all views
+    A, Rt, k = _calibrate_camera_wrap(src, dest, image_width, image_height, n_dist_coeff)
+
+    if ransac:
+        return Rt, A, k, inlier
+    else:
+        return Rt, A, k</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.find_homography"><code class="name flex">
+<span>def <span class="ident">find_homography</span></span>(<span>src, dest, compute_residual=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Estimate homography using normalized DLT</p>
+<p>TODO How handle cases where H[2,2] == 0?</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_homography(src, dest, compute_residual = False):
+    &#39;&#39;&#39;
+        Estimate homography using normalized DLT
+
+        TODO How handle cases where H[2,2] == 0?
+    &#39;&#39;&#39;
+    N = src.shape[0]
+    dt = src.dtype
+    normalize = N &gt; 4
+
+    if normalize:
+        # compute transforms that normalize coordinates such that
+        # centroid is at origin with average distance of sqrt(2)
+        src_T = _normalize_transform(src)
+        dest_T = _normalize_transform(dest)
+
+        # normalize
+        src_n = apply_homography(src, src_T)
+        dest_n = apply_homography(dest, dest_T)
+    else:
+        src_n = src
+        dest_n = dest
+
+    # DLT
+    A = np.zeros((2*N, 9), dtype = np.float64)
+    A[:N,0] = src_n[:,0]
+    A[:N,1] = src_n[:,1]
+    A[:N,2] = 1
+    A[:N,6] = -dest_n[:,0]*src_n[:,0]
+    A[:N,7] = -dest_n[:,0]*src_n[:,1]
+    A[:N,8] = -dest_n[:,0]
+    A[N:,3] = -src_n[:,0]
+    A[N:,4] = -src_n[:,1]
+    A[N:,5] = -1
+    A[N:,6] = dest_n[:,1]*src_n[:,0]
+    A[N:,7] = dest_n[:,1]*src_n[:,1]
+    A[N:,8] = dest_n[:,1]
+
+    U, sigma, VT = np.linalg.svd(A)
+    #residual = sigma[-1]
+    H = VT[-1].reshape(3,3)
+
+    # denormalize
+    if normalize:
+        H = np.linalg.inv(dest_T).dot(H).dot(src_T)
+
+    if np.abs(H[2,2]) != 0.0:
+        H /= H[2,2]
+    else:
+        H = None
+
+    if compute_residual and normalize:
+        if H is not None:
+            tmp = apply_homography(src, H)
+            residual = np.mean(np.linalg.norm(tmp-dest, ord = 2, axis = 1))
+            return H, residual
+        else:
+            return None, None
+    elif compute_residual:
+        return H, sigma[-1]
+    else:
+        return H</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.find_homography_ransac"><code class="name flex">
+<span>def <span class="ident">find_homography_ransac</span></span>(<span>src, dest, error_thresh_px, compute_residual=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_homography_ransac(src, dest, error_thresh_px, compute_residual = False):
+
+    def model_f(mask):
+        return find_homography(src[mask], dest[mask])
+
+    def err_f(model):
+        src_t = apply_homography(src, model)
+        return np.linalg.norm(src_t-dest, axis = 1) &lt; error_thresh_px
+
+    return util.ransac(src.shape[0], 4, model_f, err_f)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.warp_image"><code class="name flex">
+<span>def <span class="ident">warp_image</span></span>(<span>img, transform, x0, y0, xstep, ystep, w, h, method='linear')</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def warp_image(img, transform, x0, y0, xstep, ystep, w, h, method = &#39;linear&#39;):
+    xi, yi = np.meshgrid(np.arange(x0, x0+w, xstep), np.arange(y0, y0+h, ystep))
+    samples = np.stack((xi.flatten(), yi.flatten()), axis = 1)
+    samples = transform(samples)
+    v = scipy.interpolate.interpn(
+        (np.arange(img.shape[0], dtype = np.float32), np.arange(img.shape[1], dtype = np.float32)),
+        img,
+        np.fliplr(samples),
+        method = method, bounds_error = False, fill_value = 0)
+    return v.reshape((xi.shape[0], xi.shape[1]))</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.warp_image_patches"><code class="name flex">
+<span>def <span class="ident">warp_image_patches</span></span>(<span>img, transform, x0s, y0s, xstep, ystep, ws, hs, method='linear')</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def warp_image_patches(img, transform, x0s, y0s, xstep, ystep, ws, hs, method = &#39;linear&#39;):
+    result = []
+    for x0, y0, w, h in zip(x0s, y0s, ws, hs):
+        result.append(warp_image(img, transform, x0, y0, xstep, ystep, w, h, method))
+    return result</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pvinspect.common.transform.FullMultiTransform"><code class="flex name class">
+<span>class <span class="ident">FullMultiTransform</span></span>
+<span>(</span><span>src, dest, image_width=0, image_height=0, ransac=False, n_dist_coeff=1, fixed_intrinsics=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base transform object</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FullMultiTransform(MultiTransform):
+
+    def __init__(self, src, dest, image_width = 0, image_height = 0, ransac = False, n_dist_coeff = 1, fixed_intrinsics = None):
+        if ransac:
+            assert fixed_intrinsics is None
+
+        if ransac:
+            self._Rt, self._A, self._dist,  self._mask = find_full_model(src, dest, n_dist_coeff, image_width, image_height, ransac = ransac)
+        else:
+            if fixed_intrinsics is None:
+                self._Rt, self._A, self._dist = find_full_model(src, dest, n_dist_coeff, image_width, image_height, ransac = ransac)
+            else:
+                self._A = fixed_intrinsics[0]
+                self._dist = fixed_intrinsics[1]
+                self._Rt = _solve_PnP_wrap(src, dest, self._A, self._dist, n_dist_coeff)
+        self._is_inverse = False
+        self._success = True
+
+    def __call__(self, coords):
+        if self._success:
+            return [apply_pinhole(x, rt, self._A, self._dist, self._is_inverse) for x, rt in zip(coords, self._Rt)]
+        else:
+            return None
+
+    def inv(self):
+        if self._success:
+            c = copy(self)
+            c._A = self._A
+            c._Rt = self._Rt
+            c._is_inverse = True
+            return c
+        else:
+            return None
+
+    def mask(self):
+        return self._mask
+
+    def reprojection_error(self):
+        return None
+
+    def __getitem__(self, i):
+        res = FullTransform.__new__(FullTransform)
+        res._success = self._success
+        res._A = self._A
+        res._dist = self._dist
+        res._Rt = self._Rt[i]
+        res._err = None
+        res._mask = None
+        res._is_inverse = self._is_inverse
+        return res
+
+    def __len__(self):
+        return len(self._Rt)
+
+    def get_subset(self, indicator):
+        res = FullMultiTransform.__new__(FullMultiTransform)
+        res._success = self._success
+        res._A = self._A
+        res._dist = self._dist
+        res._Rt = [x for i, x in enumerate(self._Rt) if indicator[i]]
+        res._mask = None
+        res._is_inverse = self._is_inverse
+        return res
+
+    def get_parameter_handles(self, items, extrinsic = True, intrinsic = False, distortion = False):
+        res = []
+        res.append(self[items[0]].get_parameter_handles(extrinsic = extrinsic, intrinsic = intrinsic, distortion = distortion))
+
+        if extrinsic:
+            for i in items[1:]:
+                res.append(self[i].get_parameter_handles(extrinsic = extrinsic, intrinsic = False, distortion = False))
+
+        return np.concatenate(res, axis = 0)
+
+    def update_parameters_by_handles(self, handles, items, extrinsic = True, intrinsic = False, distortion = False):
+        t = [self[i] for i in items]
+        l = t[0].get_parameter_handles(extrinsic = extrinsic, intrinsic = intrinsic, distortion = distortion).shape[0]
+        t[0].update_parameters_by_handles(handles[:l], extrinsic = extrinsic, intrinsic = intrinsic, distortion = distortion)
+        handles = handles[l:] if handles.shape[0] &gt; l else None
+        self._A = t[0]._A
+        self._dist = t[0]._dist
+        self._Rt[items[0]] = t[0]._Rt
+
+        if extrinsic and len(items) &gt; 1:
+            l = handles.shape[0] // (len(items)-1)
+            for ti, i in zip(t[1:], items[1:]):
+                ti.update_parameters_by_handles(handles[:l])
+                self._Rt[i] = ti._Rt
+                handles = handles[l:] if handles.shape[0] &gt; l else None
+
+    @property
+    def valid(self):
+        return self._success</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pvinspect.common.transform.MultiTransform" href="#pvinspect.common.transform.MultiTransform">MultiTransform</a></li>
+<li><a title="pvinspect.common.transform.Transform" href="#pvinspect.common.transform.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pvinspect.common.transform.FullMultiTransform.valid"><code class="name">var <span class="ident">valid</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def valid(self):
+    return self._success</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pvinspect.common.transform.FullMultiTransform.get_parameter_handles"><code class="name flex">
+<span>def <span class="ident">get_parameter_handles</span></span>(<span>self, items, extrinsic=True, intrinsic=False, distortion=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_parameter_handles(self, items, extrinsic = True, intrinsic = False, distortion = False):
+    res = []
+    res.append(self[items[0]].get_parameter_handles(extrinsic = extrinsic, intrinsic = intrinsic, distortion = distortion))
+
+    if extrinsic:
+        for i in items[1:]:
+            res.append(self[i].get_parameter_handles(extrinsic = extrinsic, intrinsic = False, distortion = False))
+
+    return np.concatenate(res, axis = 0)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.FullMultiTransform.get_subset"><code class="name flex">
+<span>def <span class="ident">get_subset</span></span>(<span>self, indicator)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_subset(self, indicator):
+    res = FullMultiTransform.__new__(FullMultiTransform)
+    res._success = self._success
+    res._A = self._A
+    res._dist = self._dist
+    res._Rt = [x for i, x in enumerate(self._Rt) if indicator[i]]
+    res._mask = None
+    res._is_inverse = self._is_inverse
+    return res</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.FullMultiTransform.inv"><code class="name flex">
+<span>def <span class="ident">inv</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def inv(self):
+    if self._success:
+        c = copy(self)
+        c._A = self._A
+        c._Rt = self._Rt
+        c._is_inverse = True
+        return c
+    else:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.FullMultiTransform.mask"><code class="name flex">
+<span>def <span class="ident">mask</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mask(self):
+    return self._mask</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.FullMultiTransform.reprojection_error"><code class="name flex">
+<span>def <span class="ident">reprojection_error</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reprojection_error(self):
+    return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.FullMultiTransform.update_parameters_by_handles"><code class="name flex">
+<span>def <span class="ident">update_parameters_by_handles</span></span>(<span>self, handles, items, extrinsic=True, intrinsic=False, distortion=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_parameters_by_handles(self, handles, items, extrinsic = True, intrinsic = False, distortion = False):
+    t = [self[i] for i in items]
+    l = t[0].get_parameter_handles(extrinsic = extrinsic, intrinsic = intrinsic, distortion = distortion).shape[0]
+    t[0].update_parameters_by_handles(handles[:l], extrinsic = extrinsic, intrinsic = intrinsic, distortion = distortion)
+    handles = handles[l:] if handles.shape[0] &gt; l else None
+    self._A = t[0]._A
+    self._dist = t[0]._dist
+    self._Rt[items[0]] = t[0]._Rt
+
+    if extrinsic and len(items) &gt; 1:
+        l = handles.shape[0] // (len(items)-1)
+        for ti, i in zip(t[1:], items[1:]):
+            ti.update_parameters_by_handles(handles[:l])
+            self._Rt[i] = ti._Rt
+            handles = handles[l:] if handles.shape[0] &gt; l else None</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pvinspect.common.transform.FullTransform"><code class="flex name class">
+<span>class <span class="ident">FullTransform</span></span>
+<span>(</span><span>src, dest, image_width=0, image_height=0, ransac=False, n_dist_coeff=1)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base transform object</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FullTransform(Transform):
+
+    def __init__(self, src, dest, image_width = 0, image_height = 0, ransac = False, n_dist_coeff = 1):
+        Rt, self._A, self._dist = find_full_model([src], [dest], n_dist_coeff, image_width, image_height, ransac = ransac)
+        self._Rt = Rt[0]
+        self._is_inverse = False
+        self._success = True
+
+    def __call__(self, coords):
+        if self._success:
+            return apply_pinhole(coords, self._Rt, self._A, self._dist, self._is_inverse)
+        else:
+            return None
+
+    def inv(self):
+        if self._success:
+            c = copy(self)
+            c._A = self._A
+            c._Rt = self._Rt
+            c._is_inverse = True
+            return c
+        else:
+            return None
+
+    @property
+    def mask(self):
+        return self._mask
+
+    @property
+    def reprojection_error(self):
+        return None
+
+    def get_parameter_handles(self, extrinsic = True, intrinsic = False, distortion = False):
+        params = []
+
+        if extrinsic:
+            params.append(util.matrix2rodrigues(self._Rt[:,:3]))
+            params.append(self._Rt[:,3])
+        if intrinsic:
+            params.append(self._A[[0,0,1,1], [0,2,1,2]])
+        if distortion:
+            params.append(self._dist)
+
+        return np.concatenate(params, axis = 0)
+
+    def update_parameters_by_handles(self, handles, extrinsic = True, intrinsic = False, distortion = False):
+        if extrinsic:
+            self._Rt[:,:3] = util.rodrigues2matrix(handles[:3])
+            self._Rt[:,3] = handles[3:6]
+            handles = handles[6:] if handles.shape[0] &gt; 6 else None
+        if intrinsic:
+            self._A[[0,0,1,1], [0,2,1,2]] = handles[:4]
+            handles = handles[4:] if handles.shape[0] &gt; 4 else None
+        if distortion:
+            self._dist = handles
+
+    @property
+    def valid(self):
+        return self._success</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pvinspect.common.transform.Transform" href="#pvinspect.common.transform.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pvinspect.common.transform.FullTransform.mask"><code class="name">var <span class="ident">mask</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def mask(self):
+    return self._mask</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.FullTransform.reprojection_error"><code class="name">var <span class="ident">reprojection_error</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def reprojection_error(self):
+    return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.FullTransform.valid"><code class="name">var <span class="ident">valid</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def valid(self):
+    return self._success</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pvinspect.common.transform.FullTransform.get_parameter_handles"><code class="name flex">
+<span>def <span class="ident">get_parameter_handles</span></span>(<span>self, extrinsic=True, intrinsic=False, distortion=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_parameter_handles(self, extrinsic = True, intrinsic = False, distortion = False):
+    params = []
+
+    if extrinsic:
+        params.append(util.matrix2rodrigues(self._Rt[:,:3]))
+        params.append(self._Rt[:,3])
+    if intrinsic:
+        params.append(self._A[[0,0,1,1], [0,2,1,2]])
+    if distortion:
+        params.append(self._dist)
+
+    return np.concatenate(params, axis = 0)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.FullTransform.inv"><code class="name flex">
+<span>def <span class="ident">inv</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def inv(self):
+    if self._success:
+        c = copy(self)
+        c._A = self._A
+        c._Rt = self._Rt
+        c._is_inverse = True
+        return c
+    else:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.FullTransform.update_parameters_by_handles"><code class="name flex">
+<span>def <span class="ident">update_parameters_by_handles</span></span>(<span>self, handles, extrinsic=True, intrinsic=False, distortion=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_parameters_by_handles(self, handles, extrinsic = True, intrinsic = False, distortion = False):
+    if extrinsic:
+        self._Rt[:,:3] = util.rodrigues2matrix(handles[:3])
+        self._Rt[:,3] = handles[3:6]
+        handles = handles[6:] if handles.shape[0] &gt; 6 else None
+    if intrinsic:
+        self._A[[0,0,1,1], [0,2,1,2]] = handles[:4]
+        handles = handles[4:] if handles.shape[0] &gt; 4 else None
+    if distortion:
+        self._dist = handles</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pvinspect.common.transform.HomographyTransform"><code class="flex name class">
+<span>class <span class="ident">HomographyTransform</span></span>
+<span>(</span><span>src, dest, image_width=0, image_height=0, ransac=False, ransac_thres=0.1)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base transform object</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HomographyTransform(Transform):
+
+    def __init__(self, src, dest, image_width = 0, image_height = 0, ransac = False, ransac_thres = 0.1):
+        self._image_width = image_width
+        self._image_height = image_height
+        self._handles = None
+
+        if ransac:
+            # initial estimate to determine scale
+            H = find_homography(src, dest)
+            r = apply_homography(np.array([[0,0],[1,1]]), H)
+            scale = np.linalg.norm(r[1]-r[0])
+
+            H, self._mask, _ = find_homography_ransac(src, dest, ransac_thres*scale)
+            src = src[self._mask]
+            dest = dest[self._mask]
+        else:
+            self._mask = None
+
+        self._H = find_homography(src, dest)
+        self._err = np.mean(np.linalg.norm(apply_homography(src, self._H) - dest, axis = 1))
+
+    def __call__(self, coords):
+        return apply_homography(coords, self._H)
+
+    def _get_sensitivity(self, axis):
+        src = np.array([[0.0,0.0]])
+        t1 = self(src)
+        src[0,axis] = 1.0
+        t2 = self(src)
+        return np.linalg.norm([t1-t2])
+
+    def inv(self):
+        c = copy(self)
+        c._H = np.linalg.pinv(self._H)
+        c._H /= c._H[2,2]
+        return c
+
+    @property
+    def mask(self):
+        return self._mask
+
+    @property
+    def reprojection_error(self):
+        return self._err
+
+    def get_parameter_handles(self):
+        x_sens = self._get_sensitivity(0)
+        y_sens = self._get_sensitivity(1)
+        dx = 1/x_sens * self._image_width
+        dy = 1/y_sens * self._image_width
+        self._handles = np.array([[-dx,dy], [dx,dy], [dx,-dy], [-dx,-dy]])
+        return self(self._handles).flatten()
+
+    def update_parameters_by_handles(self, handles):
+        handles = handles.reshape(self._handles.shape)
+        self._H = find_homography(self._handles, handles)
+
+    @property
+    def valid(self):
+        return self._H is not None</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pvinspect.common.transform.Transform" href="#pvinspect.common.transform.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pvinspect.common.transform.HomographyTransform.mask"><code class="name">var <span class="ident">mask</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def mask(self):
+    return self._mask</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.HomographyTransform.reprojection_error"><code class="name">var <span class="ident">reprojection_error</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def reprojection_error(self):
+    return self._err</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.HomographyTransform.valid"><code class="name">var <span class="ident">valid</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def valid(self):
+    return self._H is not None</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pvinspect.common.transform.HomographyTransform.get_parameter_handles"><code class="name flex">
+<span>def <span class="ident">get_parameter_handles</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_parameter_handles(self):
+    x_sens = self._get_sensitivity(0)
+    y_sens = self._get_sensitivity(1)
+    dx = 1/x_sens * self._image_width
+    dy = 1/y_sens * self._image_width
+    self._handles = np.array([[-dx,dy], [dx,dy], [dx,-dy], [-dx,-dy]])
+    return self(self._handles).flatten()</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.HomographyTransform.inv"><code class="name flex">
+<span>def <span class="ident">inv</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def inv(self):
+    c = copy(self)
+    c._H = np.linalg.pinv(self._H)
+    c._H /= c._H[2,2]
+    return c</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.HomographyTransform.update_parameters_by_handles"><code class="name flex">
+<span>def <span class="ident">update_parameters_by_handles</span></span>(<span>self, handles)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_parameters_by_handles(self, handles):
+    handles = handles.reshape(self._handles.shape)
+    self._H = find_homography(self._handles, handles)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pvinspect.common.transform.IdentityTransform"><code class="flex name class">
+<span>class <span class="ident">IdentityTransform</span></span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base transform object</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IdentityTransform(Transform):
+
+    def __init__(self):
+        pass
+
+    def __call__(self, coords):
+        return coords
+
+    def inv(self):
+        return self
+
+    @property
+    def mask(self):
+        return None
+
+    @property
+    def reprojection_error(self):
+        return 0.0
+
+    def get_parameter_handles(self):
+        return None
+
+    def update_parameters_by_handles(self):
+        return None
+
+    def valid(self):
+        return True</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pvinspect.common.transform.Transform" href="#pvinspect.common.transform.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pvinspect.common.transform.IdentityTransform.mask"><code class="name">var <span class="ident">mask</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def mask(self):
+    return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.IdentityTransform.reprojection_error"><code class="name">var <span class="ident">reprojection_error</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def reprojection_error(self):
+    return 0.0</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pvinspect.common.transform.IdentityTransform.get_parameter_handles"><code class="name flex">
+<span>def <span class="ident">get_parameter_handles</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_parameter_handles(self):
+    return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.IdentityTransform.inv"><code class="name flex">
+<span>def <span class="ident">inv</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def inv(self):
+    return self</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.IdentityTransform.update_parameters_by_handles"><code class="name flex">
+<span>def <span class="ident">update_parameters_by_handles</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_parameters_by_handles(self):
+    return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.IdentityTransform.valid"><code class="name flex">
+<span>def <span class="ident">valid</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def valid(self):
+    return True</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pvinspect.common.transform.MultiTransform"><code class="flex name class">
+<span>class <span class="ident">MultiTransform</span></span>
+<span>(</span><span>src, dest, image_width=0, image_height=0, ransac=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base transform object</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiTransform(Transform):
+
+    @abstractmethod
+    def __getitem__(self, i):
+        pass
+
+    @abstractmethod
+    def __len__(self):
+        pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="pvinspect.common.transform.Transform" href="#pvinspect.common.transform.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pvinspect.common.transform.FullMultiTransform" href="#pvinspect.common.transform.FullMultiTransform">FullMultiTransform</a></li>
+</ul>
+</dd>
+<dt id="pvinspect.common.transform.Transform"><code class="flex name class">
+<span>class <span class="ident">Transform</span></span>
+<span>(</span><span>src, dest, image_width=0, image_height=0, ransac=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base transform object</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Transform(ABC):
+    &#39;&#39;&#39;Base transform object&#39;&#39;&#39;
+
+    @abstractmethod
+    def __init__(self, src, dest, image_width = 0, image_height = 0, ransac = False):
+        pass
+
+    @abstractmethod
+    def __call__(self, coords):
+        pass
+
+    @abstractmethod
+    def inv(self):
+        pass
+
+    @abstractproperty
+    def mask(self):
+        pass
+
+    @abstractproperty
+    def reprojection_error(self):
+        pass
+
+    @abstractmethod
+    def get_parameter_handles(self):
+        pass
+
+    @abstractmethod
+    def update_parameters_by_handles(self):
+        pass
+
+    @abstractproperty
+    def valid(self):
+        pass
+
+    def mean_scale(self):
+        a = np.array([[0,0], [10,0], [10,10], [0,10]])
+        at = self(a)
+        s1 = 1/2 * (np.linalg.norm(at[1]-at[0]) + np.linalg.norm(at[3]-at[2])) / 10
+        s2 = 1/2 * (np.linalg.norm(at[2]-at[1]) + np.linalg.norm(at[0]-at[3])) / 10
+        s = 1/2 * (s1+s2)
+        d = np.round(s/8)   # ensure that it is divisible by 8
+        return float(d*8)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pvinspect.common.transform.IdentityTransform" href="#pvinspect.common.transform.IdentityTransform">IdentityTransform</a></li>
+<li><a title="pvinspect.common.transform.MultiTransform" href="#pvinspect.common.transform.MultiTransform">MultiTransform</a></li>
+<li><a title="pvinspect.common.transform.HomographyTransform" href="#pvinspect.common.transform.HomographyTransform">HomographyTransform</a></li>
+<li><a title="pvinspect.common.transform.FullTransform" href="#pvinspect.common.transform.FullTransform">FullTransform</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pvinspect.common.transform.Transform.mask"><code class="name">var <span class="ident">mask</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractproperty
+def mask(self):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.Transform.reprojection_error"><code class="name">var <span class="ident">reprojection_error</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractproperty
+def reprojection_error(self):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.Transform.valid"><code class="name">var <span class="ident">valid</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractproperty
+def valid(self):
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pvinspect.common.transform.Transform.get_parameter_handles"><code class="name flex">
+<span>def <span class="ident">get_parameter_handles</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def get_parameter_handles(self):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.Transform.inv"><code class="name flex">
+<span>def <span class="ident">inv</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def inv(self):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.Transform.mean_scale"><code class="name flex">
+<span>def <span class="ident">mean_scale</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mean_scale(self):
+    a = np.array([[0,0], [10,0], [10,10], [0,10]])
+    at = self(a)
+    s1 = 1/2 * (np.linalg.norm(at[1]-at[0]) + np.linalg.norm(at[3]-at[2])) / 10
+    s2 = 1/2 * (np.linalg.norm(at[2]-at[1]) + np.linalg.norm(at[0]-at[3])) / 10
+    s = 1/2 * (s1+s2)
+    d = np.round(s/8)   # ensure that it is divisible by 8
+    return float(d*8)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.common.transform.Transform.update_parameters_by_handles"><code class="name flex">
+<span>def <span class="ident">update_parameters_by_handles</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def update_parameters_by_handles(self):
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pvinspect.common" href="index.html">pvinspect.common</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pvinspect.common.transform.apply_homography" href="#pvinspect.common.transform.apply_homography">apply_homography</a></code></li>
+<li><code><a title="pvinspect.common.transform.apply_pinhole" href="#pvinspect.common.transform.apply_pinhole">apply_pinhole</a></code></li>
+<li><code><a title="pvinspect.common.transform.distort" href="#pvinspect.common.transform.distort">distort</a></code></li>
+<li><code><a title="pvinspect.common.transform.distort_inverse" href="#pvinspect.common.transform.distort_inverse">distort_inverse</a></code></li>
+<li><code><a title="pvinspect.common.transform.find_full_model" href="#pvinspect.common.transform.find_full_model">find_full_model</a></code></li>
+<li><code><a title="pvinspect.common.transform.find_homography" href="#pvinspect.common.transform.find_homography">find_homography</a></code></li>
+<li><code><a title="pvinspect.common.transform.find_homography_ransac" href="#pvinspect.common.transform.find_homography_ransac">find_homography_ransac</a></code></li>
+<li><code><a title="pvinspect.common.transform.warp_image" href="#pvinspect.common.transform.warp_image">warp_image</a></code></li>
+<li><code><a title="pvinspect.common.transform.warp_image_patches" href="#pvinspect.common.transform.warp_image_patches">warp_image_patches</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pvinspect.common.transform.FullMultiTransform" href="#pvinspect.common.transform.FullMultiTransform">FullMultiTransform</a></code></h4>
+<ul class="">
+<li><code><a title="pvinspect.common.transform.FullMultiTransform.get_parameter_handles" href="#pvinspect.common.transform.FullMultiTransform.get_parameter_handles">get_parameter_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullMultiTransform.get_subset" href="#pvinspect.common.transform.FullMultiTransform.get_subset">get_subset</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullMultiTransform.inv" href="#pvinspect.common.transform.FullMultiTransform.inv">inv</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullMultiTransform.mask" href="#pvinspect.common.transform.FullMultiTransform.mask">mask</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullMultiTransform.reprojection_error" href="#pvinspect.common.transform.FullMultiTransform.reprojection_error">reprojection_error</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullMultiTransform.update_parameters_by_handles" href="#pvinspect.common.transform.FullMultiTransform.update_parameters_by_handles">update_parameters_by_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullMultiTransform.valid" href="#pvinspect.common.transform.FullMultiTransform.valid">valid</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pvinspect.common.transform.FullTransform" href="#pvinspect.common.transform.FullTransform">FullTransform</a></code></h4>
+<ul class="">
+<li><code><a title="pvinspect.common.transform.FullTransform.get_parameter_handles" href="#pvinspect.common.transform.FullTransform.get_parameter_handles">get_parameter_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullTransform.inv" href="#pvinspect.common.transform.FullTransform.inv">inv</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullTransform.mask" href="#pvinspect.common.transform.FullTransform.mask">mask</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullTransform.reprojection_error" href="#pvinspect.common.transform.FullTransform.reprojection_error">reprojection_error</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullTransform.update_parameters_by_handles" href="#pvinspect.common.transform.FullTransform.update_parameters_by_handles">update_parameters_by_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.FullTransform.valid" href="#pvinspect.common.transform.FullTransform.valid">valid</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pvinspect.common.transform.HomographyTransform" href="#pvinspect.common.transform.HomographyTransform">HomographyTransform</a></code></h4>
+<ul class="">
+<li><code><a title="pvinspect.common.transform.HomographyTransform.get_parameter_handles" href="#pvinspect.common.transform.HomographyTransform.get_parameter_handles">get_parameter_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.HomographyTransform.inv" href="#pvinspect.common.transform.HomographyTransform.inv">inv</a></code></li>
+<li><code><a title="pvinspect.common.transform.HomographyTransform.mask" href="#pvinspect.common.transform.HomographyTransform.mask">mask</a></code></li>
+<li><code><a title="pvinspect.common.transform.HomographyTransform.reprojection_error" href="#pvinspect.common.transform.HomographyTransform.reprojection_error">reprojection_error</a></code></li>
+<li><code><a title="pvinspect.common.transform.HomographyTransform.update_parameters_by_handles" href="#pvinspect.common.transform.HomographyTransform.update_parameters_by_handles">update_parameters_by_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.HomographyTransform.valid" href="#pvinspect.common.transform.HomographyTransform.valid">valid</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pvinspect.common.transform.IdentityTransform" href="#pvinspect.common.transform.IdentityTransform">IdentityTransform</a></code></h4>
+<ul class="">
+<li><code><a title="pvinspect.common.transform.IdentityTransform.get_parameter_handles" href="#pvinspect.common.transform.IdentityTransform.get_parameter_handles">get_parameter_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.IdentityTransform.inv" href="#pvinspect.common.transform.IdentityTransform.inv">inv</a></code></li>
+<li><code><a title="pvinspect.common.transform.IdentityTransform.mask" href="#pvinspect.common.transform.IdentityTransform.mask">mask</a></code></li>
+<li><code><a title="pvinspect.common.transform.IdentityTransform.reprojection_error" href="#pvinspect.common.transform.IdentityTransform.reprojection_error">reprojection_error</a></code></li>
+<li><code><a title="pvinspect.common.transform.IdentityTransform.update_parameters_by_handles" href="#pvinspect.common.transform.IdentityTransform.update_parameters_by_handles">update_parameters_by_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.IdentityTransform.valid" href="#pvinspect.common.transform.IdentityTransform.valid">valid</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pvinspect.common.transform.MultiTransform" href="#pvinspect.common.transform.MultiTransform">MultiTransform</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pvinspect.common.transform.Transform" href="#pvinspect.common.transform.Transform">Transform</a></code></h4>
+<ul class="">
+<li><code><a title="pvinspect.common.transform.Transform.get_parameter_handles" href="#pvinspect.common.transform.Transform.get_parameter_handles">get_parameter_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.Transform.inv" href="#pvinspect.common.transform.Transform.inv">inv</a></code></li>
+<li><code><a title="pvinspect.common.transform.Transform.mask" href="#pvinspect.common.transform.Transform.mask">mask</a></code></li>
+<li><code><a title="pvinspect.common.transform.Transform.mean_scale" href="#pvinspect.common.transform.Transform.mean_scale">mean_scale</a></code></li>
+<li><code><a title="pvinspect.common.transform.Transform.reprojection_error" href="#pvinspect.common.transform.Transform.reprojection_error">reprojection_error</a></code></li>
+<li><code><a title="pvinspect.common.transform.Transform.update_parameters_by_handles" href="#pvinspect.common.transform.Transform.update_parameters_by_handles">update_parameters_by_handles</a></code></li>
+<li><code><a title="pvinspect.common.transform.Transform.valid" href="#pvinspect.common.transform.Transform.valid">valid</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
