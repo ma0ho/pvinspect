@@ -1092,6 +1092,11 @@ table {
 <span class="k">def</span> <span class="nf">locate_module_and_cells</span><span class="p">(</span><span class="n">sequence</span><span class="p">:</span> <span class="n">ModuleImageOrSequence</span><span class="p">,</span> <span class="n">estimate_distortion</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModuleImageOrSequence</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;Locate a single module and its cells</span>
 
+<span class="sd">    Note:</span>
+<span class="sd">        This methods implements the following paper:</span>
+<span class="sd">        Hoffmann, Mathis, et al. &quot;Fast and robust detection of solar modules in electroluminescence images.&quot;</span>
+<span class="sd">        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        sequence (ModuleImageOrSequence): A single module image or a sequence of module images </span>
 <span class="sd">        estimate_distortion (bool): Set True to estimate lens distortion, else False </span>
@@ -1300,6 +1305,10 @@ table {
     
   
     <div class="desc"><p>Locate a single module and its cells</p>
+<p>Note:
+    This methods implements the following paper:
+    Hoffmann, Mathis, et al. "Fast and robust detection of solar modules in electroluminescence images."
+    International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.</p>
 <p>Args:
     sequence (ModuleImageOrSequence): A single module image or a sequence of module images 
     estimate_distortion (bool): Set True to estimate lens distortion, else False </p>
@@ -1311,6 +1320,11 @@ table {
     <div class="codehilite"><pre><span></span><span class="nd">@_sequence</span>
 <span class="k">def</span> <span class="nf">locate_module_and_cells</span><span class="p">(</span><span class="n">sequence</span><span class="p">:</span> <span class="n">ModuleImageOrSequence</span><span class="p">,</span> <span class="n">estimate_distortion</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModuleImageOrSequence</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;Locate a single module and its cells</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This methods implements the following paper:</span>
+<span class="sd">        Hoffmann, Mathis, et al. &quot;Fast and robust detection of solar modules in electroluminescence images.&quot;</span>
+<span class="sd">        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        sequence (ModuleImageOrSequence): A single module image or a sequence of module images </span>
