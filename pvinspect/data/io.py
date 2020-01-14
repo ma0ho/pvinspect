@@ -40,7 +40,7 @@ def read_module_image(path: PathOrStr, modality: int, cols: int = None, rows: in
 
     return ModuleImage(img, modality, path, cols, rows)
 
-def read_module_images(path: PathOrStr, modality: int, same_camera: bool, cols: int = None, rows: int = None, N: int = 0, pattern: Union[str, Tuple[str]] = ('*.png', '*.tif', '*.tiff', '*.bmp')) -> ModuleImageSequence:
+def read_module_images(path: PathOrStr, modality: int, same_camera: bool, cols: int = None, rows: int = None, N: int = 0, pattern: Union[str, Tuple[str]] = ('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes = False) -> ModuleImageSequence:
     '''Read a sequence of module images and return it
 
     Args:
@@ -51,6 +51,7 @@ def read_module_images(path: PathOrStr, modality: int, same_camera: bool, cols: 
         rows (int): Number of rows of cells
         N (int): Only read first N images
         pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
+        allow_different_dtypes (bool): Allow images to have different datatypes?
 
     Returns:
         image: The module image sequence
@@ -93,7 +94,7 @@ def read_module_images(path: PathOrStr, modality: int, same_camera: bool, cols: 
                 result.append(ModuleImage(data, img.modality, img.path, img.cols, img.rows))
             imgs = result
 
-    return ModuleImageSequence(imgs, copy=False, same_camera=same_camera)
+    return ModuleImageSequence(imgs, copy=False, same_camera=same_camera, allow_different_dtypes=allow_different_dtypes)
 
 def save_images(path: PathOrStr, sequence: ImageSequence, mkdir: bool = True):
     '''Write a sequence of images to disk

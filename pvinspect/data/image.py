@@ -81,17 +81,19 @@ class ImageSequence:
             plt.subplot(rows, cols, i+1)
             img.show(*args, **kwargs)
 
-    def __init__(self, images: List[Image], same_camera: bool, copy = True):
+    def __init__(self, images: List[Image], same_camera: bool, copy = True, allow_different_dtypes = False):
         '''Initialize a module image sequence
         
         Args:
             images (List[Image]): The list of images
             came_camera (bool): Indicates, if all images are from the same camera and hence share the same intrinsic parameters
             copy (bool): Copy the images?
+            allow_different_dtypes (bool): Allow images to have different datatypes?
         '''
 
         self._images = deepcopy(images) if copy else images
         self._same_camera = same_camera
+        self._allow_different_dtypes = allow_different_dtypes
         if len(self.images) == 0:
             logging.error('Creation of an empty sequence is not supported')
             exit()
@@ -101,14 +103,14 @@ class ImageSequence:
         dtype = self.images[0].dtype
         modality = self.images[0].modality
         for img in self.images:
-            if img.dtype != dtype:
-                logging.error('Cannot create sequence from mixed dtypes. Consider using the "relaxed" argument, when reading images.')
+            if img.dtype != dtype and not allow_different_dtypes:
+                logging.error('Cannot create sequence from mixed dtypes. Consider using the "allow_different_dtypes" argument, when reading images.')
                 exit()
-            if img.shape != shape:
-                logging.error('Cannot create sequence from mixed shapes. Consider using the "relaxed" argument, when reading images.')
+            if img.shape != shape and same_camera:
+                logging.error('Cannot create sequence from mixed shapes. Consider using the "same_camera" argument, when reading images.')
                 exit()
             if img.modality != modality:
-                logging.error('Cannot create a sequence from mixed modalities. Consider using the "relaxed" argument, when reading images.')
+                logging.error('Cannot create a sequence from mixed modalities.')
                 exit()
 
     def head(self, N: int = 4, cols: int = 2, *args, **kwargs):
@@ -137,12 +139,12 @@ class ImageSequence:
     @property
     def dtype(self) -> np.dtype:
         '''Access the image datatype'''
-        return self.images[0].dtype
+        return self.images[0].dtype if not self._allow_different_dtypes else None
 
     @property
     def shape(self) -> Tuple[int, int]:
         '''Access the image shape'''
-        return self.images[0].shape
+        return self.images[0].shape if self._same_camera else None
 
     @property
     def modality(self) -> int:
@@ -280,13 +282,14 @@ class ModuleImage(Image):
 class ModuleImageSequence(ImageSequence):
     '''An immutable sequence of module images, allowing for access to single images as well as analysis of the sequence'''
 
-    def __init__(self, images: List[ModuleImage], same_camera: bool, copy = True):
+    def __init__(self, images: List[ModuleImage], same_camera: bool, copy = True, allow_different_dtypes = False):
         '''Initialize a module image sequence
         
         Args:
             images (List[ModuleImage]): The list of images
             same_camera (bool): Indicates if all images are from the same camera
             copy (bool): Copy the images?
+            allow_different_dtypes (bool): Allow images to have different datatypes?
         '''
 
         cols = images[0].cols
@@ -299,7 +302,7 @@ class ModuleImageSequence(ImageSequence):
                 logging.error('Cannot create sequence from different module configurations')
                 exit()
 
-        super().__init__(images, same_camera, copy)
+        super().__init__(images, same_camera, copy, allow_different_dtypes)
 
 
 ModuleImageOrSequence = Union[ModuleImageSequence, ModuleImage]
