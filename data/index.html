@@ -110,7 +110,7 @@ __all__ = [
 </details>
 </dd>
 <dt id="pvinspect.data.read_module_images"><code class="name flex">
-<span>def <span class="ident">read_module_images</span></span>(<span>path, modality, same_camera, cols=None, rows=None, N=0, pattern=('*.png', '*.tif', '*.tiff', '*.bmp'))</span>
+<span>def <span class="ident">read_module_images</span></span>(<span>path, modality, same_camera, cols=None, rows=None, N=0, pattern=('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Read a sequence of module images and return it</p>
@@ -130,6 +130,8 @@ __all__ = [
 <dd>Only read first N images</dd>
 <dt><strong><code>pattern</code></strong> :&ensp;<code>Union</code>[<code>str</code>, <code>Tuple</code>[<code>str</code>]]</dt>
 <dd>Files must match any of the given pattern</dd>
+<dt><strong><code>allow_different_dtypes</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Allow images to have different datatypes?</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -140,7 +142,7 @@ __all__ = [
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_module_images(path: PathOrStr, modality: int, same_camera: bool, cols: int = None, rows: int = None, N: int = 0, pattern: Union[str, Tuple[str]] = (&#39;*.png&#39;, &#39;*.tif&#39;, &#39;*.tiff&#39;, &#39;*.bmp&#39;)) -&gt; ModuleImageSequence:
+<pre><code class="python">def read_module_images(path: PathOrStr, modality: int, same_camera: bool, cols: int = None, rows: int = None, N: int = 0, pattern: Union[str, Tuple[str]] = (&#39;*.png&#39;, &#39;*.tif&#39;, &#39;*.tiff&#39;, &#39;*.bmp&#39;), allow_different_dtypes = False) -&gt; ModuleImageSequence:
     &#39;&#39;&#39;Read a sequence of module images and return it
 
     Args:
@@ -151,6 +153,7 @@ __all__ = [
         rows (int): Number of rows of cells
         N (int): Only read first N images
         pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
+        allow_different_dtypes (bool): Allow images to have different datatypes?
 
     Returns:
         image: The module image sequence
@@ -193,7 +196,7 @@ __all__ = [
                 result.append(ModuleImage(data, img.modality, img.path, img.cols, img.rows))
             imgs = result
 
-    return ModuleImageSequence(imgs, copy=False, same_camera=same_camera)</code></pre>
+    return ModuleImageSequence(imgs, copy=False, same_camera=same_camera, allow_different_dtypes=allow_different_dtypes)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.save_images"><code class="name flex">

@@ -31,16 +31,32 @@ from .image import ModuleImageSequence, ModuleImage, EL_IMAGE
 from .io import read_module_image, read_module_images
 from pathlib import Path
 from google_drive_downloader import GoogleDriveDownloader as gdd
+from typing import Tuple
+import os
 
-_ds_ids = {
+_ds_keys = {
     &#39;20191219_poly10x6&#39;: &#39;1B5fQPLvStuMvuYJ5CxbzyxfwuWQdfNVE&#39;
 }
+
+def _get_dataset_key(name: str):
+    if name in _ds_keys.keys():
+        return _ds_keys[name]
+    else:
+        keys = os.getenv(&#39;PVINSPECT_KEYS&#39;).split(&#39;;&#39;)
+        keys = {x.split(&#39;,&#39;)[0]: x.split(&#39;,&#39;)[1] for x in keys}
+        print(keys)
+        if name in keys.keys():
+            return keys[name]
+        else:
+            raise RuntimeError(&#39;The specified dataset &#34;{}&#34; could not be found. Maybe you tried \
+                to access a protected dataset and didn\&#39;t set PVINSPECT_KEY_FILE environment variable?&#39;)
 
 def _check_and_download_ds(name: str):
     ds_path = Path(__file__).parent.absolute() / &#39;datasets&#39; / name
     if not ds_path.is_dir():
+        k = _get_dataset_key(name)
         ds_path.mkdir(parents=True, exist_ok=False)
-        gdd.download_file_from_google_drive(_ds_ids[name], str(ds_path / &#39;data.zip&#39;), unzip=True)
+        gdd.download_file_from_google_drive(k, str(ds_path / &#39;data.zip&#39;), unzip=True)
     return ds_path
 
 def poly10x6(N: int = 0) -&gt; ModuleImageSequence:
@@ -50,7 +66,52 @@ def poly10x6(N: int = 0) -&gt; ModuleImageSequence:
         N (int): Only read first N images
     &#39;&#39;&#39;
     p = _check_and_download_ds(&#39;20191219_poly10x6&#39;)
-    return read_module_images(p, EL_IMAGE, True, 10, 6, N = N)</code></pre>
+    return read_module_images(p, EL_IMAGE, True, 10, 6, N = N)
+
+def caip_dataB() -&gt; Tuple[ModuleImageSequence, ModuleImageSequence]:
+    &#39;&#39;&#39;Read DataB from CAIP paper (private dataset)
+    
+    Note:
+        This dataset is from the following publication:
+        Hoffmann, Mathis, et al. &#34;Fast and robust detection of solar modules in electroluminescence images.&#34;
+        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.
+
+    Returns:
+        images1: All modules with shape 10x6
+        images2: All modules with shape 9x4
+    &#39;&#39;&#39;
+    p = _check_and_download_ds(&#39;20200114_caip&#39;)
+    images1 = read_module_images(p / &#39;deitsch_testset&#39; / &#39;10x6&#39;, EL_IMAGE, False, 10, 6, allow_different_dtypes=True)
+    images2 = read_module_images(p / &#39;deitsch_testset&#39; / &#39;9x4&#39;, EL_IMAGE, False, 9, 4, allow_different_dtypes=True)
+    return images1, images2
+
+def caip_dataC() -&gt; ModuleImageSequence:
+    &#39;&#39;&#39;Read DataC from CAIP paper (private dataset)
+    
+    Note:
+        This dataset is from the following publication:
+        Hoffmann, Mathis, et al. &#34;Fast and robust detection of solar modules in electroluminescence images.&#34;
+        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.
+
+    Returns:
+        images: All modules images
+    &#39;&#39;&#39;
+    p = _check_and_download_ds(&#39;20200114_caip&#39;)
+    return read_module_images(p / &#39;multiple&#39;, EL_IMAGE, True, 10, 6)
+
+def caip_dataD() -&gt; ModuleImageSequence:
+    &#39;&#39;&#39;Read DataC from CAIP paper (private dataset)
+    
+    Note:
+        This dataset is from the following publication:
+        Hoffmann, Mathis, et al. &#34;Fast and robust detection of solar modules in electroluminescence images.&#34;
+        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.
+
+    Returns:
+        images: All modules images
+    &#39;&#39;&#39;
+    p = _check_and_download_ds(&#39;20200114_caip&#39;)
+    return read_module_images(p / &#39;rotated&#39;, EL_IMAGE, True, 10, 6)</code></pre>
 </details>
 </section>
 <section>
@@ -60,6 +121,110 @@ def poly10x6(N: int = 0) -&gt; ModuleImageSequence:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pvinspect.data.demo.caip_dataB"><code class="name flex">
+<span>def <span class="ident">caip_dataB</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read DataB from CAIP paper (private dataset)</p>
+<h2 id="note">Note</h2>
+<p>This dataset is from the following publication:
+Hoffmann, Mathis, et al. "Fast and robust detection of solar modules in electroluminescence images."
+International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>images1</code></strong></dt>
+<dd>All modules with shape 10x6</dd>
+<dt><strong><code>images2</code></strong></dt>
+<dd>All modules with shape 9x4</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def caip_dataB() -&gt; Tuple[ModuleImageSequence, ModuleImageSequence]:
+    &#39;&#39;&#39;Read DataB from CAIP paper (private dataset)
+    
+    Note:
+        This dataset is from the following publication:
+        Hoffmann, Mathis, et al. &#34;Fast and robust detection of solar modules in electroluminescence images.&#34;
+        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.
+
+    Returns:
+        images1: All modules with shape 10x6
+        images2: All modules with shape 9x4
+    &#39;&#39;&#39;
+    p = _check_and_download_ds(&#39;20200114_caip&#39;)
+    images1 = read_module_images(p / &#39;deitsch_testset&#39; / &#39;10x6&#39;, EL_IMAGE, False, 10, 6, allow_different_dtypes=True)
+    images2 = read_module_images(p / &#39;deitsch_testset&#39; / &#39;9x4&#39;, EL_IMAGE, False, 9, 4, allow_different_dtypes=True)
+    return images1, images2</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.demo.caip_dataC"><code class="name flex">
+<span>def <span class="ident">caip_dataC</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read DataC from CAIP paper (private dataset)</p>
+<h2 id="note">Note</h2>
+<p>This dataset is from the following publication:
+Hoffmann, Mathis, et al. "Fast and robust detection of solar modules in electroluminescence images."
+International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>images</code></strong></dt>
+<dd>All modules images</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def caip_dataC() -&gt; ModuleImageSequence:
+    &#39;&#39;&#39;Read DataC from CAIP paper (private dataset)
+    
+    Note:
+        This dataset is from the following publication:
+        Hoffmann, Mathis, et al. &#34;Fast and robust detection of solar modules in electroluminescence images.&#34;
+        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.
+
+    Returns:
+        images: All modules images
+    &#39;&#39;&#39;
+    p = _check_and_download_ds(&#39;20200114_caip&#39;)
+    return read_module_images(p / &#39;multiple&#39;, EL_IMAGE, True, 10, 6)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.demo.caip_dataD"><code class="name flex">
+<span>def <span class="ident">caip_dataD</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read DataC from CAIP paper (private dataset)</p>
+<h2 id="note">Note</h2>
+<p>This dataset is from the following publication:
+Hoffmann, Mathis, et al. "Fast and robust detection of solar modules in electroluminescence images."
+International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>images</code></strong></dt>
+<dd>All modules images</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def caip_dataD() -&gt; ModuleImageSequence:
+    &#39;&#39;&#39;Read DataC from CAIP paper (private dataset)
+    
+    Note:
+        This dataset is from the following publication:
+        Hoffmann, Mathis, et al. &#34;Fast and robust detection of solar modules in electroluminescence images.&#34;
+        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.
+
+    Returns:
+        images: All modules images
+    &#39;&#39;&#39;
+    p = _check_and_download_ds(&#39;20200114_caip&#39;)
+    return read_module_images(p / &#39;rotated&#39;, EL_IMAGE, True, 10, 6)</code></pre>
+</details>
+</dd>
 <dt id="pvinspect.data.demo.poly10x6"><code class="name flex">
 <span>def <span class="ident">poly10x6</span></span>(<span>N=0)</span>
 </code></dt>
@@ -102,6 +267,9 @@ def poly10x6(N: int = 0) -&gt; ModuleImageSequence:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pvinspect.data.demo.caip_dataB" href="#pvinspect.data.demo.caip_dataB">caip_dataB</a></code></li>
+<li><code><a title="pvinspect.data.demo.caip_dataC" href="#pvinspect.data.demo.caip_dataC">caip_dataC</a></code></li>
+<li><code><a title="pvinspect.data.demo.caip_dataD" href="#pvinspect.data.demo.caip_dataD">caip_dataD</a></code></li>
 <li><code><a title="pvinspect.data.demo.poly10x6" href="#pvinspect.data.demo.poly10x6">poly10x6</a></code></li>
 </ul>
 </li>
