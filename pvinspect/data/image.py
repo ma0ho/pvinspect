@@ -35,9 +35,18 @@ class Image:
         self._path = path
         self._modality = modality
 
-    def show(self):
-        '''Show this image'''
-        plt.imshow(self.data, cmap='gray')
+    def show(self, clip_low: float = 0.001, clip_high: float = 99.999):
+        '''Show this image
+        
+        Args:
+            clip_low (float): Intensity below this percentile is clipped
+            clip_high (float): Intensity above this percentile is clipped
+        '''
+        clip_low = clip_low if clip_low is not None else 0.0
+        clip_high = clip_high if clip_high is not None else 100.0
+        p = np.percentile(self.data, [clip_low, clip_high])
+        d = np.clip(self.data, p[0], p[1])
+        plt.imshow(d, cmap='gray')
         plt.colorbar()
         plt.title(str(self.path.name))
 
@@ -191,9 +200,9 @@ class CellImage(Image):
         '''0-based column index of the cell in the original module'''
         return self._col
 
-    def show(self):
+    def show(self, *argv, **kwargs):
         '''Show this image'''
-        super().show()
+        super().show(*argv, **kwargs)
         plt.title('{}: (row: {:d}, col: {:d})'.format(self._path.name, self._row, self._col))
 
 
@@ -261,17 +270,14 @@ class ModuleImage(Image):
         '''Transformation from regular grid to image coordinates'''
         return deepcopy(self._transform)
 
-    def show(self, show_cell_crossings: bool = True):
+    def show(self, show_cell_crossings: bool = True, *argv, **kwargs):
         '''Show this image and (optionally) the cell crossing points
         
         Args:
             show_cell_crossings (bool): Indicates, if the cell crossing points should be shown in addition to the image
         '''
 
-        if show_cell_crossings and self.transform is None:
-            logging.warning('Transform is not initialized. Cannot show cell crossings.')
-
-        super().show()
+        super().show(*argv, **kwargs)
 
         if show_cell_crossings and self.transform is not None:
             grid = self.grid()
