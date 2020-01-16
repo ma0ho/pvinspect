@@ -313,11 +313,12 @@ def _sequence(func):
     @wraps(func)
     def wrapper_sequence(*args, **kwargs):
         if not isinstance(args[0], ModuleImageSequence):
-            args[0] = ModuleImageSequence([args[0]], copy=False)
+            args = list(args)
+            args[0] = ModuleImageSequence([args[0]], copy=False, same_camera=False)
             unwrap = True
         else:
             unwrap = False
-        res = func(*args, **kwargs)
+        res = func(*tuple(args), **kwargs)
         if unwrap:
             if isinstance(res, tuple) and isinstance(res[0], ModuleImageSequence):
                 res[0] = res[0].images[0]
