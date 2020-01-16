@@ -261,7 +261,7 @@ class ModuleImage(Image):
         '''Transformation from regular grid to image coordinates'''
         return deepcopy(self._transform)
 
-    def show(self, show_cell_crossings: bool = False):
+    def show(self, show_cell_crossings: bool = True):
         '''Show this image and (optionally) the cell crossing points
         
         Args:
@@ -276,7 +276,7 @@ class ModuleImage(Image):
         if show_cell_crossings and self.transform is not None:
             grid = self.grid()
             coords = self.transform.__call__(grid)
-            plt.scatter(coords[:,0], coords[:,1], c='yellow')
+            plt.scatter(coords[:,0], coords[:,1], c='yellow', marker='+')
 
 
 class ModuleImageSequence(ImageSequence):
