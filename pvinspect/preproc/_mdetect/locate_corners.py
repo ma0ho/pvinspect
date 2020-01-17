@@ -3,8 +3,9 @@ from scipy.interpolate import interpn
 import matplotlib.pyplot as plt
 from skimage.transform.integral import integral_image
 from scipy.ndimage.filters import gaussian_filter1d
-from .config import GAUSSIAN_RELATIVE_SIGMA
+from .config import GAUSSIAN_RELATIVE_SIGMA, CORNER_DETECTION_MAX_PEAKS, CORNER_DETECTION_PEAK_THRESH
 from .summary import Summary
+from scipy.signal import find_peaks
 
 summary = Summary('locate_corners')
 
@@ -29,20 +30,6 @@ def _corner_patches(coords, patch_size):
     coords[:,3,1] += d
     return coords
 
-#def _extract_profile(img, p0, p1):
-#    n_samples = int(np.ceil(np.linalg.norm(p1-p0)))
-#    x = np.linspace(p0[0], p1[0], n_samples)
-#    y = np.linspace(p0[1], p1[1], n_samples)
-#    yx = np.array([y, x]).T
-#    return interpn((np.arange(img.shape[0]), np.arange(img.shape[1])), img, yx, method = 'linear')
-
-#def _bivariate_polynomial(x, y, d):
-#    monomials = []
-#    for i in range(d+1):
-#        for j in range(d+1):
-#            monomials.append(x**i * y**j)
-#    return np.array(monomials).T
-
 def _extract_profile2d(img, patch, transform, n_samples):
     n_samples = 80
     x, y = np.meshgrid(
@@ -50,16 +37,21 @@ def _extract_profile2d(img, patch, transform, n_samples):
         np.linspace(patch[0,1], patch[3,1], n_samples))
     xy = np.array([x.flatten(), y.flatten()]).T
     xy_t = transform(xy)
+
+    # simple projection to image bounds
+    xy_t[xy_t[:,0] < 0.0, 0] = 3
+    xy_t[xy_t[:,0] > img.shape[1]-1, 0] = img.shape[1]-3
+    xy_t[xy_t[:,1] < 0.0, 1] = 3  # 0 gives artifacts
+    xy_t[xy_t[:,1] > img.shape[0]-1, 1] = img.shape[0]-3
+
+    # warp patch
     yx_t = np.flip(xy_t, 1)
-    v = interpn((np.arange(img.shape[0]), np.arange(img.shape[1])), img, yx_t, method = 'linear', bounds_error = False, fill_value = 0.0)
+    v = interpn((np.arange(img.shape[0]), np.arange(img.shape[1])), img, yx_t, method = 'linear', bounds_error = False, fill_value=0.0)
     summary.put('patch_{:d}_{:d}'.format(int(patch[0,0]+1), int(patch[0,1]+1)), v.reshape(n_samples, n_samples))
     return x, y, v.reshape(n_samples, n_samples)
 
-def _find_stops(img, dim, sigma, strategy, patch, edgetype = 'ridge'):
+def _find_stops(img, dim, sigma, patch, edgetype = 'ridge'):
     img = img.T if dim == 0 else img
-
-    #plt.imshow(img)
-    #plt.show()
 
     # calculate downsampling
     size = 0.5*np.sum(img.shape)
@@ -72,116 +64,64 @@ def _find_stops(img, dim, sigma, strategy, patch, edgetype = 'ridge'):
 
     # calculate gradient of that
     grad_smooth = np.gradient(profile_smooth)
+    grad2_smooth = np.gradient(grad_smooth)
 
     summary.put('patch_{:d}_{:d}_profile_{}'.format(int(patch[0,0]+1), int(patch[0,1]+1), 'x' if dim == 0 else 'y'), profile)
     summary.put('patch_{:d}_{:d}_profile_grad_{}'.format(int(patch[0,0]+1), int(patch[0,1]+1), 'x' if dim == 0 else 'y'), grad_smooth)
 
-    # find maxima
-    # everything that is > 1.5*std(grad_smooth) is considered a maximum
-    grad_smooth_t = (grad_smooth > 1.5*np.std(grad_smooth))*grad_smooth
-    maxima = []
-    while True:
-        m = np.argmax(grad_smooth_t)
+    # find peaks in first and second derivative of profile
+    min_distance = img.shape[0]//CORNER_DETECTION_MAX_PEAKS
+    peaks, _ = find_peaks(grad2_smooth, distance=min_distance, height=CORNER_DETECTION_PEAK_THRESH*np.mean(np.abs(grad2_smooth)))
+    maxpeaks, _ = find_peaks(grad_smooth, distance=min_distance, height=CORNER_DETECTION_PEAK_THRESH*np.mean(np.abs(grad_smooth)))
+    minpeaks, _ = find_peaks(-grad_smooth, distance=min_distance, height=CORNER_DETECTION_PEAK_THRESH*np.mean(np.abs(grad_smooth)))
 
-        # go to the right
-        for i in range(grad_smooth_t.shape[0]-m):
-            if grad_smooth_t[m+i] > 0:
-                grad_smooth_t[m+i] = 0
-            else:
-                break
+    #plt.subplot(1,2,1)
+    #plt.plot(np.arange(profile.shape[0]), grad_smooth)
+    #plt.scatter(peaks, grad_smooth[peaks])
+    #plt.subplot(1,2,2)
+    #plt.plot(np.arange(profile.shape[0]), grad2_smooth)
+    #plt.scatter(peaks, grad2_smooth[peaks])
+    #plt.show()
 
-        # go to the left
-        for i in range(1,m):
-            if grad_smooth_t[m-i] > 0:
-                grad_smooth_t[m-i] = 0
-            else:
-                break
-        maxima.append(m)
+    # threshold for finding minimum/maximum corresponding to peak in 2nd derivative
+    eps = img.shape[0] // 10
 
-        if np.sum(grad_smooth_t) == 0:
-            break
-    
-    # find minima
-    # everything that is < -1.5*std(grad_smooth) is considered a minimum
-    grad_smooth_t = (grad_smooth < -1.5*np.std(grad_smooth))*grad_smooth
-    minima = []
-    while True:
-        m = np.argmin(grad_smooth_t)
-        for i in range(grad_smooth_t.shape[0]-m):
-            if grad_smooth_t[m+i] < 0:
-                grad_smooth_t[m+i] = 0
-            else:
-                break
-        for i in range(1,m):
-            if grad_smooth_t[m-i] < 0:
-                grad_smooth_t[m-i] = 0
-            else:
-                break
-        minima.append(m)
+    if edgetype in ('up', 'down'):
+        # filter all peaks in 2nd derivative that are not close to a maximum/minimum
+        compare = maxpeaks if edgetype == 'up' else minpeaks
+        peaks_new = []
+        for peak in peaks.tolist():
+            if np.any(np.abs(peak-compare) <= eps):
+                peaks_new.append(peak)
 
-        if np.sum(grad_smooth_t) == 0:
-            break
-
-    # skip if no minima/maxima found
-    if len(maxima) == 0 or len(minima) == 0:
-        return None
-
-    # for "ridge" edges, we require that the number of minima and maxima is consistent
-    if len(maxima) != len(minima) and edgetype == 'ridge':
-        return None
-
-    # go for maxima (edgetype=ridge/up) or minima (edgetype=down)
-    target = np.array(maxima) if edgetype in ('ridge', 'up') else np.array(minima)
-
-    # determine correct extremum by spatial order
-    if strategy == 'order':
-        target = np.sort(target)
-        if target.shape[0]%2 == 1:
-            # take middle
-            pos = target[target.shape[0]//2]
+        # if multiple found, return the one closest to the center
+        if len(peaks_new) > 1:
+            center = img.shape[0]//2
+            distances = np.abs(np.array(peaks_new) - center)
+            return peaks_new[np.argmin(distances)]
+        elif len(peaks_new) == 1:
+            return peaks_new[0]
         else:
-            # take two mid target and select by maximum abs value
-            m1 = target[target.shape[0]//2 -1]
-            m2 = target[target.shape[0]//2]
-            if np.abs(grad_smooth[m1]) > np.abs(grad_smooth[m2]):
-                pos = m1
-            else:
-                pos = m2
-        #print(pos)
-        #plt.plot(np.arange(profile.shape[0]), grad_smooth)
-        #plt.show()
-
-    # determine correct extremum by distance to center of the patch
-    elif strategy == 'distance':
-        center = profile_smooth.shape[0]/2
-        dist = np.abs(target-center)
-        idx = np.argmin(dist)
-        pos = target[idx]
-        #plt.plot(np.arange(profile.shape[0]), grad_smooth)
-        #plt.show()
-
-    # take closest minimum (edgetype=ridge) or skip
-    if edgetype == 'ridge':
-        minima = np.array(minima)
-        dist = pos-minima
-
-        # minimum needs to be right of maximum
-        if np.sum(dist > 0) == 0:
             return None
 
-        min_idx = np.argmin(dist[dist>0])
-        minimum = minima[dist>0][min_idx]
+    else:
+        # filter all peaks in 2nd derivative that are not close to a maximum and a minimum
+        peaks_new = []
+        for peak in peaks.tolist():
+            if np.any(np.abs(peak-maxpeaks) <= eps) and np.any(np.abs(peak-minpeaks) <= eps):
+                peaks_new.append(peak)
 
-    summary.put('patch_{:d}_{:d}_pos_{}'.format(int(patch[0,0]+1), int(patch[0,1]+1), 'x' if dim == 0 else 'y'), pos)
-    
-    # for corner edges, we only get one estimate
-    if edgetype in ('up', 'down'):
-        return pos
-
-    # for ridges, we get the left and right boundary of the ridge
-    elif edgetype == 'ridge':
-        return [minimum, pos]
-
+        # if number of remaining peaks uneven, return the middle one
+        if len(peaks_new) % 2 == 1:
+            return peaks_new[len(peaks_new)//2]
+        # otherwise take the one closest to the center
+        elif len(peaks_new) > 0:
+            center = img.shape[0]//2
+            distances = np.abs(np.array(peaks_new) - center)
+            return peaks_new[np.argmin(distances)]
+        else:
+            return None
+        
 def _determine_sampling_and_filter(patch_t):
     patch_width = max(np.linalg.norm(patch_t[1]-patch_t[0]), np.linalg.norm(patch_t[3]-patch_t[2]))
     patch_height = max(np.linalg.norm(patch_t[2]-patch_t[1]), np.linalg.norm(patch_t[3]-patch_t[0]))
@@ -215,30 +155,15 @@ def fit_inner_corners(img, coords, transform, patch_size):
         _, _, v = _extract_profile2d(img, patches[i], transform, n_samples)
         
         # find stop in x and y direction
-        xstops = _find_stops(v, 0, sigma_filter, 'order', patches[i])
-        ystops = _find_stops(v, 1, sigma_filter, 'order', patches[i])
+        xc = _find_stops(v, 0, sigma_filter, patches[i])
+        yc = _find_stops(v, 1, sigma_filter, patches[i])
 
         # if both succeded
-        if xstops is not None and ystops is not None:
+        if xc is not None and yc is not None:
 
             # xstops and ystops is given in patch coordinates -> transform to image coordinates
             x_size, y_size = v.shape[1], v.shape[0]
-            xstops[0] /= x_size
-            xstops[1] /= x_size
-            ystops[0] /= y_size
-            ystops[1] /= y_size
-
-            # calculate corner coordinate
-            xstopdiff = xstops[1] - xstops[0]
-            ystopdiff = ystops[1] - ystops[0]
-            corner = [xstops[0] + xstopdiff/2, ystops[0] + ystopdiff/2]
-
-            ## check if 
-            #reject_thres = 1/patch_size * 0.1
-
-            #accepted = xstopdiff > 0 and ystopdiff > 0 and xstopdiff < reject_thres and ystopdiff < reject_thres
-            
-            #accepted_flags.append(accepted)
+            corner = [xc/x_size, yc/y_size]
             accepted_flags.append(True)
             corners.append(corner)
         else:
@@ -260,7 +185,40 @@ def fit_inner_corners(img, coords, transform, patch_size):
     return coords+corners, np.array(accepted_flags)
 
 
-def fit_outer_corners(img, coords, transform, patch_size, n_cols, m_rows):
+def fit_outer_corners(img, coords, transform, patch_size, n_cols, m_rows, is_module_detail):
+
+    if is_module_detail:
+        # determine, on which sides the module is continued
+        x_profile = np.sum(img, 1)
+        y_profile = np.sum(img, 0)
+        x_thresh = 0.3*(np.max(x_profile)-np.min(x_profile)) + np.min(x_profile)
+        y_thresh = 0.3*(np.max(y_profile)-np.min(y_profile)) + np.min(y_profile)
+        cont_left = np.median(y_profile[:10]) > y_thresh
+        cont_right = np.median(y_profile[-10:]) > y_thresh
+        cont_top = np.median(x_profile[:10]) > x_thresh
+        cont_bottom = np.median(x_profile[-10:]) > x_thresh
+        #plt.plot(np.arange(x_profile.shape[0]), x_profile)
+        #plt.show()
+        #plt.plot(np.arange(y_profile.shape[0]), y_profile)
+        #plt.show()
+        #print(x_thresh, y_thresh)
+    else:
+        cont_left, cont_right, cont_top, cont_bottom = False, False, False, False
+
+    # depending on the orientation of the model, we need to assign differently
+    x0 = transform(np.array([[0,0]])).flatten()
+    if np.linalg.norm(x0-np.array([0,0])) < np.linalg.norm(x0-np.array([img.shape[0],0])):
+        # horizontal orientation
+        x_cont_left = cont_left
+        x_cont_right = cont_right
+        y_cont_left = cont_top
+        y_cont_right = cont_bottom
+    else:
+        x_cont_left = cont_top
+        x_cont_right = cont_bottom
+        y_cont_left = cont_right
+        y_cont_right = cont_left
+
     patches = _corner_patches(coords, patch_size)
     accepted_flags = list()
     corners = list()
@@ -273,58 +231,29 @@ def fit_outer_corners(img, coords, transform, patch_size, n_cols, m_rows):
         #plt.imshow(v, cmap='gray')
         #plt.show()
         
-        if i <= n_cols:
+        if i <= n_cols and not y_cont_left:
             y_edgetype = 'up'
-        elif i >= n_cols + m_rows and i <= 2*n_cols + m_rows:
+        elif i >= n_cols+m_rows and i <= 2*n_cols + m_rows and not y_cont_right:
             y_edgetype = 'down'
         else:
             y_edgetype = 'ridge'
         
-        if i >= n_cols and i <= n_cols+m_rows:
+        if i >= n_cols and i <= n_cols+m_rows and not x_cont_right:
             x_edgetype = 'down'
-        elif i >= 2*n_cols + m_rows or i == 0:
+        elif (i >= 2*n_cols + m_rows or i == 0) and not x_cont_left:
             x_edgetype = 'up'
         else:
             x_edgetype = 'ridge'
 
-        xstops = _find_stops(v, 0, sigma_filter, 'distance', patches[i], x_edgetype)
-        ystops = _find_stops(v, 1, sigma_filter, 'distance', patches[i], y_edgetype)
+        xc = _find_stops(v, 0, sigma_filter, patches[i], x_edgetype)
+        yc = _find_stops(v, 1, sigma_filter, patches[i], y_edgetype)
 
-        if xstops is not None and ystops is not None:
+        if xc is not None and yc is not None:
             x_size, y_size = v.shape[1], v.shape[0]
-
-            xc = ((xstops[1]-xstops[0])/2)+xstops[0] if x_edgetype == 'ridge' else xstops
-            yc = ((ystops[1]-ystops[0])/2)+ystops[0] if y_edgetype == 'ridge' else ystops
             xc /= x_size
             yc /= y_size
-
-            #xstop /= x_size
-            #ystop /= y_size
-
-            #xstops[0] /= x_size
-            #xstops[1] /= x_size
-            #ystops[0] /= y_size
-            #ystops[1] /= y_size
-            
-            #xstopdiff = xstops[1] - xstops[0] if x_edgetype == 'ridge' else 0
-            #ystopdiff = ystops[1] - ystops[0] if y_edgetype == 'ridge' else 0
-
-            #xc = xstops[0] + xstopdiff/2 if x_edgetype != 'up' else xstops[1]
-            #yc = ystops[0] + ystopdiff/2 if y_edgetype != 'up' else ystops[1]
-
             corner = [xc, yc]
-
-            reject_thres = 1/patch_size * 0.1
-
-            accepted = True
-            #if x_edgetype == 'ridge' and (xstops[1]-xstops[0])/x_size > reject_thres:
-            #    accepted = False
-            #if y_edgetype == 'ridge' and (ystops[1]-ystops[0])/y_size > reject_thres:
-            #    accepted = False
-            
-            #accepted = xstopdiff >= 0 and ystopdiff >= 0 and xstopdiff < reject_thres and ystopdiff < reject_thres
-            
-            accepted_flags.append(accepted)
+            accepted_flags.append(True)
             corners.append(corner)
         else:
             accepted_flags.append(False)
@@ -343,42 +272,3 @@ def fit_outer_corners(img, coords, transform, patch_size, n_cols, m_rows):
     corners = np.array(corners)
     corners -= patch_size/2
     return coords+corners, np.array(accepted_flags)
-
-        
-
-    
-    #patches = transform(patches.reshape(-1,2)).reshape(-1,4,2)
-    #p = _extract_profile(img, patches[1,0], patches[1,1])
-
-    #x = np.arange(p.shape[0])
-    #res = np.polyfit(x, p, 4)
-    #v = np.polyval(res, x)
-
-    #plt.plot(x, p)
-    #plt.plot(x, v)
-    #plt.show()
-    #exit()
-
-    #for i in range(0,5):
-
-    #    x, y, v = _extract_profile2d(img, patches[i], transform)
-
-
-    #    xv, yv, vv = x.flatten(), y.flatten(), v.flatten()
-    #    A = _bivariate_polynomial(xv, yv, 6)
-    #    coeff, _, _, _ = np.linalg.lstsq(A, vv)
-
-    #    rv = A.dot(coeff)
-
-    #    m = np.argmin(rv)
-    #    #print(xv[m], yv[m])
-
-    #    plt.subplot(1,2,1)
-    #    plt.pcolormesh(x, y, v, cmap=plt.get_cmap('gray'), vmin=v.min(), vmax=v.max())
-    #    plt.plot([xv[m]], [yv[m]], marker='o', color='r')
-    #    plt.subplot(1,2,2)
-    #    plt.pcolormesh(x, y, rv.reshape(v.shape), cmap=plt.get_cmap('plasma'), vmin=v.min(), vmax=v.max())
-    #    plt.show()
-    #    plt.clf()
-    
-

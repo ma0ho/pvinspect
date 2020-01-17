@@ -83,7 +83,10 @@ class ImageSequence:
         rows = math.ceil(N/cols)
 
         # adjust the figure size
-        aspect = self.shape[0]/self.shape[1]
+        if self.shape is not None:
+            aspect = self.shape[0]/self.shape[1]
+        else:
+            aspect = 1.0
         plt.figure(figsize=(6*cols,6*rows*aspect))
 
         for i, img in enumerate(imgs):
@@ -285,10 +288,31 @@ class ModuleImage(Image):
             plt.scatter(coords[:,0], coords[:,1], c='yellow', marker='+')
 
 
+class PartialModuleImage(ModuleImage):
+    '''An image of a solar module with additional meta data'''
+
+    def __init__(self, data: np.ndarray, modality: int, path: Path, cols: int = None, rows: int = None, transform: Transform = None):
+        '''Initialize a module image
+
+        Args:
+            data (np.ndarray): The image data
+            modality (int): The imaging modality
+            path (Path): Path to the image
+            cols (int): Number of completely visible cells in a column
+            rows (int): Number of completely visible cells in a row
+            transform (Transform): Transform from regular grid to module corners
+        '''
+
+        super().__init__(data, modality, path, cols, rows, transform)
+
+
+ModuleOrPartialModuleImage = Union[ModuleImage, PartialModuleImage]
+
+
 class ModuleImageSequence(ImageSequence):
     '''An immutable sequence of module images, allowing for access to single images as well as analysis of the sequence'''
 
-    def __init__(self, images: List[ModuleImage], same_camera: bool, copy = True, allow_different_dtypes = False):
+    def __init__(self, images: List[ModuleOrPartialModuleImage], same_camera: bool, copy = True, allow_different_dtypes = False):
         '''Initialize a module image sequence
         
         Args:
@@ -311,7 +335,7 @@ class ModuleImageSequence(ImageSequence):
         super().__init__(images, same_camera, copy, allow_different_dtypes)
 
 
-ModuleImageOrSequence = Union[ModuleImageSequence, ModuleImage]
+ModuleImageOrSequence = Union[ModuleImageSequence, ModuleImage, PartialModuleImage]
 
 
 def _sequence(func):

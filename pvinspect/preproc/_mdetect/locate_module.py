@@ -3,28 +3,18 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.ndimage.filters import gaussian_filter1d
 import math
-from .config import GAUSSIAN_RELATIVE_SIGMA, OUTER_CORNER_THRESH_FACTOR
-from scipy import optimize
+from .config import GAUSSIAN_RELATIVE_SIGMA, OUTER_CORNER_THRESH_FACTOR, MODULE_DETECTION_PEAK_THRESH
+from scipy import optimize, signal
 from pvinspect.common import transform
 from .summary import Summary
 
 summary = Summary('locate_module')
 
-def _find_stops(img, dim):
+def _find_stops(img, dim, n_cells):
     img = img.T if dim == 0 else img
 
     # calculate downsampling
     size = 0.5*np.sum(img.shape)
-    #sigma = GAUSSIAN_RELATIVE_SIGMA*size
-    #s = np.floor(2/3 * np.pi * sigma)
-    #sigma_s = (3*s) / (2*np.pi)
-    #if sigma**2 - sigma_s**2 < 0.5**2:
-    #    # convince Nyquist
-    #    s -= 1
-    #    sigma_s = (3*s) / (2*np.pi)
-    #sigma_filter = np.sqrt(sigma**2 - sigma_s**2)
-
-    #print(sigma, s, sigma_filter)
 
     # extract profile of cumsum along di
     profile = np.sum(img, 1)
@@ -35,101 +25,31 @@ def _find_stops(img, dim):
     # calculate gradient of that
     grad_smooth = np.gradient(profile_smooth)
 
-    # find maxima and minima and lower threshold if none found
-    for i in range(1,10):
-        thresh = (OUTER_CORNER_THRESH_FACTOR/i)*np.std(grad_smooth)
-        maxima = np.argwhere(grad_smooth > thresh).flatten().tolist()
-        minima = np.argwhere(grad_smooth < -thresh).flatten().tolist()
-        #print(thresh)
-        #print(maxima)
-        #print(minima)
+    thresh = MODULE_DETECTION_PEAK_THRESH*np.mean(np.abs(grad_smooth))
+    peaks_max, _ = signal.find_peaks(grad_smooth, height=thresh)
+    peaks_min, _ = signal.find_peaks(-grad_smooth, height=thresh)
 
-        if len(maxima) > 0 and len(minima) > 0:
-            break
-
-    #plt.plot(np.arange(profile.shape[0]), grad_sharp)
-    #plt.show()
-    #plt.plot(np.arange(profile.shape[0]), grad_smooth)
-    #plt.show()
-    if len(maxima) == 0 or len(minima) == 0:
-        return None
-
-    # non maximum/minimum supression
-    max_last = maxima[0] < minima[0]
-    maxi = 1 if max_last else 0
-    mini = 0 if max_last else 1
-    while True:
-        if max_last:
-            # expect minimum next
-            if maxima[maxi] < minima[mini]:
-                # not true: only keep highest maximum
-                if grad_smooth[maxima[maxi-1]] < grad_smooth[maxima[maxi]]:
-                    del maxima[maxi-1]
-                else:
-                    del maxima[maxi]
-            else:
-                # ok: go on
-                max_last = False
-                mini += 1
-                #maxi += 1
-        else:
-            # expect maximum next
-            if maxima[maxi] > minima[mini]:
-                # not true: only keep smallest minimum
-                if grad_smooth[minima[mini-1]] > grad_smooth[minima[mini]]:
-                    del minima[mini-1]
-                else:
-                    del minima[mini]
-            else:
-                # ok: go on
-                max_last = True
-                #mini += 1
-                maxi += 1
-        if mini < len(minima) and maxi >= len(maxima) and len(minima)-mini > 1:
-            # more than 1 minimum remaining
-            idx = np.argmin(np.array(grad_smooth)[minima[mini:]])
-            minima = minima[:mini] + [minima[mini+idx]]
-        if maxi < len(maxima) and mini >= len(minima) and len(maxima)-maxi > 1:
-            # more than 1 maximum remaining
-            idx = np.argmax(np.array(grad_smooth)[maxima[maxi:]])
-            maxima = maxima[:maxi] + [maxima[maxi+idx]]
-
-        if mini >= len(minima) or maxi >= len(maxima):
-            break
-
-    # max -> min pairs
-    if minima[0] < maxima[0]:
-        minima = minima[1:]
-    if len(maxima) > len(minima):
-        maxima = maxima[:-1]
-
-    if len(maxima) == 0 or len(minima) == 0:
-        return None
-
-    # length of pairs
-    l = np.array(minima)-np.array(maxima)
-
-    # take largest
-    maxi = np.argmax(l)
-    extremals = [maxima[maxi], minima[maxi]]
-
-    #extremals = [np.argmax(grad_smooth), np.argmin(grad_smooth)]
+    extremals = [peaks_max[0], peaks_min[-1]]
 
     thresh = np.std(grad_smooth)*OUTER_CORNER_THRESH_FACTOR
+
+    min_distance = int((extremals[1]-extremals[0]) / n_cells / 2)    # consider std only for half cell size
+
     res = []
+    thresh = np.std(np.clip(grad_smooth, 0.0, None)[max(0, extremals[0]-min_distance):min(img.shape[0], extremals[0]+min_distance)])*OUTER_CORNER_THRESH_FACTOR
     res.append(extremals[0] - np.argmax((grad_smooth <= thresh)[extremals[0]::-1]))
     res.append(extremals[0] + np.argmax((grad_smooth <= thresh)[extremals[0]::+1]))
+    thresh = np.std(np.clip(grad_smooth, None, 0.0)[max(0, extremals[1]-min_distance):min(img.shape[0], extremals[1]+min_distance)])*OUTER_CORNER_THRESH_FACTOR
     res.append(extremals[1] - np.argmax((grad_smooth >= -thresh)[extremals[1]::-1]))
     res.append(extremals[1] + np.argmax((grad_smooth >= -thresh)[extremals[1]::+1]))
-
-    # store summary
-    dimstr = 'x' if dim == 0 else 'y'
-    summary.put('profile_{}'.format(dimstr), profile)
-    summary.put('profile_grad_smooth_{}'.format(dimstr), grad_smooth)
-    summary.put('stops_{}'.format(dimstr), res)
-
+    
+    #plt.plot(np.arange(profile.shape[0]), grad_smooth)
+    #plt.scatter(peaks_max, grad_smooth[peaks_max])
+    #plt.scatter(peaks_min, grad_smooth[peaks_min])
+    #plt.scatter(res, [grad_smooth[x] for x in res])
+    #plt.show()
+    
     return res
-
 
 def _assign_stops(x_stops, y_stops, img):
 
@@ -220,9 +140,9 @@ def _assign_stops(x_stops, y_stops, img):
     return np.array([(Ax, Ay), (Bx, By), (Cx, Cy), (Dx, Dy)])
 
 
-def locate_module(img):
-    x_stops = _find_stops(img, 0)
-    y_stops = _find_stops(img, 1)
+def locate_module(img, n_cols, m_rows):
+    x_stops = _find_stops(img, 0, n_cols)
+    y_stops = _find_stops(img, 1, m_rows)
 
     if x_stops is None or y_stops is None:
         return None
@@ -230,10 +150,13 @@ def locate_module(img):
         return _assign_stops(x_stops, y_stops, img)
 
 
-def module_boundingbox_model(coords, n_cols, m_rows):
-    mean_x = 1/2 * (coords[1,0]-coords[0,0] + coords[2,0]-coords[3,0])
-    mean_y = 1/2 * (coords[2,1]-coords[1,1] + coords[3,1]-coords[0,1])
-    oriented_horizontal = mean_x > mean_y
+def module_boundingbox_model(coords, n_cols, m_rows, orientation):
+    if orientation is None:
+        mean_x = 1/2 * (coords[1,0]-coords[0,0] + coords[2,0]-coords[3,0])
+        mean_y = 1/2 * (coords[2,1]-coords[1,1] + coords[3,1]-coords[0,1])
+        oriented_horizontal = mean_x > mean_y
+    else:
+        oriented_horizontal = orientation == 'horizontal'
 
     if oriented_horizontal:
         src = np.array([[0,0], [n_cols,0], [n_cols,m_rows], [0,m_rows]])
@@ -241,39 +164,3 @@ def module_boundingbox_model(coords, n_cols, m_rows):
         src = np.array([[0,m_rows], [0,0], [n_cols,0], [n_cols,m_rows]])
 
     return src
-
-
-#def refine_location(coords, iimg, iimg2):
-#    a_iimg = np.prod(iimg.shape)
-#    avg_size = np.sum(iimg.shape)/2
-#    s_iimg = iimg[-1,-1]
-#    s2_iimg = iimg2[-1,-1]
-#
-#    def obj(x):
-#        x = x.reshape(-1,2)
-#        path = integral_tools.create_path(x, 4)
-#        s_inner, a_inner = integral_tools.shape_sum(path, iimg, True, 'linear')
-#        s2_inner = integral_tools.shape_sum(path, iimg2, False, 'linear')
-#        s_outer = s_iimg-s_inner
-#        s2_outer = s2_iimg-s2_inner
-#        a_outer = a_iimg-a_inner
-#        m_inner = s_inner/a_inner
-#        m_outer = s_outer/a_outer
-#        m2_inner = s2_inner/a_inner
-#        m2_outer = s2_outer/a_outer
-#        std_inner = np.sqrt(m2_inner-m_inner**2)
-#        std_outer = np.sqrt(m2_outer-m_outer**2)
-#        res = ( (std_inner+std_outer) / (m_inner-m_outer) )**2
-#        return res
-#
-#    x_max = iimg.shape[1]-1
-#    y_max = iimg.shape[0]-1
-#    bounds = [(0,x_max), (0,y_max)]*4
-#    init = coords.flatten()
-#
-#    res = optimize.minimize(obj, init, bounds = bounds, method = 'SLSQP', options = dict(eps = 0.0000000001*avg_size))
-#    print(res)
-#
-#    return res.x.reshape(-1,2)
-
-    

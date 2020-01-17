@@ -2,7 +2,8 @@
 
 from pvinspect.preproc._mdetect.locate import apply
 from pvinspect.common.transform import HomographyTransform, warp_image, FullMultiTransform, FullTransform
-from pvinspect.data.image import ModuleImageSequence, ModuleImage, ModuleImageOrSequence, _sequence, CellImage, CellImageSequence, EL_IMAGE
+from pvinspect.data.image import *
+from pvinspect.data.image import _sequence
 from pvinspect.data.exceptions import UnsupportedModalityException
 from typing import Union
 from tqdm.auto import tqdm
@@ -12,7 +13,7 @@ from pvinspect.common._ipy_exit import exit
 import numpy as np
 
 @_sequence
-def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion: bool = True) -> ModuleImageOrSequence:
+def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion: bool = True, orientation: str = None) -> ModuleImageOrSequence:
     '''Locate a single module and its cells
 
     Note:
@@ -23,6 +24,8 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
     Args:
         sequence (ModuleImageOrSequence): A single module image or a sequence of module images 
         estimate_distortion (bool): Set True to estimate lens distortion, else False 
+        orientation (str): Orientation of the module ('horizontal' or 'vertical' or None).
+            If set to None (default), orientation is automatically determined
 
     Returns:
         images: The same image/sequence with location information added
@@ -39,7 +42,7 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
     flags = list()
     transforms = list()
     for img in tqdm(sequence.images):
-        t, mc, dt, f = apply(img.data, img.cols, img.rows)
+        t, mc, dt, f = apply(img.data, img.cols, img.rows, is_module_detail=isinstance(img, PartialModuleImage), orientation=orientation)
         transforms.append(t)
         flags.append(f)
         mcs.append(mc)
@@ -82,7 +85,12 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
 
     for t, img in zip(transforms, sequence.images):
         if t is not None and t.valid:
-            img_res = ModuleImage(img.data, img.modality, img.path, img.cols, img.rows, t)
+            if isinstance(img, ModuleImage):
+                img_res = ModuleImage(img.data, img.modality, img.path, img.cols, img.rows, t)
+            elif isinstance(img, PartialModuleImage):
+                img_res = PartialModuleImage(img.data, img.modality, img.path, img.cols, img.rows, t)
+            else:
+                raise TypeError('Unsupported type {}'.format(type(img)))
             result.append(img_res)
         else:
             result.append(deepcopy(img))
