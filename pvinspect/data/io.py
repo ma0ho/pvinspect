@@ -167,6 +167,16 @@ def read_partial_module_images(path: PathOrStr, modality: int, same_camera: bool
 
     return _read_module_images(path, modality, same_camera, True, cols, rows, N, pattern, allow_different_dtypes)
 
+def save_image(filename: PathOrStr, image: Image):
+    '''Write an image to disk
+
+    Args:
+        filename (PathOrStr): Filename of the resulting image
+        image (Image): The image
+    '''
+
+    io.imsave(filename, image.data, check_contrast=False)
+
 def save_images(path: PathOrStr, sequence: ImageSequence, mkdir: bool = True):
     '''Write a sequence of images to disk
 
@@ -181,9 +191,9 @@ def save_images(path: PathOrStr, sequence: ImageSequence, mkdir: bool = True):
     if mkdir:
         path.mkdir(parents=True, exist_ok=True)
 
-    for img in tqdm(sequence.images):
-        if isinstance(img, CellImage):
-            name = '{}_row{:02d}_col{:02d}{}'.format(img.path.stem, img.row, img.col, img.path.suffix)
+    for image in tqdm(sequence.images):
+        if isinstance(image, CellImage):
+            name = '{}_row{:02d}_col{:02d}{}'.format(image.path.stem, image.row, image.col, image.path.suffix)
         else:
-            name = img.path.name
-        io.imsave(path / name, img.data, check_contrast=False)
+            name = image.path.name
+        save_image(path / name, image)

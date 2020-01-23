@@ -1,5 +1,6 @@
-from pvinspect.data import save_images, read_module_images, EL_IMAGE
+from pvinspect.data import *
 import pvinspect.data as data
+from pvinspect.preproc import locate_module_and_cells, segment_cells
 from pathlib import Path
 import numpy as np
 
@@ -55,3 +56,24 @@ def test_filter():
         assert False
     except:
         assert True
+
+def test_save_and_read_image(tmp_path):
+    img = demo.poly10x6(1)[0]
+    save_image(tmp_path / 'img.tif', img)
+    img_read = read_module_image(tmp_path / 'img.tif', EL_IMAGE)
+    assert np.linalg.norm(img.data.flatten()-img_read.data.flatten()) == 0
+
+def test_save_image_sequence(tmp_path):
+    seq = demo.poly10x6(5)
+    save_images(tmp_path, seq)
+
+    for img in seq:
+        img_read = read_module_image(tmp_path / img.path.name, EL_IMAGE)
+
+def test_save_cell_images(tmp_path):
+    cells = segment_cells(locate_module_and_cells(demo.poly10x6(1)[0]))
+    save_images(tmp_path, cells)
+
+    for cell in cells:
+        p = tmp_path / '{}_row{:02d}_col{:02d}{}'.format(cell.path.stem, cell.row, cell.col, cell.path.suffix)
+        img_read = read_module_image(p, EL_IMAGE)
