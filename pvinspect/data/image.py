@@ -291,7 +291,7 @@ class ModuleImage(Image):
 class PartialModuleImage(ModuleImage):
     '''An image of a solar module with additional meta data'''
 
-    def __init__(self, data: np.ndarray, modality: int, path: Path, cols: int = None, rows: int = None, transform: Transform = None):
+    def __init__(self, data: np.ndarray, modality: int, path: Path, cols: int = None, rows: int = None, first_col: int = None, first_row: int = None, transform: Transform = None):
         '''Initialize a module image
 
         Args:
@@ -300,10 +300,15 @@ class PartialModuleImage(ModuleImage):
             path (Path): Path to the image
             cols (int): Number of completely visible cells in a column
             rows (int): Number of completely visible cells in a row
+            first_col (int): Index of the first complete column shown
+            first_row (int): Index of the first complete row shown
             transform (Transform): Transform from regular grid to module corners
         '''
 
         super().__init__(data, modality, path, cols, rows, transform)
+
+        self._first_col = first_col
+        self._first_row = first_row
 
 
 ModuleOrPartialModuleImage = Union[ModuleImage, PartialModuleImage]

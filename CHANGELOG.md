@@ -8,6 +8,7 @@
 * Automatic clipping of outliers in viewer
   * includes `clip_low` and `clip_high` arguments in viewing methods
 * Add `save_image` to allow saving a single image
+* Add `segment_module_part` as a more flexible variant of `segment_module` and `segment_cell`
 
 ## 0.0.1
 * Initial version

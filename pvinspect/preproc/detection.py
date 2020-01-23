@@ -100,29 +100,64 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
 
     return ModuleImageSequence(result, same_camera=sequence.same_camera, copy=False)
 
-def segment_module(image: ModuleImage, size: int = None) -> ModuleImage:
-    '''Obtain a rectified, cropped and undistorted module image
+def segment_module_part(image: ModuleImage, first_col: int, first_row: int, cols: int, rows: int, size: int = None, padding: float = 0.0) -> PartialModuleImage:
+    '''Segment a part of a module
 
     Args:
-        image (ModuleImage): A single module image
+        image (ModuleImage): The corresponding module image
+        first_col (int): First column to appear in the segment
+        first_row (int): First row to appear in the segment
+        cols (int): Number of columns of the segment
+        rows (int): Number of rows of the segment
         size (int): Size of a cell in pixels (automatically chosen by default)
+        padding (float): Optional padding around the given segment relative to the cell size
+                         (must be in [0..1[ )
 
     Returns:
-        module: The resulting module image
+        segment: The resulting segment
     '''
 
     if image.transform is None or not image.transform.valid:
         logging.error('The ModuleImage does not have a valid transform. Did module localization succeed?')
         exit()
 
-    size = image.transform.mean_scale() if size is None else size
-    result = warp_image(image.data, image.transform, 0, 0, 1/size, 1/size, image.cols, image.rows)
-    result = result.astype(image.dtype)
-    transform = HomographyTransform(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]),
-        np.array([[0.0, 0.0], [0.0, size], [size, 0.0], [size, size]]))
-    return ModuleImage(result, image.modality, image.path, image.cols, image.rows, transform)
+    if padding >= 1.0 or padding < 0.0:
+        logging.error('padding needs to be in [0..1[')
+        exit()
+    
+    last_col = first_col+cols
+    last_row = first_row+rows
+    if last_row > image.rows or last_col > image.cols:
+        logging.error('The row or column index exceeds the module geometry')
+        exit()
 
-def segment_cell(image: ModuleImage, row: int, col: int, size: int = None) -> CellImage:
+    size = image.transform.mean_scale() if size is None else size
+    result = warp_image(image.data, image.transform, first_col-padding, first_row-padding,
+        1/size, 1/size, cols+2*padding, rows+2*padding)
+    result = result.astype(image.dtype)
+    transform = HomographyTransform(np.array([
+        [first_row-padding, first_col-padding], [first_row-padding, last_col-padding],
+        [last_row-padding, first_col-padding], [last_row-padding, last_col-padding]]),
+        np.array([[0.0, 0.0], [0.0, size*cols], [size*rows, 0.0], [size*rows, size*cols]]))
+    return PartialModuleImage(result, image.modality, image.path, cols, rows, first_col, first_row, transform)
+
+def segment_module(image: ModuleImage, size: int = None, padding: float = 0.0) -> ModuleImage:
+    '''Obtain a rectified, cropped and undistorted module image
+
+    Args:
+        image (ModuleImage): A single module image
+        size (int): Size of a cell in pixels (automatically chosen by default)
+        padding (float): Optional padding around the given segment relative to the cell size
+                         (must be in [0..1[ )
+
+    Returns:
+        module: The resulting module image
+    '''
+
+    result = segment_module_part(image, 0, 0, image.cols, image.rows, size, padding)
+    return ModuleImage(result._data, image.modality, image.path, image.cols, image.rows, result.transform)
+
+def segment_cell(image: ModuleImage, row: int, col: int, size: int = None, padding: float = 0.0) -> CellImage:
     '''Obtain a cell image from a module image
 
     Args:
@@ -130,22 +165,16 @@ def segment_cell(image: ModuleImage, row: int, col: int, size: int = None) -> Ce
         row (int): The row number (starting at 0)
         col (int): The column number (starting at 0)
         size (int): Size of the resulting cell image in pixels (automatically chosen by default)
+        padding (float): Optional padding around the cell relative to the cell size
+                         (must be in [0..1[ )
 
     Returns:
         cells: The segmented cell image
     '''
 
-    if row >= image.rows or col >= image.cols:
-        logging.error('The row or column index exceeds the module geometry')
-        exit()
-    if image.transform is None or not image.transform.valid:
-        logging.error('The ModuleImage does not have a valid transform. Did module localization succeed?')
-        exit()
 
-    size = image.transform.mean_scale() if size is None else size
-    cell = warp_image(image.data, image.transform, col, row, 1/size, 1/size, 1, 1)
-    cell = cell.astype(image.dtype)
-    return CellImage(cell, image.modality, image.path, row, col)
+    result = segment_module_part(image, col, row, 1, 1, size, padding)
+    return CellImage(result._data, image.modality, image.path, row, col)
 
 @_sequence
 def segment_modules(sequence: ModuleImageOrSequence, size: int = None) -> ModuleImageSequence:

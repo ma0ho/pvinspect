@@ -1,5 +1,5 @@
 from pvinspect import data, preproc
-from pvinspect.data.image import CellImageSequence, ModuleImageSequence
+from pvinspect.data.image import *
 from pathlib import Path
 from pvinspect.common.transform import HomographyTransform, FullTransform
 import numpy as np
@@ -46,6 +46,7 @@ def test_segment_cells():
 
     assert isinstance(cells, CellImageSequence)
     assert len(cells) == 120
+    assert isinstance(cells[0], CellImage)
     assert cells[0].path == seq[0].path
     assert cells[0].row == 0
     assert cells[0].col == 0
@@ -58,6 +59,7 @@ def test_segment_modules():
     modules = preproc.segment_modules(seq)
     
     assert isinstance(modules, ModuleImageSequence)
+    assert isinstance(modules[0], ModuleImage)
     assert len(modules) == 2
     assert modules[0].path == seq[0].path
     assert modules.same_camera is False
@@ -72,5 +74,41 @@ def test_segment_modules():
     assert_equal(x[0], modules[0].shape[1])
     assert_equal(x[1], modules[0].shape[0])
 
+def test_segment_size():
+    img = preproc.locate_module_and_cells(data.demo.poly10x6(1)[0])
+    part = preproc.segment_module_part(img, 1, 3, 2, 1, size=20)
+    assert_equal(part.shape[1], 2*20)
+    assert_equal(part.shape[0], 1*20)
+
+def test_segment_padding():
+    img = preproc.locate_module_and_cells(data.demo.poly10x6(1)[0])
+    part = preproc.segment_module_part(img, 0, 0, 3, 2, padding=0.5)
+    assert_equal(part.shape[1]/part.shape[0], 8/6)
+
+def test_segment_padding_transform():
+    img = preproc.locate_module_and_cells(data.demo.poly10x6(1)[0])
+    part = preproc.segment_module_part(img, 0, 0, 3, 2, padding=0.5, size=20)
+    x1 = part.transform(np.array([[0.0,1.0]])).flatten()
+    x2 = part.transform(np.array([[2.0,3.0]])).flatten()
+    assert_equal(x1[0], 10)
+    assert_equal(x1[1], 30)
+    assert_equal(x2[0], 50)
+    assert_equal(x2[1], 70)
+
+def test_locate_partial_module():
+    img = preproc.locate_module_and_cells(data.demo.poly10x6(1)[0])
+    part = preproc.segment_module_part(img, 0, 0, 3, 2, padding=0.5)
+    part_det = preproc.locate_module_and_cells(part, False)
+
+    x1_true = [part_det.shape[1]*1/8, part_det.shape[0]*1/6]
+    x2_true = [part_det.shape[1]*7/8, part_det.shape[0]*5/6]
+    x1 = part_det.transform(np.array([[0.0,0.0]])).flatten()
+    x2 = part_det.transform(np.array([[3.0,2.0]])).flatten()
+    eps = 0.05*part_det.shape[1]
+
+    assert_equal(x1[0], x1_true[0], eps)
+    assert_equal(x1[1], x1_true[1], eps)
+    assert_equal(x2[0], x2_true[0], eps)
+    assert_equal(x2[1], x2_true[1], eps)
 
 
