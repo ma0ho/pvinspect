@@ -97,7 +97,7 @@ def _read_module_images(path: PathOrStr, modality: int, same_camera: bool, is_pa
                 result.append(ModuleImage(data, img.modality, img.path, img.cols, img.rows))
             imgs = result
 
-    return ModuleImageSequence(imgs, copy=False, same_camera=same_camera, allow_different_dtypes=allow_different_dtypes)
+    return ModuleImageSequence(imgs, same_camera=same_camera, allow_different_dtypes=allow_different_dtypes)
 
 def read_module_image(path: PathOrStr, modality: int, cols: int = None, rows: int = None) -> ModuleImage:
     '''Read a single image of a solar module and return it

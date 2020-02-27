@@ -1,10 +1,20 @@
 from pvinspect import data
-from pvinspect.data.image import _sequence, ModuleImageSequence, ModuleImage
+from pvinspect.data.image import *
+from pvinspect.data.image import _sequence
+from pathlib import Path
 
 @_sequence
 def _some_fn(seq: ModuleImageSequence):
     assert isinstance(seq, ModuleImageSequence)
     return seq
+
+def _random_image() -> Image:
+    data = np.random.random((10,10))
+    return Image(data, EL_IMAGE, Path() / 'test.png')
+
+def _random_module_image() -> ModuleImage:
+    data = np.random.random((10,10))
+    return ModuleImage(data, EL_IMAGE, Path() / 'test.png')
 
 def test_sequence_element_access():
     seq = data.demo.poly10x6(2)
@@ -12,6 +22,23 @@ def test_sequence_element_access():
     assert seq._images[1].path == seq[1].path
 
 def test_sequence_wrapper():
-    img = data.demo.poly10x6(1)[0]
+    img = _random_module_image()
     res = _some_fn(img)
     assert isinstance(res, ModuleImage)
+
+def test_image_from_other():
+    p = Path() / 'other.png'
+    img = _random_image()
+    img2 = Image.from_other(img, path=p)
+    assert img._data is img2._data
+    assert img._modality is img2._modality
+    assert img2._path is p
+
+def test_module_image_from_other():
+    img = _random_module_image()
+    img2 = ModuleImage.from_other(img, cols=10, rows=6)
+    assert img._data is img2._data
+    assert img._modality is img2._modality
+    assert img._path is img2._path
+    assert img2._cols == 10
+    assert img2._rows == 6

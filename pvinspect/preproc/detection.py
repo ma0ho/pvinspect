@@ -85,12 +85,7 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
 
     for t, img in zip(transforms, sequence.images):
         if t is not None and t.valid:
-            if isinstance(img, ModuleImage):
-                img_res = ModuleImage(img.data, img.modality, img.path, img.cols, img.rows, t)
-            elif isinstance(img, PartialModuleImage):
-                img_res = PartialModuleImage(img.data, img.modality, img.path, img.cols, img.rows, t)
-            else:
-                raise TypeError('Unsupported type {}'.format(type(img)))
+            img_res = type(img).from_other(img, transform=t)
             result.append(img_res)
         else:
             result.append(deepcopy(img))
@@ -98,7 +93,7 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
     if failures > 0:
         logging.warning('Module localization falied for {:d} images'.format(failures))
 
-    return ModuleImageSequence(result, same_camera=sequence.same_camera, copy=False)
+    return ModuleImageSequence.from_other(sequence, images=result)
 
 def segment_module_part(image: ModuleImage, first_col: int, first_row: int, cols: int, rows: int, size: int = None, padding: float = 0.0) -> PartialModuleImage:
     '''Segment a part of a module
@@ -204,7 +199,7 @@ with less variation in size.')
         if img.transform is not None and img.transform.valid:
             result.append(segment_module(img, size))
 
-    return ModuleImageSequence(result, same_camera=False, copy=False)
+    return type(sequence).from_other(sequence, images=result, same_camera=False)
 
 @_sequence
 def segment_cells(sequence: ModuleImageOrSequence, size: int = None) -> CellImageSequence:
@@ -236,5 +231,5 @@ with less variation in size.')
                 if img.transform is not None and img.transform.valid:
                     result.append(segment_cell(img, row, col, size))
 
-    return CellImageSequence(result, copy=False)
+    return CellImageSequence(result)
 

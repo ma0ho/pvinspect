@@ -5,12 +5,13 @@ from skimage import io
 from pvinspect.common import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
-from typing import List, Tuple, Union, Callable
+from typing import List, Tuple, Union, Callable, Type, TypeVar
 from copy import deepcopy
 import math
 from functools import wraps
 import logging
 from pvinspect.common._ipy_exit import exit
+import inspect
 
 
 # modality    
@@ -19,8 +20,29 @@ EL_IMAGE = 0
 PL_IMAGE = 1
 '''Indicate a photoluminescense (PL) image'''
 
+class _Base:
 
-class Image:
+    T = TypeVar('T')
+
+    @classmethod
+    def from_other(cls: Type[T], other: T, **kwargs) -> T:
+        '''Create a new image by partially overwriting the properties of another
+
+        Args:
+            other (Image): The other image
+            **kwargs: Arguments that should be overwritten
+        '''
+        required = inspect.getfullargspec(cls.__init__)[0]
+
+        other_args = dict()
+        for name in required:
+            if name not in kwargs and name != 'self':
+                other_args[name] = getattr(other, '_'+name)
+
+        return cls(**kwargs, **other_args)
+
+
+class Image(_Base):
     '''A general image'''
 
     def __init__(self, data: np.ndarray, modality: int, path: Path):
@@ -75,7 +97,7 @@ class Image:
         '''The imaging modality'''
         return self._modality
 
-class ImageSequence:
+class ImageSequence(_Base):
     '''An immutable sequence of images, allowing for access to single images as well as analysis of the sequence'''
 
     def _show(self, imgs: List[Image], cols: int, *args, **kwargs):
@@ -93,17 +115,16 @@ class ImageSequence:
             plt.subplot(rows, cols, i+1)
             img.show(*args, **kwargs)
 
-    def __init__(self, images: List[Image], same_camera: bool, copy = True, allow_different_dtypes = False):
+    def __init__(self, images: List[Image], same_camera: bool, allow_different_dtypes = False):
         '''Initialize a module image sequence
         
         Args:
             images (List[Image]): The list of images
             came_camera (bool): Indicates, if all images are from the same camera and hence share the same intrinsic parameters
-            copy (bool): Copy the images?
             allow_different_dtypes (bool): Allow images to have different datatypes?
         '''
 
-        self._images = deepcopy(images) if copy else images
+        self._images = images
         self._same_camera = same_camera
         self._allow_different_dtypes = allow_different_dtypes
         if len(self.images) == 0:
@@ -317,13 +338,12 @@ ModuleOrPartialModuleImage = Union[ModuleImage, PartialModuleImage]
 class ModuleImageSequence(ImageSequence):
     '''An immutable sequence of module images, allowing for access to single images as well as analysis of the sequence'''
 
-    def __init__(self, images: List[ModuleOrPartialModuleImage], same_camera: bool, copy = True, allow_different_dtypes = False):
+    def __init__(self, images: List[ModuleOrPartialModuleImage], same_camera: bool, allow_different_dtypes = False):
         '''Initialize a module image sequence
         
         Args:
             images (List[ModuleImage]): The list of images
             same_camera (bool): Indicates if all images are from the same camera
-            copy (bool): Copy the images?
             allow_different_dtypes (bool): Allow images to have different datatypes?
         '''
 
@@ -337,7 +357,7 @@ class ModuleImageSequence(ImageSequence):
                 logging.error('Cannot create sequence from different module configurations')
                 exit()
 
-        super().__init__(images, same_camera, copy, allow_different_dtypes)
+        super().__init__(images, same_camera, allow_different_dtypes)
 
 
 ModuleImageOrSequence = Union[ModuleImageSequence, ModuleImage, PartialModuleImage]
@@ -349,7 +369,7 @@ def _sequence(func):
     def wrapper_sequence(*args, **kwargs):
         if not isinstance(args[0], ModuleImageSequence):
             args = list(args)
-            args[0] = ModuleImageSequence([args[0]], copy=False, same_camera=False)
+            args[0] = ModuleImageSequence([args[0]], same_camera=False)
             unwrap = True
         else:
             unwrap = False
