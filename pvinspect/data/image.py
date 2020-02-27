@@ -74,7 +74,7 @@ class Image(_Base):
 
     @property
     def data(self) -> np.ndarray:
-        '''The underlying image date'''
+        '''The underlying image data'''
         return deepcopy(self._data)
 
     @property
@@ -163,6 +163,15 @@ class ImageSequence(_Base):
             cols (int): How many images to show in a column
         '''
         self._show(self.images[-N:], cols, *args, **kwargs)
+
+    _T = TypeVar('T')
+    def apply_image_data(self: _T, fn: Callable[[np.ndarray], np.ndarray], *argv, **kwargs) -> _T:
+        result = []
+        for img in self._images:
+            data = img.data
+            res = fn(img.data, *argv, **kwargs)
+            result.append(type(img).from_other(img, data=res))
+        return type(self).from_other(self, images=result)
 
     @property
     def images(self) -> List[Image]:
