@@ -2,6 +2,7 @@ from pvinspect import data
 from pvinspect.data.image import *
 from pvinspect.data.image import _sequence
 from pathlib import Path
+from test.utilities import assert_equal
 
 @_sequence
 def _some_fn(seq: ModuleImageSequence):
@@ -42,3 +43,27 @@ def test_module_image_from_other():
     assert img._path is img2._path
     assert img2._cols == 10
     assert img2._rows == 6
+
+def test_image_dtype_conversion():
+    data = np.array([127], dtype=np.uint8)
+    img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
+    assert img.dtype == np.uint16
+    assert_equal(img._data.max(), int(127/255*65535), 2)
+
+def test_image_dtype_range_high():
+    data = np.array([1.3])
+    ex_cnt = 0
+    try:
+        img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
+    except:
+        ex_cnt += 1
+    assert ex_cnt == 1
+
+def test_image_dtype_range_low():
+    data = np.array([-0.1])
+    ex_cnt = 0
+    try:
+        img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
+    except:
+        ex_cnt += 1
+    assert ex_cnt == 1

@@ -1,7 +1,7 @@
 '''Provides classes to store and visualize images with metadata'''
 
 import numpy as np
-from skimage import io
+from skimage import io, img_as_uint
 from pvinspect.common import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -46,13 +46,20 @@ class Image(_Base):
     '''A general image'''
 
     def __init__(self, data: np.ndarray, modality: int, path: Path):
-        '''Create a new image
+        '''Create a new image. All non-float images as automatically converted to uint.
 
         Args:
             data (np.ndarray): The image data
             modality (int): The imaging modality (EL_IMAGE or PL_IMAGE)
             path (Path): Path to the image
         '''
+        # convert to a common dtype
+        if data.dtype != np.float:
+            data = img_as_uint(data)
+        else:
+            if data.min() < 0.0 or data.max() > 1.0:
+                raise RuntimeError("Float images must be scaled between [0,1].")
+
         self._data = data
         self._path = path
         self._modality = modality
