@@ -4,7 +4,7 @@ from .image import *
 from pathlib import Path
 import numpy as np
 from typing import Union, Tuple
-from skimage import io
+from skimage import io, color, img_as_uint
 from .exceptions import UnsupportedModalityException
 from functools import reduce
 from tqdm.auto import tqdm
@@ -33,10 +33,19 @@ def _read_module_image(path: PathOrStr, modality: int, is_partial_module: bool, 
     '''
 
     path = __assurePath(path)
-    img = io.imread(path, as_gray=True)
+    img = io.imread(path)
+
     if img.dtype == '>u2':
         # big endian -> little endian
         img = img.astype(np.uint16)
+
+    if img.ndim == 3 and (img.dtype == np.float32 or img.dtype == np.float64):
+        img = color.rgb2gray(img)
+    elif img.ndim == 3:
+        img = img_as_uint(color.rgb2gray(img))
+
+    if (img.dtype == np.float32 or img.dtype == np.float64) and (img.min() < 0.0 or img.max() > 1.0):
+        raise RuntimeWarning('Image "{}" is of type float but not scaled between 0 and 1. This might cause trouble later.'.format(path))
 
     if is_partial_module:
         return PartialModuleImage(img, modality, path, cols, rows)
