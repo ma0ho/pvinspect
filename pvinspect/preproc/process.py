@@ -5,7 +5,7 @@ from typing import List
 import numpy as np
 
 @_sequence
-def compensate_flatfield(sequence: ModuleImageOrSequence, coeff: np.ndarray) -> ModuleImageOrSequence:
+def _compensate_flatfield(sequence: ModuleImageOrSequence, coeff: np.ndarray) -> ModuleImageOrSequence:
     '''Low level method to perform flat field correction
 
     Args:

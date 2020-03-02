@@ -4,11 +4,11 @@ from pvinspect.data.image import _sequence
 from typing import List
 import numpy as np
 
-def calibrate_flatfield(images: ImageSequence, targets: List[float], order: int = 0) -> np.array:
+def _calibrate_flatfield(images: ImageSequence, targets: List[float], order: int = 0) -> np.array:
     '''Low-level method to perform flat-field calibration
 
     Args:
-        images (ImageSequence): Sequence of calibration shots
+        images (ImageSequence): Sequence of calibration shots (needs to be of type float)
         targets (List[float]): Corresponding list of normalization targets
         order (int): Order of compensation polynomial. The order is chosen automatically, if order == 0 (default)
 
