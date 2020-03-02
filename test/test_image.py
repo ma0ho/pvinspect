@@ -54,24 +54,6 @@ def test_image_dtype_conversion():
     assert img.dtype == np.uint16
     assert_equal(img._data.max(), int(127/255*65535), 2)
 
-def test_image_dtype_range_high():
-    data = np.array([1.3])
-    ex_cnt = 0
-    try:
-        img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
-    except:
-        ex_cnt += 1
-    assert ex_cnt == 1
-
-def test_image_dtype_range_low():
-    data = np.array([-0.1])
-    ex_cnt = 0
-    try:
-        img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
-    except:
-        ex_cnt += 1
-    assert ex_cnt == 1
-
 def test_float_image_is_not_converted():
     data = np.array([[0.1]], dtype=np.float32)
     img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
@@ -80,14 +62,14 @@ def test_float_image_is_not_converted():
     img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
     assert img.dtype == np.float64
 
-def test_apply_does_not_copy():
+def test_apply_does_copy():
     seq = _random_image_sequence()
+    data = seq[0].data
     def fn(x):
         x[:] = 0.0
         return x
     seq.apply_image_data(fn)
-    for img in seq:
-        assert_equal(img.data, 0.0)
+    assert_equal(seq[0].data, data)
 
 def test_image_as_type():
     img = _random_image()
