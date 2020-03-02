@@ -88,3 +88,15 @@ def test_apply_does_not_copy():
     seq.apply_image_data(fn)
     for img in seq:
         assert_equal(img.data, 0.0)
+
+def test_image_as_type():
+    img = _random_image()
+    assert img.dtype == np.float32 or img.dtype == np.float64
+    img = img.as_type(np.uint16)
+    assert img.dtype == np.uint16
+
+def test_sequence_as_type():
+    seq = _random_image_sequence()
+    assert seq.dtype == np.float32 or seq.dtype == np.float64
+    seq = seq.as_type(np.uint16)
+    assert seq.dtype == np.uint16

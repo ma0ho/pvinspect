@@ -76,6 +76,10 @@ class Image(_Base):
         plt.colorbar()
         plt.title(str(self.path.name))
 
+    _T = TypeVar('T')
+    def as_type(self: _T, dtype: np.ndarray.dtype) -> _T:
+        return type(self).from_other(self, data = self._data.astype(dtype))
+    
     @property
     def data(self) -> np.ndarray:
         '''The underlying image data'''
@@ -170,11 +174,19 @@ class ImageSequence(_Base):
 
     _T = TypeVar('T')
     def apply_image_data(self: _T, fn: Callable[[np.ndarray], np.ndarray], *argv, **kwargs) -> _T:
-        '''Apply the given callable on every image data. Note that the callable must NOT modify the data object inplace!'''
+        '''Apply the given callable on every image data.'''
         result = []
         for img in self._images:
-            res = fn(img._data, *argv, **kwargs)
+            data = img.data
+            res = fn(data, *argv, **kwargs)
             result.append(type(img).from_other(img, data=res))
+        return type(self).from_other(self, images=result)
+
+    def as_type(self: _T, dtype: np.ndarray.dtype) -> _T:
+        '''Convert sequence to specified dtype'''
+        result = []
+        for img in self._images:
+            result.append(type(img).from_other(img, data=img._data.astype(dtype)))
         return type(self).from_other(self, images=result)
 
     @property
