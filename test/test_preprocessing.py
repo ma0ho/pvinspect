@@ -1,4 +1,6 @@
 from pvinspect.data.image import *
+from pvinspect.preproc.calibration import *
+from pvinspect.preproc.process import *
 from pvinspect.preproc.calibration import _calibrate_flatfield
 from pvinspect.preproc.process import _compensate_flatfield
 import numpy as np
@@ -59,3 +61,12 @@ def test_calibrate_and_compensate_flatfield():
     assert_equal(np.zeros_like(img0), compensated[0].data)
     assert_equal(np.full_like(img1, 0.5), compensated[1].data)
     assert_equal(np.full_like(img1, 1.0), compensated[2].data)
+
+def test_calibrate_and_compensate_preserves_range():
+    img0 = np.array([[0]], dtype=np.uint32)
+    img1 = np.array([[10000]], dtype=np.uint32)
+    img_test = np.array([[8000]])
+
+    coeff = calibrate_flatfield(_make_image_seq([img0, img1]), [0, 1.0])
+    compensated = compensate_flatfield(_make_image_seq([img_test]), coeff)
+    assert_equal(compensated[0].data, 0.8)

@@ -10,6 +10,9 @@
 * Add `save_image` to allow saving a single image
 * Add `segment_module_part` as a more flexible variant of `segment_module` and `segment_cell`
 * Add `from_other` method to `Image` and `ImageSequence` to allow partial overwriting of attributes
+* Add `as_type` to `Image` and `ImageSequence` to allow datatype conversions with little overhead
+* Add `apply_image_data` to `ImageSequence` to enable image manipulation over sequences of images
+* Add `calibrate_flatfield` and `compensate_flatfield`
 
 ## 0.0.1
 * Initial version
