@@ -82,3 +82,10 @@ def test_sequence_as_type():
     assert seq.dtype == np.float32 or seq.dtype == np.float64
     seq = seq.as_type(np.uint16)
     assert seq.dtype == np.uint16
+
+def test_image_data_returns_copy():
+    img = _random_image()
+    original_data = img._data.copy()
+    data = img.data
+    data[:] = 0.0
+    assert_equal(img.data, original_data)
