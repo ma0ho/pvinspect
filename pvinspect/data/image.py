@@ -54,7 +54,7 @@ class Image(_Base):
             path (Path): Path to the image
         '''
         # convert to a common dtype
-        if data.dtype != np.float:
+        if data.dtype != np.float32 and data.dtype != np.float64:
             data = img_as_uint(data)
         else:
             if data.min() < 0.0 or data.max() > 1.0:

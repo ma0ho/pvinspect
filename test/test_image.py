@@ -67,3 +67,11 @@ def test_image_dtype_range_low():
     except:
         ex_cnt += 1
     assert ex_cnt == 1
+
+def test_float_image_is_not_converted():
+    data = np.array([[0.1]], dtype=np.float32)
+    img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
+    assert img.dtype == np.float32
+    data = np.array([[0.1]], dtype=np.float64)
+    img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
+    assert img.dtype == np.float64
