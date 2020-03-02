@@ -56,9 +56,6 @@ class Image(_Base):
         # convert to a common dtype
         if data.dtype != np.float32 and data.dtype != np.float64:
             data = img_as_uint(data)
-        else:
-            if data.min() < 0.0 or data.max() > 1.0:
-                raise RuntimeError("Float images must be scaled between [0,1].")
 
         self._data = data
         self._path = path
