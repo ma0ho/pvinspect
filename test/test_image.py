@@ -17,6 +17,10 @@ def _random_module_image() -> ModuleImage:
     data = np.random.random((10,10))
     return ModuleImage(data, EL_IMAGE, Path() / 'test.png')
 
+def _random_image_sequence() -> ImageSequence:
+    imgs = [_random_module_image() for x in range(2)]
+    return ImageSequence(imgs, False)
+
 def test_sequence_element_access():
     seq = data.demo.poly10x6(2)
     assert seq._images[0].path == seq[0].path
@@ -75,3 +79,12 @@ def test_float_image_is_not_converted():
     data = np.array([[0.1]], dtype=np.float64)
     img = ModuleImage(data, EL_IMAGE, Path() / 'test.png')
     assert img.dtype == np.float64
+
+def test_apply_does_not_copy():
+    seq = _random_image_sequence()
+    def fn(x):
+        x[:] = 0.0
+        return x
+    seq.apply_image_data(fn)
+    for img in seq:
+        assert_equal(img.data, 0.0)
