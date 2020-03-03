@@ -45,13 +45,13 @@ class _Base:
 class Image(_Base):
     '''A general image'''
 
-    def __init__(self, data: np.ndarray, modality: int, path: Path):
+    def __init__(self, data: np.ndarray, path: Path, modality: int = None):
         '''Create a new image. All non-float images as automatically converted to uint.
 
         Args:
             data (np.ndarray): The image data
-            modality (int): The imaging modality (EL_IMAGE or PL_IMAGE)
             path (Path): Path to the image
+            modality (int): The imaging modality (EL_IMAGE or PL_IMAGE) or None
         '''
         # convert to a common dtype
         if data.dtype != np.float32 and data.dtype != np.float64:
@@ -235,7 +235,7 @@ class CellImage(Image):
             col (int): Cell index (zero-based)
         '''
 
-        super().__init__(data, modality, path)
+        super().__init__(data, path, modality)
         self._row = row
         self._col = col
 
@@ -284,7 +284,7 @@ class ModuleImage(Image):
             transform (Transform): Transform from regular grid to module corners
         '''
 
-        super().__init__(data, modality, path)
+        super().__init__(data, path, modality)
         self._cols = cols
         self._rows = rows
         self._transform = transform

@@ -19,18 +19,8 @@ def __assurePath(p: PathOrStr) -> Path:
     else:
         return p
 
-def _read_module_image(path: PathOrStr, modality: int, is_partial_module: bool, cols: int = None, rows: int = None) -> ModuleImage:
-    '''Read a single image of a solar module and return it
-
-    Args:
-        path (PathOrStr): Path to the file to be read
-        modality (int): The imaging modality
-        cols (int): Number of columns of cells
-        rows (int): Number of rows of cells
-
-    Returns:
-        image: The module image
-    '''
+def _read_image(path: PathOrStr, is_module_image: bool, is_partial_module: bool,  modality: int = None, cols: int = None, rows: int = None):
+    assert is_module_image and not is_partial_module or is_partial_module and not is_module_image or not is_partial_module and not is_module_image
 
     path = __assurePath(path)
     img = io.imread(path)
@@ -49,26 +39,12 @@ def _read_module_image(path: PathOrStr, modality: int, is_partial_module: bool, 
 
     if is_partial_module:
         return PartialModuleImage(img, modality, path, cols, rows)
-    else:
+    elif is_module_image:
         return ModuleImage(img, modality, path, cols, rows)
+    else:
+        return Image(img, path, modality)
 
-def _read_module_images(path: PathOrStr, modality: int, same_camera: bool, is_partial_module: bool, cols: int = None, rows: int = None, N: int = 0, pattern: Union[str, Tuple[str]] = ('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes = False) -> ModuleImageSequence:
-    '''Read a sequence of module images and return it
-
-    Args:
-        path (PathOrStr): Path to the sequence
-        modality (int): The imaging modality
-        same_camera (bool): Indicate, if all images are from the same camera and hence share the same intrinsic parameters
-        cols (int): Number of columns of cells
-        rows (int): Number of rows of cells
-        N (int): Only read first N images
-        pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
-        allow_different_dtypes (bool): Allow images to have different datatypes?
-
-    Returns:
-        image: The module image sequence
-    '''
-
+def _read_images(path: PathOrStr, is_module_image: bool, same_camera: bool, is_partial_module: bool, modality: int = None, cols: int = None, rows: int = None, N: int = 0, pattern: Union[str, Tuple[str]] = ('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes = False):
     path = __assurePath(path)
 
     if isinstance(pattern, str):
@@ -82,7 +58,7 @@ def _read_module_images(path: PathOrStr, modality: int, same_camera: bool, is_pa
 
     imgs = list()
     for fn in tqdm(imgpaths):
-        imgs.append(_read_module_image(fn, modality, is_partial_module, cols, rows))
+        imgs.append(_read_image(fn, is_module_image, is_partial_module, modality, cols, rows))
 
     if not same_camera:
         homogeneous_types = np.all(np.array([img.dtype == imgs[0].dtype for img in imgs]))
@@ -106,7 +82,40 @@ def _read_module_images(path: PathOrStr, modality: int, same_camera: bool, is_pa
                 result.append(ModuleImage(data, img.modality, img.path, img.cols, img.rows))
             imgs = result
 
-    return ModuleImageSequence(imgs, same_camera=same_camera, allow_different_dtypes=allow_different_dtypes)
+    if is_module_image or is_partial_module:
+        return ModuleImageSequence(imgs, same_camera=same_camera, allow_different_dtypes=allow_different_dtypes)
+    else:
+        return ImageSequence(imgs, same_camera, allow_different_dtypes)
+
+def read_image(path: PathOrStr, modality: int = None) -> Image:
+    '''Read a single image of a solar module and return it
+
+    Args:
+        path (PathOrStr): Path to the file to be read
+        modality (int): The imaging modality
+
+    Returns:
+        image: The module image
+    '''
+
+    return _read_image(path=path, is_module_image=False, is_partial_module=False, modality=modality)
+
+def read_images(path: PathOrStr, same_camera: bool, modality: int = None, N: int = 0, pattern: Union[str, Tuple[str]] = ('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes = False) -> ImageSequence:
+    '''Read a sequence of images and return it
+
+    Args:
+        path (PathOrStr): Path to the sequence
+        same_camera (bool): Indicate, if all images are from the same camera and hence share the same intrinsic parameters
+        modality (int): The imaging modality
+        N (int): Only read first N images
+        pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
+        allow_different_dtypes (bool): Allow images to have different datatypes?
+
+    Returns:
+        image: The image sequence
+    '''
+
+    return _read_images(path, is_module_image=False, same_camera=same_camera, is_partial_module=False, modality=modality, pattern=pattern, allow_different_dtypes=allow_different_dtypes, N=N)
 
 def read_module_image(path: PathOrStr, modality: int, cols: int = None, rows: int = None) -> ModuleImage:
     '''Read a single image of a solar module and return it
@@ -121,7 +130,7 @@ def read_module_image(path: PathOrStr, modality: int, cols: int = None, rows: in
         image: The module image
     '''
 
-    return _read_module_image(path, modality, False, cols, rows)
+    return _read_image(path=path, is_module_image=True, is_partial_module=False, modality=modality, cols=cols, rows=rows)
 
 def read_module_images(path: PathOrStr, modality: int, same_camera: bool, cols: int = None, rows: int = None, N: int = 0, pattern: Union[str, Tuple[str]] = ('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes = False) -> ModuleImageSequence:
     '''Read a sequence of module images and return it
@@ -140,7 +149,7 @@ def read_module_images(path: PathOrStr, modality: int, same_camera: bool, cols: 
         image: The module image sequence
     '''
 
-    return _read_module_images(path, modality, same_camera, False, cols, rows, N, pattern, allow_different_dtypes)
+    return _read_images(path=path, modality=modality, same_camera=same_camera, is_partial_module=False, is_module_image=True, cols=cols, rows=rows, N=N, pattern=pattern, allow_different_dtypes=allow_different_dtypes)
 
 def read_partial_module_image(path: PathOrStr, modality: int, cols: int = None, rows: int = None) -> ModuleImage:
     '''Read a single partial view of a solar module and return it
@@ -155,7 +164,7 @@ def read_partial_module_image(path: PathOrStr, modality: int, cols: int = None, 
         image: The module image
     '''
 
-    return _read_module_image(path, modality, True, cols, rows)
+    return _read_image(path=path, is_module_image=False, is_partial_module=True, modality=modality, cols=cols, rows=rows)
 
 def read_partial_module_images(path: PathOrStr, modality: int, same_camera: bool, cols: int = None, rows: int = None, N: int = 0, pattern: Union[str, Tuple[str]] = ('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes = False) -> ModuleImageSequence:
     '''Read a sequence of partial views of solar modules and return it
@@ -174,7 +183,7 @@ def read_partial_module_images(path: PathOrStr, modality: int, same_camera: bool
         image: The module image sequence
     '''
 
-    return _read_module_images(path, modality, same_camera, True, cols, rows, N, pattern, allow_different_dtypes)
+    return _read_images(path=path, is_module_image=False, is_partial_module=True, same_camera=same_camera, modality=modality, cols=cols, rows=rows, N=N, pattern=pattern, allow_different_dtypes=allow_different_dtypes)
 
 def save_image(filename: PathOrStr, image: Image):
     '''Write an image to disk

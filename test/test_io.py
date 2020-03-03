@@ -3,6 +3,7 @@ import pvinspect.data  as data
 from pvinspect.preproc import locate_module_and_cells, segment_cells
 from pathlib import Path
 import numpy as np
+from pvinspect.data.image import *
 
 EXAMPLES = Path(__file__).absolute().parent.parent / 'pvinspect' / 'data' / 'datasets' / '20191219_poly10x6'
 
@@ -77,3 +78,24 @@ def test_save_cell_images(tmp_path):
     for cell in cells:
         p = tmp_path / '{}_row{:02d}_col{:02d}{}'.format(cell.path.stem, cell.row, cell.col, cell.path.suffix)
         img_read = read_module_image(p, EL_IMAGE)
+
+def test_read_images():
+    _check_download_demo()
+    seq = read_images(EXAMPLES, True, N=2)
+    assert isinstance(seq, ImageSequence)
+    for img in seq:
+        assert isinstance(img, Image)
+
+def test_read_module_images():
+    _check_download_demo()
+    seq = read_module_images(EXAMPLES, EL_IMAGE, True, N=2)
+    assert isinstance(seq, ModuleImageSequence)
+    for img in seq:
+        assert isinstance(img, ModuleImage)
+
+def test_read_partial_module_images():
+    _check_download_demo()
+    seq = read_partial_module_images(EXAMPLES, EL_IMAGE, True, N=2)
+    assert isinstance(seq, ModuleImageSequence)
+    for img in seq:
+        assert isinstance(img, PartialModuleImage)
