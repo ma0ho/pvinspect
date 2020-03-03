@@ -1,10 +1,10 @@
 '''Provides access to demo datasets'''
 
-from .image import ModuleImageSequence, ModuleImage, EL_IMAGE
-from .io import read_module_image, read_module_images
+from .image import ModuleImageSequence, ModuleImage, EL_IMAGE, ImageSequence
+from .io import *
 from pathlib import Path
 from google_drive_downloader import GoogleDriveDownloader as gdd
-from typing import Tuple
+from typing import Tuple, Dict
 import os
 
 _ds_keys = {
@@ -17,12 +17,11 @@ def _get_dataset_key(name: str):
     else:
         keys = os.getenv('PVINSPECT_KEYS').split(';')
         keys = {x.split(',')[0]: x.split(',')[1] for x in keys}
-        print(keys)
         if name in keys.keys():
             return keys[name]
         else:
             raise RuntimeError('The specified dataset "{}" could not be found. Maybe you tried \
-                to access a protected dataset and didn\'t set PVINSPECT_KEY_FILE environment variable?')
+                to access a protected dataset and didn\'t set PVINSPECT_KEYS environment variable?')
 
 def _check_and_download_ds(name: str):
     ds_path = Path(__file__).parent.absolute() / 'datasets' / name
@@ -85,4 +84,21 @@ def caip_dataD() -> ModuleImageSequence:
     '''
     p = _check_and_download_ds('20200114_caip')
     return read_module_images(p / 'rotated', EL_IMAGE, True, 10, 6)
+
+def calibration_ipv40CCD_FF(N: int = 0) -> Dict[str, ImageSequence]:
+    '''Flat-field calibration data for ipv40CCD (private dataset)
+
+    Args:
+        N (int): Number of images per excitation
+
+    Returns:
+        images: Dict with excitation as key and images
+    '''
+    p = _check_and_download_ds('20200303_calibration_iPV40CCD')
+    res = dict()
+    for d in p.glob('FF*'):
+        key = d.name.split('_')[1]
+        seq = read_images(path=d, same_camera=False, N=N)
+        res[key] = seq
+    return res
 

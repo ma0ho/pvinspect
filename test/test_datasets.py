@@ -27,3 +27,10 @@ def test_caip_dataD():
     assert len(seq) == 9
     assert seq.modality == data.EL_IMAGE
     assert seq.same_camera == True
+
+def test_calibration_ipv40CCD_FF():
+    d = data.datasets.calibration_ipv40CCD_FF(N=2)
+    assert isinstance(d, dict)
+    assert '0A' in d.keys()
+    assert len(d) == 3
+    assert len(d['0A']) == 2

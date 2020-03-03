@@ -24,7 +24,7 @@ def _compensate_flatfield(sequence: ModuleImageOrSequence, coeff: np.ndarray) ->
         for i in range(1, coeff.shape[0]):
             res += coeff[i]*data
             data *= data
-        return res
+        return np.clip(res, 0.0, 1.0)
 
     return sequence.apply_image_data(fn, coeff)
 
