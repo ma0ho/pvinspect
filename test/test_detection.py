@@ -6,7 +6,7 @@ import numpy as np
 from .utilities import assert_equal
 
 def test_locate_homography():
-    seq = data.demo.poly10x6(2)
+    seq = data.datasets.poly10x6(2)
     seq = preproc.locate_module_and_cells(seq, False)
 
     assert isinstance(seq[0].transform, HomographyTransform)
@@ -23,7 +23,7 @@ def test_locate_homography():
     assert x[1] > 80 and x[1] < 160
 
 def test_locate_full():
-    seq = data.demo.poly10x6(2)
+    seq = data.datasets.poly10x6(2)
     seq = preproc.locate_module_and_cells(seq, True)
 
     assert isinstance(seq[0].transform, FullTransform)
@@ -40,7 +40,7 @@ def test_locate_full():
     assert x[1] > 80 and x[1] < 160
 
 def test_segment_cells():
-    seq = data.demo.poly10x6(2)
+    seq = data.datasets.poly10x6(2)
     seq = preproc.locate_module_and_cells(seq, True)
     cells = preproc.segment_cells(seq)
 
@@ -54,7 +54,7 @@ def test_segment_cells():
     assert cells[11].row == 1
 
 def test_segment_modules():
-    seq = data.demo.poly10x6(2)
+    seq = data.datasets.poly10x6(2)
     seq = preproc.locate_module_and_cells(seq, True)
     modules = preproc.segment_modules(seq)
     
@@ -75,18 +75,18 @@ def test_segment_modules():
     assert_equal(x[1], modules[0].shape[0])
 
 def test_segment_size():
-    img = preproc.locate_module_and_cells(data.demo.poly10x6(1)[0])
+    img = preproc.locate_module_and_cells(data.datasets.poly10x6(1)[0])
     part = preproc.segment_module_part(img, 1, 3, 2, 1, size=20)
     assert_equal(part.shape[1], 2*20)
     assert_equal(part.shape[0], 1*20)
 
 def test_segment_padding():
-    img = preproc.locate_module_and_cells(data.demo.poly10x6(1)[0])
+    img = preproc.locate_module_and_cells(data.datasets.poly10x6(1)[0])
     part = preproc.segment_module_part(img, 0, 0, 3, 2, padding=0.5)
     assert_equal(part.shape[1]/part.shape[0], 8/6)
 
 def test_segment_padding_transform():
-    img = preproc.locate_module_and_cells(data.demo.poly10x6(1)[0])
+    img = preproc.locate_module_and_cells(data.datasets.poly10x6(1)[0])
     part = preproc.segment_module_part(img, 0, 0, 3, 2, padding=0.5, size=20)
     x1 = part.transform(np.array([[0.0,1.0]])).flatten()
     x2 = part.transform(np.array([[2.0,3.0]])).flatten()
@@ -96,7 +96,7 @@ def test_segment_padding_transform():
     assert_equal(x2[1], 70)
 
 def test_locate_partial_module():
-    img = preproc.locate_module_and_cells(data.demo.poly10x6(1)[0])
+    img = preproc.locate_module_and_cells(data.datasets.poly10x6(1)[0])
     part = preproc.segment_module_part(img, 0, 0, 3, 2, padding=0.5)
     part_det = preproc.locate_module_and_cells(part, False)
 

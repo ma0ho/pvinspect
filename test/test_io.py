@@ -1,5 +1,5 @@
 from pvinspect.data import *
-import pvinspect.data as data
+import pvinspect.data  as data
 from pvinspect.preproc import locate_module_and_cells, segment_cells
 from pathlib import Path
 import numpy as np
@@ -7,7 +7,7 @@ import numpy as np
 EXAMPLES = Path(__file__).absolute().parent.parent / 'pvinspect' / 'data' / 'datasets' / '20191219_poly10x6'
 
 def _check_download_demo():
-    data.demo.poly10x6(1)
+    data.datasets.poly10x6(1)
 
 def test_read_sequence():
     _check_download_demo()
@@ -58,20 +58,20 @@ def test_filter():
         assert True
 
 def test_save_and_read_image(tmp_path):
-    img = demo.poly10x6(1)[0]
+    img = datasets.poly10x6(1)[0]
     save_image(tmp_path / 'img.tif', img)
     img_read = read_module_image(tmp_path / 'img.tif', EL_IMAGE)
     assert np.linalg.norm(img.data.flatten()-img_read.data.flatten()) == 0
 
 def test_save_image_sequence(tmp_path):
-    seq = demo.poly10x6(5)
+    seq = datasets.poly10x6(5)
     save_images(tmp_path, seq)
 
     for img in seq:
         img_read = read_module_image(tmp_path / img.path.name, EL_IMAGE)
 
 def test_save_cell_images(tmp_path):
-    cells = segment_cells(locate_module_and_cells(demo.poly10x6(1)[0]))
+    cells = segment_cells(locate_module_and_cells(datasets.poly10x6(1)[0]))
     save_images(tmp_path, cells)
 
     for cell in cells:

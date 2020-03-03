@@ -22,7 +22,7 @@ def _random_image_sequence() -> ImageSequence:
     return ImageSequence(imgs, False)
 
 def test_sequence_element_access():
-    seq = data.demo.poly10x6(2)
+    seq = data.datasets.poly10x6(2)
     assert seq._images[0].path == seq[0].path
     assert seq._images[1].path == seq[1].path
 
