@@ -1,7 +1,7 @@
 '''Provides classes to store and visualize images with metadata'''
 
 import numpy as np
-from skimage import io, img_as_uint
+from skimage import io, img_as_uint, img_as_float
 from pvinspect.common import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -78,7 +78,10 @@ class Image(_Base):
 
     _T = TypeVar('T')
     def as_type(self: _T, dtype: np.ndarray.dtype) -> _T:
-        return type(self).from_other(self, data = self._data.astype(dtype))
+        if dtype == np.float32 or dtype == np.float64:
+            return type(self).from_other(self, data = img_as_float(self._data))
+        else:
+            return type(self).from_other(self, data = img_as_uint(self._data))
     
     @property
     def data(self) -> np.ndarray:
@@ -186,7 +189,7 @@ class ImageSequence(_Base):
         '''Convert sequence to specified dtype'''
         result = []
         for img in self._images:
-            result.append(type(img).from_other(img, data=img._data.astype(dtype)))
+            result.append(img.as_type(dtype))
         return type(self).from_other(self, images=result)
 
     @property
