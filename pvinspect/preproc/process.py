@@ -4,6 +4,7 @@ from pvinspect.data.image import _sequence
 from typing import List
 import numpy as np
 from skimage import img_as_float, img_as_uint
+import cv2
 
 @_sequence
 def _compensate_flatfield(sequence: ModuleImageOrSequence, coeff: np.ndarray) -> ModuleImageOrSequence:
@@ -43,3 +44,24 @@ def compensate_flatfield(sequence: ModuleImageOrSequence, coeff: np.ndarray) -> 
     sequence = _compensate_flatfield(sequence, coeff)
 
     return sequence
+
+@_sequence
+def compensate_distortion(sequence: ModuleImageOrSequence, mtx: np.ndarray, dist: np.ndarray, newcameramtx: np.ndarray, roi: Tuple[int, int, int, int]) -> ModuleImageOrSequence:
+    '''Perform lens distortion correction
+
+    Args:
+        sequence (ModuleImageOrSequence): Sequence of images or single image
+        mtx (np.ndarray): Matrix of instrinsic camera parameters
+        dist (np.ndarray): Matrix of distortion coefficients
+        newcameramtx (np.ndarray): Matrix that performs additional scaling to account for black borders
+        roi (Tuple[int, int, int, int]): ROI of valid pixels
+
+    Returns:
+        sequence: The corrected images
+    '''
+    def corr(x):
+        dst = cv2.undistort(x, mtx, dist, None, newcameramtx)
+        return dst[roi[1]:roi[3],roi[0]:roi[2]]
+
+    return sequence.apply_image_data(corr)
+

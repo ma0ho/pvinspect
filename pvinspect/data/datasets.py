@@ -102,3 +102,14 @@ def calibration_ipv40CCD_FF(N: int = 0) -> Dict[str, ImageSequence]:
         res[key] = seq
     return res
 
+def calibration_ipv40CCD_distortion(N: int = 0) -> ImageSequence:
+    '''Lens calibration data for ipv40CCD (private dataset)
+
+    Args:
+        N (int): Number of images
+
+    Returns:
+        images: Sequence of images
+    '''
+    p = _check_and_download_ds('20200303_calibration_iPV40CCD')
+    return read_images(path = p / 'distortion', same_camera=True, N=N)

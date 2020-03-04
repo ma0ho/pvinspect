@@ -7,6 +7,7 @@ from pvinspect.data import datasets
 import numpy as np
 from skimage.exposure import rescale_intensity
 from test.utilities import assert_equal
+import cv2
 
 def _make_image_seq(imgs):
     imgs = [ModuleImage(img, EL_IMAGE, None) for img in imgs]
@@ -90,3 +91,31 @@ def test_calibrate_and_compensate_flatfield_realdata():
     assert data.min() >= 0.0
     assert data.max() <= 1.0
     assert data.std() <= 0.01
+
+def test_calibrate_distortion():
+    ds = datasets.calibration_ipv40CCD_distortion(N=3)
+    res = calibrate_distortion(ds, (7,7))
+
+    assert len(res) == 4
+    assert res[0].shape == (3,3)
+    assert res[1].shape == (1,5)
+    assert res[2].shape == (3,3)
+    assert len(res[3]) == 4
+
+def test_compensate_distortion_identity():
+    imgs = datasets.calibration_ipv40CCD_distortion(N=2)
+    mtx = np.identity(3)
+    dist = np.zeros((1,5), dtype=np.float32)
+    roi = (0, 0, imgs.shape[1], imgs.shape[0])
+    imgs_comp = compensate_distortion(imgs, mtx, dist, mtx, roi)
+
+    assert (imgs_comp[0].data-imgs[0].data).sum() == 0
+    assert (imgs_comp[1].data-imgs[1].data).sum() == 0
+
+def test_calibrate_compensate_distortion_realdata():
+    ds = datasets.calibration_ipv40CCD_distortion()
+    res = calibrate_distortion(ds, (7,7))
+    ds_comp = compensate_distortion(ds, *res)
+    
+    for img, comp in zip(ds, ds_comp):
+        assert_equal(comp.data.mean(), img.data.mean(), 0.01*img.data.max())

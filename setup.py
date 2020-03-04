@@ -27,7 +27,8 @@ setuptools.setup(
         'opencv-python',
         'requests',
         'googledrivedownloader',
-        'jupyterlab'
+        'jupyterlab',
+        'opencv-python'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

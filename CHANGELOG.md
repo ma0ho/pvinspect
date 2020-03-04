@@ -1,6 +1,7 @@
 # Changelog
 
 ## In development
+
 * Rework + cleanup module detection
 * Allow detection of partial modules
   * includes new module type `PartialModuleImage`
@@ -13,7 +14,9 @@
 * Add `as_type` to `Image` and `ImageSequence` to allow datatype conversions with little overhead
 * Add `apply_image_data` to `ImageSequence` to enable image manipulation over sequences of images
 * Add `calibrate_flatfield` and `compensate_flatfield`
+* Add `calibrate_distortion`and `compensate_distortion`
 
 ## 0.0.1
+
 * Initial version
 * Includes module detection
