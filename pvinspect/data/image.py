@@ -388,24 +388,24 @@ class ModuleImageSequence(ImageSequence):
         super().__init__(images, same_camera, allow_different_dtypes)
 
 
-ModuleImageOrSequence = Union[ModuleImageSequence, ModuleImage, PartialModuleImage]
+ModuleImageOrSequence = Union[ModuleImageSequence, ModuleImage, PartialModuleImage, Image]
 
 
 def _sequence(func):
     '''Assure that the first argument is a sequence and handle the first return value accordingly'''
     @wraps(func)
     def wrapper_sequence(*args, **kwargs):
-        if not isinstance(args[0], ModuleImageSequence):
+        if not isinstance(args[0], ImageSequence):
             args = list(args)
-            args[0] = ModuleImageSequence([args[0]], same_camera=False)
+            args[0] = ModuleImageSequence([args[0]], same_camera=False) if type(args[0]) == ModuleImage else ImageSequence([args[0]], same_camera=False)
             unwrap = True
         else:
             unwrap = False
         res = func(*tuple(args), **kwargs)
         if unwrap:
-            if isinstance(res, tuple) and isinstance(res[0], ModuleImageSequence):
+            if isinstance(res, tuple) and isinstance(res[0], ImageSequence):
                 res[0] = res[0].images[0]
-            elif isinstance(res, ModuleImageSequence):
+            elif isinstance(res, ImageSequence):
                 res = res.images[0]
         return res
     return wrapper_sequence

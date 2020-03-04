@@ -4,11 +4,6 @@ from pvinspect.data.image import _sequence
 from pathlib import Path
 from test.utilities import assert_equal
 
-@_sequence
-def _some_fn(seq: ModuleImageSequence):
-    assert isinstance(seq, ModuleImageSequence)
-    return seq
-
 def _random_image() -> Image:
     data = np.random.random((10,10))
     return Image(data, EL_IMAGE, Path() / 'test.png')
@@ -18,8 +13,12 @@ def _random_module_image() -> ModuleImage:
     return ModuleImage(data, EL_IMAGE, Path() / 'test.png')
 
 def _random_image_sequence() -> ImageSequence:
-    imgs = [_random_module_image() for x in range(2)]
+    imgs = [_random_image() for x in range(2)]
     return ImageSequence(imgs, False)
+
+def _random_module_image_sequence() -> ModuleImageSequence:
+    imgs = [_random_module_image() for x in range(2)]
+    return ModuleImageSequence(imgs, False)
 
 def test_sequence_element_access():
     seq = data.datasets.poly10x6(2)
@@ -27,10 +26,33 @@ def test_sequence_element_access():
     assert seq._images[1].path == seq[1].path
 
 def test_sequence_wrapper():
-    img = _random_module_image()
-    res = _some_fn(img)
-    assert isinstance(res, ModuleImage)
+    
+    @_sequence
+    def _some_fn_mis(seq: ModuleImageSequence):
+        assert type(seq) == ModuleImageSequence
+        return seq
+    
+    @_sequence
+    def _some_fn_is(seq: ImageSequence):
+        assert type(seq) == ImageSequence
+        return seq
 
+    img = _random_module_image()
+    res = _some_fn_mis(img)
+    assert isinstance(res, ModuleImage)
+    
+    img = _random_image()
+    res = _some_fn_is(img)
+    assert isinstance(res, Image)
+
+    img_seq = _random_module_image_sequence()
+    res = _some_fn_mis(img_seq)
+    assert isinstance(res, ModuleImageSequence)
+
+    img_seq = _random_image_sequence()
+    res = _some_fn_is(img_seq)
+    assert isinstance(res, ImageSequence)
+    
 def test_image_from_other():
     p = Path() / 'other.png'
     img = _random_image()
