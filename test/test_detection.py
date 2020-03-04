@@ -53,6 +53,15 @@ def test_segment_cells():
     assert cells[1].col == 1
     assert cells[11].row == 1
 
+def test_segment_cells_single_image():
+    seq = data.datasets.poly10x6(1)
+    seq = preproc.locate_module_and_cells(seq, True)
+    cells = preproc.segment_cells(seq[0])
+
+    assert isinstance(cells, CellImageSequence)
+    assert len(cells) == 60
+    assert isinstance(cells[0], CellImage)
+
 def test_segment_modules():
     seq = data.datasets.poly10x6(2)
     seq = preproc.locate_module_and_cells(seq, True)

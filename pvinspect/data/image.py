@@ -390,23 +390,31 @@ class ModuleImageSequence(ImageSequence):
 
 ModuleImageOrSequence = Union[ModuleImageSequence, ModuleImage, PartialModuleImage, Image]
 
+def _sequence(*args):
+    def decorator_sequence(func):
+        '''Assure that the first argument is a sequence and handle the first return value accordingly'''
+        @wraps(func)
+        def wrapper_sequence(*args, **kwargs):
+            if not isinstance(args[0], ImageSequence):
+                args = list(args)
+                args[0] = ModuleImageSequence([args[0]], same_camera=False) if type(args[0]) == ModuleImage else ImageSequence([args[0]], same_camera=False)
+                unwrap = True
+            else:
+                unwrap = False
+            res = func(*tuple(args), **kwargs)
+            if unwrap and not disable_unwrap:
+                if isinstance(res, tuple) and isinstance(res[0], ImageSequence):
+                    res[0] = res[0].images[0]
+                elif isinstance(res, ImageSequence):
+                    res = res.images[0]
+            return res
+        return wrapper_sequence
 
-def _sequence(func):
-    '''Assure that the first argument is a sequence and handle the first return value accordingly'''
-    @wraps(func)
-    def wrapper_sequence(*args, **kwargs):
-        if not isinstance(args[0], ImageSequence):
-            args = list(args)
-            args[0] = ModuleImageSequence([args[0]], same_camera=False) if type(args[0]) == ModuleImage else ImageSequence([args[0]], same_camera=False)
-            unwrap = True
-        else:
-            unwrap = False
-        res = func(*tuple(args), **kwargs)
-        if unwrap:
-            if isinstance(res, tuple) and isinstance(res[0], ImageSequence):
-                res[0] = res[0].images[0]
-            elif isinstance(res, ImageSequence):
-                res = res.images[0]
-        return res
-    return wrapper_sequence
+    if len(args) == 1 and callable(args[0]):
+        disable_unwrap = False
+        return decorator_sequence(args[0])
+    else:
+        disable_unwrap = args[0] if len(args) == 1 else False
+        return decorator_sequence
+
 

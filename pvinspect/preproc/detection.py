@@ -201,7 +201,7 @@ with less variation in size.')
 
     return type(sequence).from_other(sequence, images=result, same_camera=False)
 
-@_sequence
+@_sequence(True)
 def segment_cells(sequence: ModuleImageOrSequence, size: int = None) -> CellImageSequence:
     '''Obtain cell images from a sequence of module images. Note that images that do not have a valid transform,
     possibly because the detection step failed, are silently ignored.

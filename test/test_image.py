@@ -52,6 +52,28 @@ def test_sequence_wrapper():
     img_seq = _random_image_sequence()
     res = _some_fn_is(img_seq)
     assert isinstance(res, ImageSequence)
+
+def test_sequence_wrapper_noarg():
+
+    @_sequence()
+    def _some_fn(seq: ModuleImageSequence):
+        assert type(seq) == ModuleImageSequence
+        return seq
+
+    img = _random_module_image()
+    res = _some_fn(img)
+    assert isinstance(res, ModuleImage)
+
+def test_sequence_wrapper_nounwrap():
+
+    @_sequence(True)
+    def _some_fn(seq: ModuleImageSequence):
+        assert type(seq) == ModuleImageSequence
+        return seq
+
+    img = _random_module_image()
+    res = _some_fn(img)
+    assert isinstance(res, ModuleImageSequence)
     
 def test_image_from_other():
     p = Path() / 'other.png'
