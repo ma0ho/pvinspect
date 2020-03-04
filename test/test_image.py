@@ -8,12 +8,20 @@ def _random_image() -> Image:
     data = np.random.random((10,10))
     return Image(data, EL_IMAGE, Path() / 'test.png')
 
+def _random_uint_image() -> Image:
+    data = (np.random.random((10,10))*100).astype(np.uint)
+    return Image(data, EL_IMAGE, Path() / 'test.png')
+
 def _random_module_image() -> ModuleImage:
     data = np.random.random((10,10))
     return ModuleImage(data, EL_IMAGE, Path() / 'test.png')
 
 def _random_image_sequence() -> ImageSequence:
     imgs = [_random_image() for x in range(2)]
+    return ImageSequence(imgs, False)
+
+def _random_uint_image_sequence() -> ImageSequence:
+    imgs = [_random_uint_image() for x in range(2)]
     return ImageSequence(imgs, False)
 
 def _random_module_image_sequence() -> ModuleImageSequence:
@@ -133,3 +141,178 @@ def test_image_data_returns_copy():
     data = img.data
     data[:] = 0.0
     assert_equal(img.data, original_data)
+
+def test_add_images():
+    img1 = _random_image()
+    img2 = _random_image()
+    res = img1 + img2
+    assert_equal(res.data, img1.data+img2.data)
+
+def test_add_images_differing_dtypes():
+    img1 = _random_image()
+    img2 = _random_uint_image()
+    try:
+        res = img1+img2
+    except RuntimeError:
+        return
+
+    # expected an error
+    assert False
+
+def test_sub_images():
+    img1 = _random_image()
+    img2 = _random_image()
+    res = img1 - img2
+    assert_equal(res.data, img1.data-img2.data)
+
+def test_sub_images_differing_dtypes():
+    img1 = _random_image()
+    img2 = _random_uint_image()
+    try:
+        res = img1-img2
+    except RuntimeError:
+        return
+
+    # expected an error
+    assert False
+
+def test_mul_images():
+    img1 = _random_image()
+    img2 = _random_image()
+    res = img1 * img2
+    assert_equal(res.data, img1.data*img2.data)
+
+def test_mul_images_differing_dtypes():
+    img1 = _random_image()
+    img2 = _random_uint_image()
+    try:
+        res = img1*img2
+    except RuntimeError:
+        return
+
+    # expected an error
+    assert False
+
+def test_truediv_images():
+    img1 = _random_image()
+    img2 = _random_image()
+    res = img1 / img2
+    assert_equal(res.data, img1.data/img2.data)
+
+def test_truediv_images_nonfloat():
+    img1 = _random_image()
+    img2 = _random_uint_image()
+    try:
+        res = img1/img2
+    except RuntimeError:
+        return
+
+    # expected an error
+    assert False
+
+def test_floordiv_images():
+    img1 = _random_uint_image()
+    img2 = _random_uint_image()
+    res = img1 // img2
+    assert_equal(res.data, img1.data//img2.data)
+
+def test_floordiv_images_differing_dtypes():
+    img1 = _random_image()
+    img2 = _random_uint_image()
+    try:
+        res = img1//img2
+    except RuntimeError:
+        return
+
+    # expected an error
+    assert False
+
+def test_mod_images():
+    img1 = _random_uint_image()
+    img2 = _random_uint_image()
+    res = img1 % img2
+    assert_equal(res.data, img1.data%img2.data)
+
+def test_mod_images_differing_dtypes():
+    img1 = _random_image()
+    img2 = _random_uint_image()
+    try:
+        res = img1%img2
+    except RuntimeError:
+        return
+
+    # expected an error
+    assert False
+
+def test_pow_images():
+    img1 = _random_image()
+    img2 = _random_image()
+    res = img1**img2
+    assert_equal(res.data, img1.data**img2.data)
+
+def test_pow_images_differing_dtypes():
+    img1 = _random_image()
+    img2 = _random_uint_image()
+    try:
+        res = img1**img2
+    except RuntimeError:
+        return
+
+    # expected an error
+    assert False
+
+def test_add_image_sequence():
+    imgs1 = _random_image_sequence()
+    imgs2 = _random_image_sequence()
+    res = imgs1+imgs2
+
+    for img1, img2, r in zip(imgs1, imgs2, res):
+        assert_equal(r.data, img1.data+img2.data)
+
+def test_sub_image_sequence():
+    imgs1 = _random_image_sequence()
+    imgs2 = _random_image_sequence()
+    res = imgs1-imgs2
+
+    for img1, img2, r in zip(imgs1, imgs2, res):
+        assert_equal(r.data, img1.data-img2.data)
+
+def test_mul_image_sequence():
+    imgs1 = _random_image_sequence()
+    imgs2 = _random_image_sequence()
+    res = imgs1*imgs2
+
+    for img1, img2, r in zip(imgs1, imgs2, res):
+        assert_equal(r.data, img1.data*img2.data)
+
+def test_truediv_image_sequence():
+    imgs1 = _random_image_sequence()
+    imgs2 = _random_image_sequence()
+    res = imgs1/imgs2
+
+    for img1, img2, r in zip(imgs1, imgs2, res):
+        assert_equal(r.data, img1.data/img2.data)
+
+def test_floordiv_image_sequence():
+    imgs1 = _random_image_sequence()
+    imgs2 = _random_image_sequence()
+    res = imgs1//imgs2
+
+    for img1, img2, r in zip(imgs1, imgs2, res):
+        assert_equal(r.data, img1.data//img2.data)
+
+def test_mod_image_sequence():
+    imgs1 = _random_uint_image_sequence()
+    imgs2 = _random_uint_image_sequence()
+    res = imgs1%imgs2
+
+    for img1, img2, r in zip(imgs1, imgs2, res):
+        assert_equal(r.data, img1.data%img2.data)
+
+def test_pow_image_sequence():
+    imgs1 = _random_image_sequence()
+    imgs2 = _random_image_sequence()
+    res = imgs1**imgs2
+
+    for img1, img2, r in zip(imgs1, imgs2, res):
+        assert_equal(r.data, img1.data**img2.data)

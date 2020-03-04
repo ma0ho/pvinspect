@@ -82,7 +82,42 @@ class Image(_Base):
             return type(self).from_other(self, data = img_as_float(self._data))
         else:
             return type(self).from_other(self, data = img_as_uint(self._data))
+
+    def __add__(self: _T, other: _T) -> _T:
+        if self.dtype != other.dtype:
+            raise RuntimeError('Images must have the same datatype')
+        return type(self).from_other(self, data = self._data+other._data)
     
+    def __sub__(self: _T, other: _T) -> _T:
+        if self.dtype != other.dtype:
+            raise RuntimeError('Images must have the same datatype')
+        return type(self).from_other(self, data = self._data-other._data)
+    
+    def __mul__(self: _T, other: _T) -> _T:
+        if self.dtype != other.dtype:
+            raise RuntimeError('Images must have the same datatype')
+        return type(self).from_other(self, data = self._data*other._data)
+    
+    def __truediv__(self: _T, other: _T) -> _T:
+        if self.dtype not in (np.float64, np.float32) or other.dtype not in (np.float64, np.float32):
+            raise RuntimeError('Images must be of type float')
+        return type(self).from_other(self, data = self._data/other._data)
+    
+    def __floordiv__(self: _T, other: _T) -> _T:
+        if self.dtype != other.dtype:
+            raise RuntimeError('Images must have the same datatype')
+        return type(self).from_other(self, data = self._data//other._data)
+    
+    def __mod__(self: _T, other: _T) -> _T:
+        if self.dtype != other.dtype:
+            raise RuntimeError('Images must have the same datatype')
+        return type(self).from_other(self, data = self._data%other._data)
+    
+    def __pow__(self: _T, other: _T) -> _T:
+        if self.dtype != other.dtype:
+            raise RuntimeError('Images must have the same datatype')
+        return type(self).from_other(self, data = self._data**other._data)
+
     @property
     def data(self) -> np.ndarray:
         '''The underlying image data'''
@@ -192,6 +227,34 @@ class ImageSequence(_Base):
             result.append(img.as_type(dtype))
         return type(self).from_other(self, images=result)
 
+    def __add__(self: _T, other: _T) -> _T:
+        res = [x+y for x, y in zip(self.images, other.images)]
+        return type(self).from_other(self, images = res)
+    
+    def __sub__(self: _T, other: _T) -> _T:
+        res = [x-y for x, y in zip(self.images, other.images)]
+        return type(self).from_other(self, images = res)
+    
+    def __mul__(self: _T, other: _T) -> _T:
+        res = [x*y for x, y in zip(self.images, other.images)]
+        return type(self).from_other(self, images = res)
+    
+    def __truediv__(self: _T, other: _T) -> _T:
+        res = [x/y for x, y in zip(self.images, other.images)]
+        return type(self).from_other(self, images = res)
+
+    def __floordiv__(self: _T, other: _T) -> _T:
+        res = [x//y for x, y in zip(self.images, other.images)]
+        return type(self).from_other(self, images = res)
+    
+    def __mod__(self: _T, other: _T) -> _T:
+        res = [x%y for x, y in zip(self.images, other.images)]
+        return type(self).from_other(self, images = res)
+    
+    def __pow__(self: _T, other: _T) -> _T:
+        res = [x**y for x, y in zip(self.images, other.images)]
+        return type(self).from_other(self, images = res)
+    
     @property
     def images(self) -> List[Image]:
         '''Access the list of images'''

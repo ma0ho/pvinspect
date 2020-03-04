@@ -15,6 +15,7 @@
 * Add `apply_image_data` to `ImageSequence` to enable image manipulation over sequences of images
 * Add `calibrate_flatfield` and `compensate_flatfield`
 * Add `calibrate_distortion`and `compensate_distortion`
+* Implement elementwise operators on Images and ImageSequences
 
 ## 0.0.1
 
