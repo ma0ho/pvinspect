@@ -391,8 +391,8 @@ class ModuleImageSequence(ImageSequence):
 ModuleImageOrSequence = Union[ModuleImageSequence, ModuleImage, PartialModuleImage, Image]
 
 def _sequence(*args):
+    '''Assure that the first argument is a sequence and handle the first return value accordingly'''
     def decorator_sequence(func):
-        '''Assure that the first argument is a sequence and handle the first return value accordingly'''
         @wraps(func)
         def wrapper_sequence(*args, **kwargs):
             if not isinstance(args[0], ImageSequence):
