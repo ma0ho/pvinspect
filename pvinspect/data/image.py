@@ -91,6 +91,10 @@ class Image(_Base):
     def __sub__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError('Images must have the same datatype')
+        if self.dtype != np.float32 and self.dtype != np.float64:
+            # unsigned -> signed
+            self._data = self._data.astype(np.int64)
+            other._data = other._data.astype(np.int64)
         return type(self).from_other(self, data = self._data-other._data)
     
     def __mul__(self: _T, other: _T) -> _T:
