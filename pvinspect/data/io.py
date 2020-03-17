@@ -186,14 +186,17 @@ def read_partial_module_images(path: PathOrStr, modality: int, same_camera: bool
     return _read_images(path=path, is_module_image=False, is_partial_module=True, same_camera=same_camera, modality=modality, cols=cols, rows=rows, N=N, pattern=pattern, allow_different_dtypes=allow_different_dtypes)
 
 def save_image(filename: PathOrStr, image: Image):
-    '''Write an image to disk
+    '''Write an image to disk. Float64 is automatically converted to float32 in order to be compatible to ImageJ.
 
     Args:
         filename (PathOrStr): Filename of the resulting image
         image (Image): The image
     '''
 
-    io.imsave(filename, image.data, check_contrast=False)
+    if image.dtype == np.float64:
+        io.imsave(filename, image.data.astype(np.float32), check_contrast=False)
+    else:
+        io.imsave(filename, image.data, check_contrast=False)
 
 def save_images(path: PathOrStr, sequence: ImageSequence, mkdir: bool = True):
     '''Write a sequence of images to disk

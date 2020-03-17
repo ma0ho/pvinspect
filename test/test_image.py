@@ -168,9 +168,8 @@ def test_sub_images():
 def test_sub_uint_images():
     img1 = _random_uint_image()
     img2 = _random_uint_image()
-    img2._data *= 2
     res = img1 - img2
-    expected = np.clip(img1.data.astype(np.int32)-img2.data.astype(np.int32), 0, 2**32)
+    expected = np.clip(img1.data.astype(np.int32)-img2.data.astype(np.int32), 0, 2**16)
     assert_equal(res.data, expected)
 
 def test_sub_images_differing_dtypes():

@@ -61,7 +61,7 @@ def compensate_distortion(sequence: ModuleImageOrSequence, mtx: np.ndarray, dist
     '''
     def corr(x):
         dst = cv2.undistort(x, mtx, dist, None, newcameramtx)
-        return dst[roi[1]:roi[3],roi[0]:roi[2]]
+        return dst[roi[0]:roi[2],roi[1]:roi[3]]
 
     return sequence.apply_image_data(corr)
 

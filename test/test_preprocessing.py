@@ -106,7 +106,7 @@ def test_compensate_distortion_identity():
     imgs = datasets.calibration_ipv40CCD_distortion(N=2)
     mtx = np.identity(3)
     dist = np.zeros((1,5), dtype=np.float32)
-    roi = (0, 0, imgs.shape[1], imgs.shape[0])
+    roi = (0, 0, imgs.shape[0], imgs.shape[1])
     imgs_comp = compensate_distortion(imgs, mtx, dist, mtx, roi)
 
     assert (imgs_comp[0].data-imgs[0].data).sum() == 0
