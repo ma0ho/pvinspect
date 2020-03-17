@@ -11,12 +11,14 @@ This package is in an early stage of development. Please be aware that the API m
 ## Installation
 
 We recommend to use the Anaconda Python distribution and to create a separate environment using Python3.7:
-```
+
+```bash
 conda create -n pvinspect pip python=3.7
 ```
 
 Then you can install this package using `pip`:
-```
+
+```bash
 conda activate pvinspect
 pip install pvinspect
 ```
@@ -24,7 +26,8 @@ pip install pvinspect
 ## Usage
 
 Activate the conda environment and start your dev environment (for example Jupyter Lab):
-```
+
+```bash
 conda activate pvinspect
 jupyter lab
 ```
@@ -42,3 +45,5 @@ In case you use methods from this package for research purposes, please make sur
 ## Acknowledgement
 
 We greatly acknowledge the [HI-ERN](http://www.hi-ern.de/hi-ern/EN/home.html) for providing us a demo dataset of electroluminescense images that is published along with this package.
+
+We gratefully acknowledge funding of the Federal Ministry for Economic Affairs and Energy (BMWi: Grant No. 0324286, iPV4.0).
