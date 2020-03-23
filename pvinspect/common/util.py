@@ -1,5 +1,5 @@
 import numpy as np
-
+from shapely.geometry import Polygon
 
 def rotation_matrix_3d(rx, ry, rz):
     Rx = np.array([[1, 0, 0], [0, np.cos(rx), -np.sin(rx)], [0, np.sin(rx), np.cos(rx)]])
@@ -91,4 +91,45 @@ def find_file_in_list(file, files):
             return i
 
     return None
+
+def iou(p1, p2):
+    '''Calculate IOU of two shapely polygons'''
+    if p1.intersects(p2):
+        return p1.intersection(p2).area/p1.union(p2).area
+    else:
+        return 0.0
+
+def mean_iou(objects_label, objects_predicted, iou_thresh: float = None):
+    '''Calculate IOU for every pair from objects_label and objects_predicted, assign objects by maximum IOU and return mean IOU'''
+
+    # set up matrix of IOUs
+    max_len = max(len(objects_label), len(objects_predicted))
+    ious = np.zeros((max_len, max_len), dtype=np.float64)
+    for i, o1 in enumerate(objects_label):
+        for j, o2 in enumerate(objects_predicted):
+            ious[i,j] = iou(o1, o2)
+
+    # for every object from objects1, find partner with maximum intersection from object2
+    iou_sum = 0.0
+    label_to_predicted = [-1]*len(objects_label)
+    for i in range(max_len):
+        j = np.argmax(ious[i])
+        iou_sum += ious[i,j]
+
+        # store assignments
+        if iou_thresh is not None and ious[i,j] > iou_thresh and i < len(label_to_predicted):
+            assignments[i] = j
+
+        # "delete" partner object
+        ious[:,j] = 0.0
+
+    # calculate precision + recall
+
+
+    # calculate mean and return
+    return iou_sum/max_len
+
+def polygon2boundingbox(polygon: Polygon):
+    '''Convert polygon to bounding box'''
+    return Polygon.from_bounds(*polygon.bounds)
 

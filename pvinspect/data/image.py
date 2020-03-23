@@ -291,6 +291,9 @@ class ImageSequence(_Base):
         return deepcopy(self.images[i])
 
 
+ImageOrSequence = Union[Image, ImageSequence]
+
+
 class CellImage(Image):
     '''An image of a solar cell with additional meta data'''
 

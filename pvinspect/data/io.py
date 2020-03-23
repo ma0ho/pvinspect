@@ -3,12 +3,14 @@
 from .image import *
 from pathlib import Path
 import numpy as np
-from typing import Union, Tuple
+from typing import Union, Tuple, List, Dict
 from skimage import io, color, img_as_uint
 from .exceptions import UnsupportedModalityException
 from functools import reduce
 from tqdm.auto import tqdm
 import logging
+from shapely.geometry import Polygon, Point
+import json
 
 
 PathOrStr = Union[Path, str]
@@ -218,3 +220,30 @@ def save_images(path: PathOrStr, sequence: ImageSequence, mkdir: bool = True):
         else:
             name = image.path.name
         save_image(path / name, image)
+
+def load_json_object_masks(path: PathOrStr) -> Dict[str, List[Tuple[str, Polygon]]]:
+    '''Load object annotations from file
+
+    Args:
+        path (PathOrStr): Path to the annotations file
+    
+    Returns:
+        annotations: Dict with filenames a keys and a list of annotations, where every
+            annotation is a tuple of "classname" and a Polygon
+    '''
+
+    path = __assurePath(path)
+    
+    with open(path, 'r') as f:
+        js = json.load(f)
+
+    result = dict()
+    for item in js:
+        anns = list()
+        for k, v in item['Label'].items():
+            for ann in v:
+                poly = Polygon([(x['x'], x['y']) for x in ann['geometry']])
+                anns.append((k, poly))
+        result[item['External ID']] = anns
+    return result
+

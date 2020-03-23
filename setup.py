@@ -28,7 +28,10 @@ setuptools.setup(
         'requests',
         'googledrivedownloader',
         'jupyterlab',
-        'opencv-python'
+        'opencv-python',
+        'shapely',
+        'optuna',
+        'sklearn'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

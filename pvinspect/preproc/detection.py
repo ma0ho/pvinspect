@@ -1,20 +1,32 @@
-'''Detection, localization and segmentation of solar modules'''
+"""Detection, localization and segmentation of solar modules"""
 
 from pvinspect.preproc._mdetect.locate import apply
-from pvinspect.common.transform import HomographyTransform, warp_image, FullMultiTransform, FullTransform
+from pvinspect.common.transform import (
+    HomographyTransform,
+    warp_image,
+    FullMultiTransform,
+    FullTransform,
+)
 from pvinspect.data.image import *
 from pvinspect.data.image import _sequence
 from pvinspect.data.exceptions import UnsupportedModalityException
-from typing import Union
+from typing import Union, List, Optional, Dict
 from tqdm.auto import tqdm
 from copy import deepcopy
 import logging
 from pvinspect.common._ipy_exit import exit
 import numpy as np
+from skimage import measure, filters, morphology
+from shapely.geometry import Polygon
+
 
 @_sequence
-def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion: bool = True, orientation: str = None) -> ModuleImageOrSequence:
-    '''Locate a single module and its cells
+def locate_module_and_cells(
+    sequence: ModuleImageOrSequence,
+    estimate_distortion: bool = True,
+    orientation: str = None,
+) -> ModuleImageOrSequence:
+    """Locate a single module and its cells
 
     Note:
         This methods implements the following paper:
@@ -29,10 +41,10 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
 
     Returns:
         images: The same image/sequence with location information added
-    '''
+    """
 
     if sequence[0].modality != EL_IMAGE:
-        logging.error('Module localization is not supporting given imaging modality')
+        logging.error("Module localization is not supporting given imaging modality")
         exit()
 
     result = list()
@@ -42,7 +54,13 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
     flags = list()
     transforms = list()
     for img in tqdm(sequence.images):
-        t, mc, dt, f = apply(img.data, img.cols, img.rows, is_module_detail=isinstance(img, PartialModuleImage), orientation=orientation)
+        t, mc, dt, f = apply(
+            img.data,
+            img.cols,
+            img.rows,
+            is_module_detail=isinstance(img, PartialModuleImage),
+            orientation=orientation,
+        )
         transforms.append(t)
         flags.append(f)
         mcs.append(mc)
@@ -51,7 +69,9 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
     if estimate_distortion:
         if sequence.same_camera:
             # do joint estimation
-            logging.info('Jointly estimating parameters for lens distortion. This might take some time..')
+            logging.info(
+                "Jointly estimating parameters for lens distortion. This might take some time.."
+            )
 
             mcs_new = list()
             dts_new = list()
@@ -63,7 +83,13 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
                     valid.append(True)
                 else:
                     valid.append(False)
-            transforms = FullMultiTransform(mcs_new, dts_new, image_width=sequence.shape[1], image_height=sequence.shape[0], n_dist_coeff=1)
+            transforms = FullMultiTransform(
+                mcs_new,
+                dts_new,
+                image_width=sequence.shape[1],
+                image_height=sequence.shape[0],
+                n_dist_coeff=1,
+            )
             transforms_new = list()
             i = 0
             for v in valid:
@@ -78,7 +104,13 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
             transforms = list()
             for mc, dt, f, img in zip(mcs, dts, flags, sequence.images):
                 if mc is not None and dt is not None:
-                    t = FullTransform(mc[f], dt[f], image_width=img.shape[1], image_height=img.shape[0], n_dist_coeff=1)
+                    t = FullTransform(
+                        mc[f],
+                        dt[f],
+                        image_width=img.shape[1],
+                        image_height=img.shape[0],
+                        n_dist_coeff=1,
+                    )
                     transforms.append(t)
                 else:
                     transforms.append(None)
@@ -91,12 +123,21 @@ def locate_module_and_cells(sequence: ModuleImageOrSequence, estimate_distortion
             result.append(deepcopy(img))
             failures += 1
     if failures > 0:
-        logging.warning('Module localization falied for {:d} images'.format(failures))
+        logging.warning("Module localization falied for {:d} images".format(failures))
 
     return ModuleImageSequence.from_other(sequence, images=result)
 
-def segment_module_part(image: ModuleImage, first_col: int, first_row: int, cols: int, rows: int, size: int = None, padding: float = 0.0) -> PartialModuleImage:
-    '''Segment a part of a module
+
+def segment_module_part(
+    image: ModuleImage,
+    first_col: int,
+    first_row: int,
+    cols: int,
+    rows: int,
+    size: int = None,
+    padding: float = 0.0,
+) -> PartialModuleImage:
+    """Segment a part of a module
 
     Args:
         image (ModuleImage): The corresponding module image
@@ -110,34 +151,63 @@ def segment_module_part(image: ModuleImage, first_col: int, first_row: int, cols
 
     Returns:
         segment: The resulting segment
-    '''
+    """
 
     if image.transform is None or not image.transform.valid:
-        logging.error('The ModuleImage does not have a valid transform. Did module localization succeed?')
+        logging.error(
+            "The ModuleImage does not have a valid transform. Did module localization succeed?"
+        )
         exit()
 
     if padding >= 1.0 or padding < 0.0:
-        logging.error('padding needs to be in [0..1[')
+        logging.error("padding needs to be in [0..1[")
         exit()
-    
-    last_col = first_col+cols
-    last_row = first_row+rows
+
+    last_col = first_col + cols
+    last_row = first_row + rows
     if last_row > image.rows or last_col > image.cols:
-        logging.error('The row or column index exceeds the module geometry')
+        logging.error("The row or column index exceeds the module geometry")
         exit()
 
     size = image.transform.mean_scale() if size is None else size
-    result = warp_image(image.data, image.transform, first_col-padding, first_row-padding,
-        1/size, 1/size, cols+2*padding, rows+2*padding)
+    result = warp_image(
+        image.data,
+        image.transform,
+        first_col - padding,
+        first_row - padding,
+        1 / size,
+        1 / size,
+        cols + 2 * padding,
+        rows + 2 * padding,
+    )
     result = result.astype(image.dtype)
-    transform = HomographyTransform(np.array([
-        [first_row-padding, first_col-padding], [first_row-padding, last_col-padding],
-        [last_row-padding, first_col-padding], [last_row-padding, last_col-padding]]),
-        np.array([[0.0, 0.0], [0.0, size*cols], [size*rows, 0.0], [size*rows, size*cols]]))
-    return PartialModuleImage(result, image.modality, image.path, cols, rows, first_col, first_row, transform)
+    transform = HomographyTransform(
+        np.array(
+            [
+                [first_row - padding, first_col - padding],
+                [first_row - padding, last_col - padding],
+                [last_row - padding, first_col - padding],
+                [last_row - padding, last_col - padding],
+            ]
+        ),
+        np.array(
+            [
+                [0.0, 0.0],
+                [0.0, size * cols],
+                [size * rows, 0.0],
+                [size * rows, size * cols],
+            ]
+        ),
+    )
+    return PartialModuleImage(
+        result, image.modality, image.path, cols, rows, first_col, first_row, transform
+    )
 
-def segment_module(image: ModuleImage, size: int = None, padding: float = 0.0) -> ModuleImage:
-    '''Obtain a rectified, cropped and undistorted module image
+
+def segment_module(
+    image: ModuleImage, size: int = None, padding: float = 0.0
+) -> ModuleImage:
+    """Obtain a rectified, cropped and undistorted module image
 
     Args:
         image (ModuleImage): A single module image
@@ -147,13 +217,23 @@ def segment_module(image: ModuleImage, size: int = None, padding: float = 0.0) -
 
     Returns:
         module: The resulting module image
-    '''
+    """
 
     result = segment_module_part(image, 0, 0, image.cols, image.rows, size, padding)
-    return ModuleImage(result._data, image.modality, image.path, image.cols, image.rows, result.transform)
+    return ModuleImage(
+        result._data,
+        image.modality,
+        image.path,
+        image.cols,
+        image.rows,
+        result.transform,
+    )
 
-def segment_cell(image: ModuleImage, row: int, col: int, size: int = None, padding: float = 0.0) -> CellImage:
-    '''Obtain a cell image from a module image
+
+def segment_cell(
+    image: ModuleImage, row: int, col: int, size: int = None, padding: float = 0.0
+) -> CellImage:
+    """Obtain a cell image from a module image
 
     Args:
         image (ModuleImageOrSequence): A single module image
@@ -165,15 +245,17 @@ def segment_cell(image: ModuleImage, row: int, col: int, size: int = None, paddi
 
     Returns:
         cells: The segmented cell image
-    '''
-
+    """
 
     result = segment_module_part(image, col, row, 1, 1, size, padding)
     return CellImage(result._data, image.modality, image.path, row, col)
 
+
 @_sequence
-def segment_modules(sequence: ModuleImageOrSequence, size: int = None) -> ModuleImageSequence:
-    '''Obtain rectified, cropped and undistorted module images from a sequence. Note that images that do not have a valid transform,
+def segment_modules(
+    sequence: ModuleImageOrSequence, size: int = None
+) -> ModuleImageSequence:
+    """Obtain rectified, cropped and undistorted module images from a sequence. Note that images that do not have a valid transform,
     possibly because the detection step failed, are silently ignored.
 
     Args:
@@ -182,28 +264,39 @@ def segment_modules(sequence: ModuleImageOrSequence, size: int = None) -> Module
 
     Returns:
         module: The segmented module images
-    '''
+    """
 
-    scales = np.array([img.transform.mean_scale() for img in sequence.images if img.transform is not None and img.transform.valid])
-    if scales.std() > 0.1*scales.mean() and size is None:
-        logging.warning('The size of cells within the sequences varies by more than 10%. However, segment_modules, \
+    scales = np.array(
+        [
+            img.transform.mean_scale()
+            for img in sequence.images
+            if img.transform is not None and img.transform.valid
+        ]
+    )
+    if scales.std() > 0.1 * scales.mean() and size is None:
+        logging.warning(
+            "The size of cells within the sequences varies by more than 10%. However, segment_modules, \
 creates images of a fixed size. Please consider to split the sequence into multiple sequences \
-with less variation in size.')
+with less variation in size."
+        )
     if size is None:
         size = int(scales.mean())
 
     result = list()
     for img in tqdm(sequence.images):
-        
+
         # for the moment, we silently ignore images without a valid transform
         if img.transform is not None and img.transform.valid:
             result.append(segment_module(img, size))
 
     return type(sequence).from_other(sequence, images=result, same_camera=False)
 
+
 @_sequence(True)
-def segment_cells(sequence: ModuleImageOrSequence, size: int = None) -> CellImageSequence:
-    '''Obtain cell images from a sequence of module images. Note that images that do not have a valid transform,
+def segment_cells(
+    sequence: ModuleImageOrSequence, size: int = None
+) -> CellImageSequence:
+    """Obtain cell images from a sequence of module images. Note that images that do not have a valid transform,
     possibly because the detection step failed, are silently ignored.
 
     Args:
@@ -212,13 +305,21 @@ def segment_cells(sequence: ModuleImageOrSequence, size: int = None) -> CellImag
 
     Returns:
         cells: The segmented cell images
-    '''
+    """
 
-    scales = np.array([img.transform.mean_scale() for img in sequence.images if img.transform is not None and img.transform.valid])
-    if scales.std() > 0.1*scales.mean() and size is None:
-        logging.warning('The size of cells within the sequences varies by more than 10%. However, segment_cells, \
+    scales = np.array(
+        [
+            img.transform.mean_scale()
+            for img in sequence.images
+            if img.transform is not None and img.transform.valid
+        ]
+    )
+    if scales.std() > 0.1 * scales.mean() and size is None:
+        logging.warning(
+            "The size of cells within the sequences varies by more than 10%. However, segment_cells, \
 creates cell images of a fixed size. Please consider to split the sequence into multiple sequences \
-with less variation in size.')
+with less variation in size."
+        )
     if size is None:
         size = int(scales.mean())
 
@@ -233,3 +334,126 @@ with less variation in size.')
 
     return CellImageSequence(result)
 
+
+def _do_locate_multiple_modules(
+    image: Image,
+    filter_size: int,
+    reject_size_thresh: float,
+    reject_fill_thresh: float,
+    padding: float,
+    cols: int,
+    rows: int,
+    drop_clipped_modules: bool,
+) -> Tuple[List[ModuleImage], List[Polygon]]:
+
+    # filter + binarize
+    image_f = filters.gaussian(image._data, filter_size)
+    image_f = image_f > filters.threshold_otsu(image_f)
+
+    # find regions
+    labeled = morphology.label(image_f)
+    regions = measure.regionprops(labeled)
+
+    # process regions
+    # check if bbox is filled to 100*reject_fill_thres%
+    regions = [r for r in regions if r.area / r.bbox_area >= reject_fill_thresh]
+    if len(regions) == 0:
+        return [], []
+
+    mean_area = int(np.mean([r.bbox_area for r in regions]))
+    results = []
+    boxes = []
+    i = 0
+    for r in regions:
+        # check size
+        if r.bbox_area < reject_size_thresh * mean_area:
+            continue
+
+        # check not touching boundary
+        if (
+            r.bbox[0] == 0
+            or r.bbox[1] == 0
+            or r.bbox[2] == labeled.shape[0]
+            or r.bbox[3] == labeled.shape[1]
+        ) and drop_clipped_modules:
+            continue
+
+        # crop module
+        pad = int(np.sqrt(r.bbox_area) * padding)
+        y0, x0 = max(0, r.bbox[0] - pad), max(0, r.bbox[1] - pad)
+        y1, x1 = (
+            min(image.shape[0], r.bbox[2] + pad),
+            min(image.shape[1], r.bbox[3] + pad),
+        )
+        boxes.append(Polygon.from_bounds(x0, y0, x1, y1))
+        crop = image._data[y0:y1, x0:x1]
+        p = image.path.parent / "{}_module{:02d}{}".format(
+            image.path.stem, i, image.path.suffix
+        )
+        results.append(
+            ModuleImage(
+                data=crop, modality=image.modality, path=p, cols=cols, rows=rows
+            )
+        )
+        i += 1
+
+    return results, boxes
+
+
+@_sequence(True)
+def locate_multiple_modules(
+    sequence: ImageOrSequence,
+    filter_size: int = 10,
+    reject_size_thresh: float = 0.75,
+    reject_fill_thresh: float = 0.5,
+    padding: float = 0.05,
+    drop_clipped_modules: bool = True,
+    cols: int = None,
+    rows: int = None,
+    return_bounding_boxes: bool = False,
+) -> Tuple[ModuleImageSequence, Optional[Dict[Path, List[Polygon]]]]:
+    """Perform localization and segmentation of multiple modules
+
+    Args:
+        sequence (ImageOrSequence): Input images
+        filter_size (int): Standard deviation of the Gaussian filter
+        reject_size_thresh (float): Detections smaller than this times the median size of detections are rejected
+        reject_fill_thresh (float): Detections, where more that this parts of the area are black after thresholding are rejected
+        padding (float): Detections are padded by this times the average size length of the bounding box
+        drop_clipped_modules (bool): Indicate, if detections that touch the boundary are dropped
+        cols (int): Number of columns of cells of a single module
+        cols (rows): Number of rows of cells of a single module
+        return_bounding_boxes (bool): If true, return the bounding boxes in addition to the crops
+
+    Returns:
+        The cropped modules as a ModuleImageSequence as well as (optionally), the bounding boxes.
+    """
+
+    # process sequence
+    results = list()
+    boxes = dict()
+    # for img in tqdm(sequence):
+    for img in sequence:
+        modules, b = _do_locate_multiple_modules(
+            img,
+            filter_size,
+            reject_size_thresh,
+            reject_fill_thresh,
+            padding,
+            cols,
+            rows,
+            drop_clipped_modules,
+        )
+        results += modules
+        boxes[img.path] = b
+
+    if return_bounding_boxes:
+        if len(results) > 0:
+            return ModuleImageSequence(results, same_camera=False), boxes
+        else:
+            return None, dict()
+    else:
+        if len(results) > 0:
+            return ModuleImageSequence(results, same_camera=False)
+        else:
+            return None
