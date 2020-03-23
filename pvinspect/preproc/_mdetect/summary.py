@@ -1,7 +1,5 @@
 class Summary:
-
     class __Summary:
-
         def __init__(self):
             self._values = {}
             self._enabled = False
@@ -17,7 +15,7 @@ class Summary:
                 if k not in self._values.keys():
                     self._values[k] = v
                 else:
-                    raise RuntimeError('key {} already used'.format(k))
+                    raise RuntimeError("key {} already used".format(k))
 
         def get(self, k):
             return self._values.get(k)
@@ -37,4 +35,3 @@ class Summary:
 
     def __getattr__(self, name):
         return getattr(self._instances[self._key], name)
-

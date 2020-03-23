@@ -1,4 +1,4 @@
 __all__ = [
-        'data',
-        'preproc',
-    ]
+    "data",
+    "preproc",
+]

@@ -1,11 +1,13 @@
 from pvinspect import data
 
+
 def test_poly10x6():
     seq = data.datasets.poly10x6()
     assert len(seq) == 20
     assert seq.modality == data.EL_IMAGE
     assert seq.shape == (2052, 2046)
     assert seq.same_camera == True
+
 
 def test_caip_dataB():
     seq1, seq2 = data.datasets.caip_dataB()
@@ -16,11 +18,13 @@ def test_caip_dataB():
     assert seq2.modality == data.EL_IMAGE
     assert seq2.same_camera == False
 
+
 def test_caip_dataC():
     seq = data.datasets.caip_dataC()
     assert len(seq) == 10
     assert seq.modality == data.EL_IMAGE
     assert seq.same_camera == True
+
 
 def test_caip_dataD():
     seq = data.datasets.caip_dataD()
@@ -28,9 +32,10 @@ def test_caip_dataD():
     assert seq.modality == data.EL_IMAGE
     assert seq.same_camera == True
 
+
 def test_calibration_ipv40CCD_FF():
     d = data.datasets.calibration_ipv40CCD_FF(N=2)
     assert isinstance(d, dict)
-    assert '0A' in d.keys()
+    assert "0A" in d.keys()
     assert len(d) == 3
-    assert len(d['0A']) == 2
+    assert len(d["0A"]) == 2
