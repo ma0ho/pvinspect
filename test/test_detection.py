@@ -10,16 +10,16 @@ def test_locate_homography():
     seq = data.datasets.poly10x6(2)
     seq = preproc.locate_module_and_cells(seq, False)
 
-    assert isinstance(seq[0].transform, HomographyTransform)
-    assert isinstance(seq[1].transform, HomographyTransform)
-    assert seq[0].transform.valid
-    assert seq[1].transform.valid
+    assert isinstance(seq[0].get_meta("transform"), HomographyTransform)
+    assert isinstance(seq[1].get_meta("transform"), HomographyTransform)
+    assert seq[0].get_meta("transform").valid
+    assert seq[1].get_meta("transform").valid
 
     # check correct origin
-    x = seq[0].transform(np.array([[0.0, 0.0]])).flatten()
+    x = seq[0].get_meta("transform")(np.array([[0.0, 0.0]])).flatten()
     assert x[0] > 1760 and x[0] < 1840
     assert x[1] > 80 and x[1] < 160
-    x = seq[1].transform(np.array([[0.0, 0.0]])).flatten()
+    x = seq[1].get_meta("transform")(np.array([[0.0, 0.0]])).flatten()
     assert x[0] > 1760 and x[0] < 1840
     assert x[1] > 80 and x[1] < 160
 
@@ -28,16 +28,16 @@ def test_locate_full():
     seq = data.datasets.poly10x6(2)
     seq = preproc.locate_module_and_cells(seq, True)
 
-    assert isinstance(seq[0].transform, FullTransform)
-    assert isinstance(seq[1].transform, FullTransform)
-    assert seq[0].transform.valid
-    assert seq[1].transform.valid
+    assert isinstance(seq[0].get_meta("transform"), FullTransform)
+    assert isinstance(seq[1].get_meta("transform"), FullTransform)
+    assert seq[0].get_meta("transform").valid
+    assert seq[1].get_meta("transform").valid
 
     # check correct origin
-    x = seq[0].transform(np.array([[0.0, 0.0]])).flatten()
+    x = seq[0].get_meta("transform")(np.array([[0.0, 0.0]])).flatten()
     assert x[0] > 1760 and x[0] < 1840
     assert x[1] > 80 and x[1] < 160
-    x = seq[1].transform(np.array([[0.0, 0.0]])).flatten()
+    x = seq[1].get_meta("transform")(np.array([[0.0, 0.0]])).flatten()
     assert x[0] > 1760 and x[0] < 1840
     assert x[1] > 80 and x[1] < 160
 
@@ -78,13 +78,13 @@ def test_segment_modules():
     assert modules[0].path == seq[0].path
     assert modules.same_camera is False
 
-    x = modules[0].transform(np.array([[0.0, 0.0]])).flatten()
+    x = modules[0].get_meta("transform")(np.array([[0.0, 0.0]])).flatten()
     assert_equal(x[0], 0.0)
     assert_equal(x[1], 0.0)
-    x = modules[0].transform(np.array([[10.0, 0.0]])).flatten()
+    x = modules[0].get_meta("transform")(np.array([[10.0, 0.0]])).flatten()
     assert_equal(x[0], modules[0].shape[1])
     assert_equal(x[1], 0.0)
-    x = modules[0].transform(np.array([[10.0, 6.0]])).flatten()
+    x = modules[0].get_meta("transform")(np.array([[10.0, 6.0]])).flatten()
     assert_equal(x[0], modules[0].shape[1])
     assert_equal(x[1], modules[0].shape[0])
 
@@ -105,8 +105,8 @@ def test_segment_padding():
 def test_segment_padding_transform():
     img = preproc.locate_module_and_cells(data.datasets.poly10x6(1)[0])
     part = preproc.segment_module_part(img, 0, 0, 3, 2, padding=0.5, size=20)
-    x1 = part.transform(np.array([[0.0, 1.0]])).flatten()
-    x2 = part.transform(np.array([[2.0, 3.0]])).flatten()
+    x1 = part.get_meta("transform")(np.array([[0.0, 1.0]])).flatten()
+    x2 = part.get_meta("transform")(np.array([[2.0, 3.0]])).flatten()
     assert_equal(x1[0], 10)
     assert_equal(x1[1], 30)
     assert_equal(x2[0], 50)
@@ -120,8 +120,8 @@ def test_locate_partial_module():
 
     x1_true = [part_det.shape[1] * 1 / 8, part_det.shape[0] * 1 / 6]
     x2_true = [part_det.shape[1] * 7 / 8, part_det.shape[0] * 5 / 6]
-    x1 = part_det.transform(np.array([[0.0, 0.0]])).flatten()
-    x2 = part_det.transform(np.array([[3.0, 2.0]])).flatten()
+    x1 = part_det.get_meta("transform")(np.array([[0.0, 0.0]])).flatten()
+    x2 = part_det.get_meta("transform")(np.array([[3.0, 2.0]])).flatten()
     eps = 0.05 * part_det.shape[1]
 
     assert_equal(x1[0], x1_true[0], eps)

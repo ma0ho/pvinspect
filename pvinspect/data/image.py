@@ -12,6 +12,10 @@ from functools import wraps
 import logging
 from pvinspect.common._ipy_exit import exit
 import inspect
+import sys
+
+# this is a pointer to the module object instance itself
+this = sys.modules[__name__]
 
 
 # modality
@@ -19,6 +23,41 @@ EL_IMAGE = 0
 """Indicate an electroluminescense (EL) image"""
 PL_IMAGE = 1
 """Indicate a photoluminescense (PL) image"""
+
+
+# global list of plugins that are called on every .show()
+this.show_plugins = list()
+
+
+def register_show_plugin(callable, priority: int = 0):
+    """Register a new plugin that is called on every .show()
+
+    Args:
+        callable: Callable that receives the image as a first argument and variable arguments to .show() next
+        priority (int): Plugins are invoked in the order of increasing priority (highest priority is invoked
+            last and hence appears on top)
+    """
+    this.show_plugins.append((priority, callable))
+    this.show_plugins = sorted(this.show_plugins, key=lambda x: x[0])
+
+
+def _invoke_show_plugins(image, **kwargs):
+    for p in this.show_plugins:
+        p[1](image, **kwargs)
+
+
+def _register_default_plugins():
+    def show_cell_crossings(image: ModuleImage, show_cell_crossings: bool = True):
+        if (
+            show_cell_crossings
+            and isinstance(image, ModuleImage)
+            and image.has_meta("transform")
+        ):
+            grid = image.grid()
+            coords = image.get_meta("transform").__call__(grid)
+            plt.scatter(coords[:, 0], coords[:, 1], c="yellow", marker="+")
+
+    register_show_plugin(show_cell_crossings)
 
 
 class _Base:
@@ -37,6 +76,9 @@ class _Base:
 
         other_args = dict()
         for name in required:
+            if name == "meta" and "meta" in kwargs.keys():
+                # joint meta dictionaries
+                kwargs["meta"].update(other._meta)
             if name not in kwargs and name != "self":
                 other_args[name] = getattr(other, "_" + name)
 
@@ -70,7 +112,7 @@ class Image(_Base):
         self._modality = modality
         self._meta = meta
 
-    def show(self, clip_low: float = 0.001, clip_high: float = 99.999):
+    def show(self, clip_low: float = 0.001, clip_high: float = 99.999, **kwargs):
         """Show this image
         
         Args:
@@ -82,6 +124,7 @@ class Image(_Base):
         p = np.percentile(self.data, [clip_low, clip_high])
         d = np.clip(self.data, p[0], p[1])
         plt.imshow(d, cmap="gray")
+        _invoke_show_plugins(self, **kwargs)
         plt.colorbar()
         plt.title(str(self.path.name))
 
@@ -385,7 +428,7 @@ class ModuleImage(Image):
         path: Path,
         cols: int = None,
         rows: int = None,
-        transform: Transform = None,
+        meta: dict = {},
     ):
         """Initialize a module image
 
@@ -395,13 +438,11 @@ class ModuleImage(Image):
             path (Path): Path to the image
             cols (int): Number of cells in a column
             rows (int): Number of cells in a row
-            transform (Transform): Transform from regular grid to module corners
         """
 
-        super().__init__(data, path, modality)
+        super().__init__(data, path, modality, meta)
         self._cols = cols
         self._rows = rows
-        self._transform = transform
 
     def grid(self) -> np.ndarray:
         """Create a grid of corners according to the module geometry
@@ -428,25 +469,6 @@ class ModuleImage(Image):
         """Number of row-columns"""
         return self._rows
 
-    @property
-    def transform(self) -> Transform:
-        """Transformation from regular grid to image coordinates"""
-        return deepcopy(self._transform)
-
-    def show(self, show_cell_crossings: bool = True, *argv, **kwargs):
-        """Show this image and (optionally) the cell crossing points
-        
-        Args:
-            show_cell_crossings (bool): Indicates, if the cell crossing points should be shown in addition to the image
-        """
-
-        super().show(*argv, **kwargs)
-
-        if show_cell_crossings and self.transform is not None:
-            grid = self.grid()
-            coords = self.transform.__call__(grid)
-            plt.scatter(coords[:, 0], coords[:, 1], c="yellow", marker="+")
-
 
 class PartialModuleImage(ModuleImage):
     """An image of a solar module with additional meta data"""
@@ -460,7 +482,7 @@ class PartialModuleImage(ModuleImage):
         rows: int = None,
         first_col: int = None,
         first_row: int = None,
-        transform: Transform = None,
+        meta: dict = {},
     ):
         """Initialize a module image
 
@@ -472,10 +494,9 @@ class PartialModuleImage(ModuleImage):
             rows (int): Number of completely visible cells in a row
             first_col (int): Index of the first complete column shown
             first_row (int): Index of the first complete row shown
-            transform (Transform): Transform from regular grid to module corners
         """
 
-        super().__init__(data, modality, path, cols, rows, transform)
+        super().__init__(data, modality, path, cols, rows, meta)
 
         self._first_col = first_col
         self._first_row = first_row

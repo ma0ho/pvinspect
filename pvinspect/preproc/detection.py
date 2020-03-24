@@ -117,7 +117,7 @@ def locate_module_and_cells(
 
     for t, img in zip(transforms, sequence.images):
         if t is not None and t.valid:
-            img_res = type(img).from_other(img, transform=t)
+            img_res = type(img).from_other(img, meta={"transform": t})
             result.append(img_res)
         else:
             result.append(deepcopy(img))
@@ -153,11 +153,13 @@ def segment_module_part(
         segment: The resulting segment
     """
 
-    if image.transform is None or not image.transform.valid:
+    if not image.has_meta("transform") or not image.get_meta("transform").valid:
         logging.error(
             "The ModuleImage does not have a valid transform. Did module localization succeed?"
         )
         exit()
+
+    t = image.get_meta("transform")
 
     if padding >= 1.0 or padding < 0.0:
         logging.error("padding needs to be in [0..1[")
@@ -169,10 +171,10 @@ def segment_module_part(
         logging.error("The row or column index exceeds the module geometry")
         exit()
 
-    size = image.transform.mean_scale() if size is None else size
+    size = t.mean_scale() if size is None else size
     result = warp_image(
         image.data,
-        image.transform,
+        t,
         first_col - padding,
         first_row - padding,
         1 / size,
@@ -200,7 +202,14 @@ def segment_module_part(
         ),
     )
     return PartialModuleImage(
-        result, image.modality, image.path, cols, rows, first_col, first_row, transform
+        result,
+        image.modality,
+        image.path,
+        cols,
+        rows,
+        first_col,
+        first_row,
+        meta={"transform": transform},
     )
 
 
@@ -226,7 +235,7 @@ def segment_module(
         image.path,
         image.cols,
         image.rows,
-        result.transform,
+        meta={"transform": result.get_meta("transform")},
     )
 
 
@@ -268,9 +277,9 @@ def segment_modules(
 
     scales = np.array(
         [
-            img.transform.mean_scale()
+            img.get_meta("transform").mean_scale()
             for img in sequence.images
-            if img.transform is not None and img.transform.valid
+            if img.has_meta("transform") and img.get_meta("transform").valid
         ]
     )
     if scales.std() > 0.1 * scales.mean() and size is None:
@@ -286,7 +295,7 @@ with less variation in size."
     for img in tqdm(sequence.images):
 
         # for the moment, we silently ignore images without a valid transform
-        if img.transform is not None and img.transform.valid:
+        if img.has_meta("transform") and img.get_meta("transform").valid:
             result.append(segment_module(img, size))
 
     return type(sequence).from_other(sequence, images=result, same_camera=False)
@@ -309,9 +318,9 @@ def segment_cells(
 
     scales = np.array(
         [
-            img.transform.mean_scale()
+            img.get_meta("transform").mean_scale()
             for img in sequence.images
-            if img.transform is not None and img.transform.valid
+            if img.has_meta("transform") and img.get_meta("transform").valid
         ]
     )
     if scales.std() > 0.1 * scales.mean() and size is None:
@@ -329,7 +338,10 @@ with less variation in size."
             for col in range(img.cols):
 
                 # for the moment, we silently ignore images without a valid transform
-                if img.transform is not None and img.transform.valid:
+                if (
+                    img.has_meta("transform") is not None
+                    and img.get_meta("transform").valid
+                ):
                     result.append(segment_cell(img, row, col, size))
 
     return CellImageSequence(result)

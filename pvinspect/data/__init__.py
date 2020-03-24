@@ -1,7 +1,7 @@
 """Data loading and viewing"""
 
 from .io import *
-from .image import EL_IMAGE, PL_IMAGE
+from .image import EL_IMAGE, PL_IMAGE, _register_default_plugins
 from . import datasets
 
 __all__ = [
@@ -17,3 +17,5 @@ __all__ = [
     "EL_IMAGE",
     "PL_IMAGE",
 ]
+
+_register_default_plugins()
