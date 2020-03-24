@@ -1,5 +1,6 @@
 import numpy as np
 from shapely.geometry import Polygon
+from typing import List
 
 
 def rotation_matrix_3d(rx, ry, rz):
@@ -127,8 +128,13 @@ def iou(p1, p2):
         return 0.0
 
 
-def mean_iou(objects_label, objects_predicted, iou_thresh: float = None):
-    """Calculate IOU for every pair from objects_label and objects_predicted, assign objects by maximum IOU and return mean IOU"""
+def objdetect_metrics(
+    objects_label,
+    objects_predicted,
+    iou_thresh: List[float] = [0.6, 0.7, 0.8, 0.9, 0.99],
+):
+    """Calculate IOU for every pair from objects_label and objects_predicted,
+    assign objects by maximum IOU and return mean IOU, precision and recall"""
 
     # set up matrix of IOUs
     max_len = max(len(objects_label), len(objects_predicted))
@@ -139,26 +145,30 @@ def mean_iou(objects_label, objects_predicted, iou_thresh: float = None):
 
     # for every object from objects1, find partner with maximum intersection from object2
     iou_sum = 0.0
-    label_to_predicted = [-1] * len(objects_label)
+    assignments = [dict() for _ in iou_thresh]
     for i in range(max_len):
         j = np.argmax(ious[i])
         iou_sum += ious[i, j]
 
-        # store assignments
-        if (
-            iou_thresh is not None
-            and ious[i, j] > iou_thresh
-            and i < len(label_to_predicted)
-        ):
-            assignments[i] = j
+        # store assignments by iou_thresh
+        for thresh_i, thresh in enumerate(iou_thresh):
+            if ious[i, j] > thresh:
+                # i = label index; j = detection index
+                assignments[thresh_i][i] = j
 
         # "delete" partner object
         ious[:, j] = 0.0
 
     # calculate precision + recall
-
-    # calculate mean and return
-    return iou_sum / max_len
+    recall = [
+        len(x.keys()) / len(objects_label) if len(objects_label) > 0 else 0.0
+        for x in assignments
+    ]
+    precision = [
+        len(x.keys()) / len(objects_predicted) if len(objects_predicted) > 0 else 0.0
+        for x in assignments
+    ]
+    return iou_sum / max_len, precision, recall
 
 
 def polygon2boundingbox(polygon: Polygon):

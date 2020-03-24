@@ -16,7 +16,7 @@ from copy import deepcopy
 import logging
 from pvinspect.common._ipy_exit import exit
 import numpy as np
-from skimage import measure, filters, morphology
+from skimage import measure, filters, morphology, transform
 from shapely.geometry import Polygon
 
 
@@ -337,7 +337,7 @@ with less variation in size."
 
 def _do_locate_multiple_modules(
     image: Image,
-    filter_size: int,
+    scale: float,
     reject_size_thresh: float,
     reject_fill_thresh: float,
     padding: float,
@@ -347,7 +347,8 @@ def _do_locate_multiple_modules(
 ) -> Tuple[List[ModuleImage], List[Polygon]]:
 
     # filter + binarize
-    image_f = filters.gaussian(image._data, filter_size)
+    # image_f = filters.gaussian(image._data, filter_size)
+    image_f = transform.rescale(image._data, scale)
     image_f = image_f > filters.threshold_otsu(image_f)
 
     # find regions
@@ -378,12 +379,16 @@ def _do_locate_multiple_modules(
         ) and drop_clipped_modules:
             continue
 
+        # transform bounding box to original size
+        s = 1 / scale
+        bbox = [int(r.bbox[i] * s) for i in range(4)]
+
         # crop module
-        pad = int(np.sqrt(r.bbox_area) * padding)
-        y0, x0 = max(0, r.bbox[0] - pad), max(0, r.bbox[1] - pad)
+        pad = int(np.sqrt(r.bbox_area) * padding * s)
+        y0, x0 = max(0, bbox[0] - pad), max(0, bbox[1] - pad)
         y1, x1 = (
-            min(image.shape[0], r.bbox[2] + pad),
-            min(image.shape[1], r.bbox[3] + pad),
+            min(image.shape[0], bbox[2] + pad),
+            min(image.shape[1], bbox[3] + pad),
         )
         boxes.append(Polygon.from_bounds(x0, y0, x1, y1))
         crop = image._data[y0:y1, x0:x1]
@@ -403,7 +408,7 @@ def _do_locate_multiple_modules(
 @_sequence(True)
 def locate_multiple_modules(
     sequence: ImageOrSequence,
-    filter_size: int = 10,
+    scale: float = 0.5,
     reject_size_thresh: float = 0.75,
     reject_fill_thresh: float = 0.5,
     padding: float = 0.05,
@@ -416,7 +421,7 @@ def locate_multiple_modules(
 
     Args:
         sequence (ImageOrSequence): Input images
-        filter_size (int): Standard deviation of the Gaussian filter
+        scale (float): Image is scaled to this size before processing
         reject_size_thresh (float): Detections smaller than this times the median size of detections are rejected
         reject_fill_thresh (float): Detections, where more that this parts of the area are black after thresholding are rejected
         padding (float): Detections are padded by this times the average size length of the bounding box
@@ -436,7 +441,7 @@ def locate_multiple_modules(
     for img in sequence:
         modules, b = _do_locate_multiple_modules(
             img,
-            filter_size,
+            scale,
             reject_size_thresh,
             reject_fill_thresh,
             padding,
