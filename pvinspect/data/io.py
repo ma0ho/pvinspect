@@ -4,7 +4,7 @@ from .image import *
 from pathlib import Path
 import numpy as np
 from typing import Union, Tuple, List, Dict
-from skimage import io, color, img_as_uint
+from skimage import io, color, img_as_uint, img_as_float
 from .exceptions import UnsupportedModalityException
 from functools import reduce
 from tqdm.auto import tqdm
@@ -113,20 +113,19 @@ def _read_images(
                 "The original images are of different shape. They might not be suited for all applications (for example superresolution)."
             )
 
-        result = list()
-        if not homogeneous_types or not homogeneous_shapes:
-            for img in imgs:
-                data = img.data
-                if not homogeneous_types:
-                    data = data.astype(np.float64)  # default type
-                if not homogeneous_shapes:
-                    tgt = np.full(target_shape, data.min(), dtype=data.dtype)
-                    tgt[: data.shape[0], : data.shape[1]] = data
-                    data = tgt
-                result.append(
-                    ModuleImage(data, img.modality, img.path, img.cols, img.rows)
+        if not homogeneous_types:
+            # target type is determined by the first image
+            logging.warning(
+                "The original images are of different type. They are converted to the type of the first image ({})".format(
+                    imgs[0].dtype
                 )
-            imgs = result
+            )
+            conv = (
+                img_as_float
+                if imgs[0].dtype == np.float32 or imgs[0].dtype == np.float64
+                else img_as_uint
+            )
+            imgs = [conv(img) for img in imgs]
 
     if is_module_image or is_partial_module:
         return ModuleImageSequence(
