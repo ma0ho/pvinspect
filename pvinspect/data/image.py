@@ -5,7 +5,7 @@ from skimage import io, img_as_uint, img_as_float
 from pvinspect.common import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
-from typing import List, Tuple, Union, Callable, Type, TypeVar
+from typing import List, Tuple, Union, Callable, Type, TypeVar, Any, Dict
 from copy import deepcopy
 import math
 from functools import wraps
@@ -46,13 +46,20 @@ class _Base:
 class Image(_Base):
     """A general image"""
 
-    def __init__(self, data: np.ndarray, path: Path, modality: int = None):
+    def __init__(
+        self,
+        data: np.ndarray,
+        path: Path,
+        modality: int = None,
+        meta: Dict[str, Any] = {},
+    ):
         """Create a new image. All non-float images as automatically converted to uint.
 
         Args:
             data (np.ndarray): The image data
             path (Path): Path to the image
             modality (int): The imaging modality (EL_IMAGE or PL_IMAGE) or None
+            meta (Dict[str, Any]): Meta attributes of this image
         """
         # convert to a common dtype
         if data.dtype != np.float32 and data.dtype != np.float64:
@@ -61,6 +68,7 @@ class Image(_Base):
         self._data = data
         self._path = path
         self._modality = modality
+        self._meta = meta
 
     def show(self, clip_low: float = 0.001, clip_high: float = 99.999):
         """Show this image
@@ -151,6 +159,14 @@ class Image(_Base):
     def modality(self) -> int:
         """The imaging modality"""
         return self._modality
+
+    def get_meta(self, key: str) -> Any:
+        """Access a meta attribute"""
+        return self._meta[key]
+
+    def has_meta(self, key: str) -> bool:
+        """Check if a meta attribute is set"""
+        return key in self._meta.keys()
 
 
 class ImageSequence(_Base):

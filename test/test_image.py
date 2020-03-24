@@ -364,3 +364,17 @@ def test_pow_image_sequence():
 
     for img1, img2, r in zip(imgs1, imgs2, res):
         assert_equal(r.data, img1.data ** img2.data)
+
+
+def test_image_meta():
+    data = _random_image().data
+    path = _random_image().path
+    img_test = Image(data=data, path=path, meta={"key": "value"})
+
+    assert img_test.has_meta("key")
+    assert not img_test.has_meta("key2")
+    assert img_test.get_meta("key") == "value"
+
+    # check from_other preserves meta
+    img_other = Image.from_other(img_test, data=_random_image().data)
+    assert img_other.get_meta("key") == "value"
