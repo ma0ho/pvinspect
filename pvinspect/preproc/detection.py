@@ -373,13 +373,13 @@ def _do_locate_multiple_modules(
     if len(regions) == 0:
         return [], []
 
-    mean_area = int(np.mean([r.bbox_area for r in regions]))
+    max_area = int(np.max([r.bbox_area for r in regions]))
     results = []
     boxes = []
     i = 0
     for r in regions:
         # check size
-        if r.bbox_area < reject_size_thresh * mean_area:
+        if r.bbox_area < reject_size_thresh * max_area:
             continue
 
         # check not touching boundary
@@ -450,7 +450,7 @@ def locate_multiple_modules(
     results = list()
     boxes = dict()
     # for img in tqdm(sequence):
-    for img in sequence:
+    for img in tqdm(sequence):
         modules, b = _do_locate_multiple_modules(
             img,
             scale,
@@ -461,6 +461,17 @@ def locate_multiple_modules(
             rows,
             drop_clipped_modules,
         )
+
+        # add original images with box annotations as meta
+        imgs_org = [
+            Image.from_other(img, meta={"multimodule_index": i, "multimodule_boxes": b})
+            for i in range(len(modules))
+        ]
+        modules = [
+            ModuleImage.from_other(m, meta={"multimodule_original": o})
+            for m, o in zip(modules, imgs_org)
+        ]
+
         results += modules
         boxes[img.path] = b
 

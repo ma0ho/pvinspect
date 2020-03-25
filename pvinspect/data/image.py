@@ -47,7 +47,9 @@ def _invoke_show_plugins(image, **kwargs):
 
 
 def _register_default_plugins():
-    def show_cell_crossings(image: ModuleImage, show_cell_crossings: bool = True):
+    def show_cell_crossings(
+        image: ModuleImage, show_cell_crossings: bool = True, **kwargs
+    ):
         if (
             show_cell_crossings
             and isinstance(image, ModuleImage)
@@ -58,6 +60,63 @@ def _register_default_plugins():
             plt.scatter(coords[:, 0], coords[:, 1], c="yellow", marker="+")
 
     register_show_plugin(show_cell_crossings)
+
+    def multimodule_show_boxes(
+        image: Image,
+        multimodule_show_boxes: bool = True,
+        multimodule_highlight_selection: bool = True,
+        **kwargs
+    ):
+        if (
+            multimodule_show_boxes
+            and isinstance(image, Image)
+            and image.has_meta("multimodule_boxes")
+        ):
+            for i, box in enumerate(image.get_meta("multimodule_boxes")):
+                color = (
+                    "red"
+                    if i == image.get_meta("multimodule_index")
+                    and multimodule_highlight_selection
+                    else "yellow"
+                )
+                plt.plot(*box.exterior.xy, linewidth=2, color=color)
+
+    register_show_plugin(multimodule_show_boxes)
+
+    def multimodule_show_numbers(
+        image: Image,
+        multimodule_show_numbers: bool = True,
+        multimodule_highlight_selection: bool = True,
+        **kwargs
+    ):
+        if (
+            multimodule_show_numbers
+            and isinstance(image, Image)
+            and image.has_meta("multimodule_boxes")
+        ):
+            for i, box in enumerate(image.get_meta("multimodule_boxes")):
+                bgcolor = (
+                    "red"
+                    if i == image.get_meta("multimodule_index")
+                    and multimodule_highlight_selection
+                    else "white"
+                )
+                textcolor = (
+                    "white"
+                    if i == image.get_meta("multimodule_index")
+                    and multimodule_highlight_selection
+                    else "black"
+                )
+                plt.text(
+                    box.centroid.x,
+                    box.centroid.y,
+                    s=str(i),
+                    color=textcolor,
+                    fontsize=20,
+                    bbox=dict(facecolor=bgcolor, alpha=0.8),
+                )
+
+    register_show_plugin(multimodule_show_numbers)
 
 
 class _Base:
@@ -124,9 +183,9 @@ class Image(_Base):
         p = np.percentile(self.data, [clip_low, clip_high])
         d = np.clip(self.data, p[0], p[1])
         plt.imshow(d, cmap="gray")
-        _invoke_show_plugins(self, **kwargs)
         plt.colorbar()
         plt.title(str(self.path.name))
+        _invoke_show_plugins(self, **kwargs)
 
     _T = TypeVar("T")
 
