@@ -315,27 +315,41 @@ def read_partial_module_images(
     )
 
 
-def save_image(filename: PathOrStr, image: Image):
+def save_image(
+    filename: PathOrStr, image: Image, with_visusalization: bool = False, **kwargs
+):
     """Write an image to disk. Float64 is automatically converted to float32 in order to be compatible to ImageJ.
 
     Args:
         filename (PathOrStr): Filename of the resulting image
         image (Image): The image
+        with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
     """
 
-    if image.dtype == np.float64:
-        io.imsave(filename, image.data.astype(np.float32), check_contrast=False)
+    if with_visusalization:
+        image.show(**kwargs)
+        plt.savefig(filename, **kwargs)
     else:
-        io.imsave(filename, image.data, check_contrast=False)
+        if image.dtype == np.float64:
+            io.imsave(filename, image.data.astype(np.float32), check_contrast=False)
+        else:
+            io.imsave(filename, image.data, check_contrast=False)
 
 
-def save_images(path: PathOrStr, sequence: ImageSequence, mkdir: bool = True):
+def save_images(
+    path: PathOrStr,
+    sequence: ImageSequence,
+    mkdir: bool = True,
+    with_visualization: bool = False,
+    **kwargs
+):
     """Write a sequence of images to disk
 
     Args:
         path (PathOrStr): Target directory
         sequence (ImageSequence): The sequence of images
         mkdir (bool): Automatically create missing directories
+        with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
     """
 
     path = __assurePath(path)
@@ -350,7 +364,7 @@ def save_images(path: PathOrStr, sequence: ImageSequence, mkdir: bool = True):
             )
         else:
             name = image.path.name
-        save_image(path / name, image)
+        save_image(path / name, image, with_visusalization=with_visualization, **kwargs)
 
 
 def load_json_object_masks(path: PathOrStr) -> Dict[str, List[Tuple[str, Polygon]]]:

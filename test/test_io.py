@@ -122,3 +122,10 @@ def test_read_partial_module_images():
     assert isinstance(seq, ModuleImageSequence)
     for img in seq:
         assert isinstance(img, PartialModuleImage)
+
+
+def test_save_image_with_visualization(tmp_path: Path):
+    img = datasets.poly10x6(1)[0]
+    p = tmp_path / "img.pdf"
+    save_image(p, img, with_visusalization=True)
+    assert p.is_file()

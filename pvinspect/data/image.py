@@ -65,6 +65,7 @@ def _register_default_plugins():
         image: Image,
         multimodule_show_boxes: bool = True,
         multimodule_highlight_selection: bool = True,
+        multimodule_boxes_linewidth: int = 2,
         **kwargs
     ):
         if (
@@ -79,7 +80,9 @@ def _register_default_plugins():
                     and multimodule_highlight_selection
                     else "yellow"
                 )
-                plt.plot(*box.exterior.xy, linewidth=2, color=color)
+                plt.plot(
+                    *box.exterior.xy, linewidth=multimodule_boxes_linewidth, color=color
+                )
 
     register_show_plugin(multimodule_show_boxes)
 
@@ -87,6 +90,7 @@ def _register_default_plugins():
         image: Image,
         multimodule_show_numbers: bool = True,
         multimodule_highlight_selection: bool = True,
+        multimodule_numbers_fontsize: int = 20,
         **kwargs
     ):
         if (
@@ -112,11 +116,38 @@ def _register_default_plugins():
                     box.centroid.y,
                     s=str(i),
                     color=textcolor,
-                    fontsize=20,
+                    fontsize=multimodule_numbers_fontsize,
                     bbox=dict(facecolor=bgcolor, alpha=0.8),
                 )
 
     register_show_plugin(multimodule_show_numbers)
+
+    def show_image(
+        image: Image,
+        clip_low: float = 0.001,
+        clip_high: float = 99.999,
+        colorbar: bool = True,
+        **kwargs
+    ):
+        clip_low = clip_low if clip_low is not None else 0.0
+        clip_high = clip_high if clip_high is not None else 100.0
+        p = np.percentile(image._data, [clip_low, clip_high])
+        d = np.clip(image._data, p[0], p[1])
+        plt.imshow(d, cmap="gray")
+        if colorbar:
+            plt.colorbar()
+
+    register_show_plugin(show_image, -100)
+
+    def axis_options(
+        image: Image, show_axis: bool = True, show_title: bool = True, **kwargs
+    ):
+        if not show_axis:
+            plt.axis("off")
+        if show_title:
+            plt.title(str(image.path.name))
+
+    register_show_plugin(axis_options, -200)
 
 
 class _Base:
@@ -171,20 +202,8 @@ class Image(_Base):
         self._modality = modality
         self._meta = meta
 
-    def show(self, clip_low: float = 0.001, clip_high: float = 99.999, **kwargs):
-        """Show this image
-        
-        Args:
-            clip_low (float): Intensity below this percentile is clipped
-            clip_high (float): Intensity above this percentile is clipped
-        """
-        clip_low = clip_low if clip_low is not None else 0.0
-        clip_high = clip_high if clip_high is not None else 100.0
-        p = np.percentile(self.data, [clip_low, clip_high])
-        d = np.clip(self.data, p[0], p[1])
-        plt.imshow(d, cmap="gray")
-        plt.colorbar()
-        plt.title(str(self.path.name))
+    def show(self, **kwargs):
+        """Show this image"""
         _invoke_show_plugins(self, **kwargs)
 
     _T = TypeVar("T")
