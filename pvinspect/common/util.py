@@ -147,17 +147,21 @@ def objdetect_metrics(
     iou_sum = 0.0
     assignments = [dict() for _ in iou_thresh]
     for i in range(max_len):
+        # find detection with maximum IOU to label i
         j = np.argmax(ious[i])
-        iou_sum += ious[i, j]
 
-        # store assignments by iou_thresh
-        for thresh_i, thresh in enumerate(iou_thresh):
-            if ious[i, j] > thresh:
-                # i = label index; j = detection index
-                assignments[thresh_i][i] = j
+        # only assign, if j does not have a larger IOU with another label
+        if np.argmax(ious[:, j]) == i:
+            iou_sum += ious[i, j]
 
-        # "delete" partner object
-        ious[:, j] = 0.0
+            # store assignments by iou_thresh
+            for thresh_i, thresh in enumerate(iou_thresh):
+                if ious[i, j] > thresh:
+                    # i = label index; j = detection index
+                    assignments[thresh_i][i] = j
+
+            # "delete" partner object
+            ious[:, j] = 0.0
 
     # calculate precision + recall
     recall = [

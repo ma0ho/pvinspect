@@ -8,6 +8,10 @@ from functools import partial
 import numpy as np
 from sklearn.model_selection import train_test_split
 import pandas as pd
+from copy import deepcopy
+
+TRAIN_SIZE = 0.7
+N_TRIALS = 100
 
 
 def objective(
@@ -73,7 +77,7 @@ if __name__ == "__main__":
 
     # split
     imgs_train, imgs_test = train_test_split(
-        img_list, train_size=0.5, stratify=obj_counts
+        img_list, train_size=TRAIN_SIZE, stratify=obj_counts
     )
     imgs_train = ImageSequence.from_other(imgs, images=imgs_train)
     imgs_test = ImageSequence.from_other(imgs, images=imgs_test)
@@ -86,9 +90,12 @@ if __name__ == "__main__":
     obj_test = partial(
         objective, imgs=imgs_test, labels=labels, skip_pr=False, iou_thresh=thresholds
     )
+    obj_test_90 = partial(
+        objective, imgs=imgs_test, labels=labels, skip_pr=False, iou_thresh=[0.9]
+    )
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(obj_train, n_trials=50)
+    study.optimize(obj_train, n_trials=N_TRIALS)
 
     # test
     print("Best configuration:")
@@ -101,6 +108,36 @@ if __name__ == "__main__":
     print("recall ({}): {}".format(thresholds, rec))
 
     # save csv
-    pd.DataFrame({"threshold": thresholds, "precision": pr, "recall": rec}).to_csv(
-        "results.csv"
+    pd.DataFrame({"iou_threshold": thresholds, "precision": pr, "recall": rec}).to_csv(
+        "results_iou.csv"
     )
+
+    # precision recall curve for varying size threshold
+    thresholds = list()
+    precisions = list()
+    recalls = list()
+    for thresh in np.linspace(0.1, 1.0, 10).tolist():
+        trial = deepcopy(study.best_trial)
+        trial.params["reject_size_thresh"] = thresh
+        iou, pr, rec = obj_test_90(trial)
+        thresholds.append(thresh)
+        precisions.append(pr[0])
+        recalls.append(rec[0])
+    pd.DataFrame(
+        {"size_threshold": thresholds, "precision": precisions, "recall": recalls}
+    ).to_csv("results_size.csv")
+
+    # precision recall curve for varying fill threshold
+    thresholds = list()
+    precisions = list()
+    recalls = list()
+    for thresh in np.linspace(0.1, 1.0, 10).tolist():
+        trial = deepcopy(study.best_trial)
+        trial.params["reject_fill_thresh"] = thresh
+        iou, pr, rec = obj_test_90(trial)
+        thresholds.append(thresh)
+        precisions.append(pr[0])
+        recalls.append(rec[0])
+    pd.DataFrame(
+        {"fill_threshold": thresholds, "precision": precisions, "recall": recalls}
+    ).to_csv("results_fill.csv")
