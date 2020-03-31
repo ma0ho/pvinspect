@@ -2,6 +2,7 @@ from pvinspect import data, preproc
 from pvinspect.data.image import *
 from pathlib import Path
 from pvinspect.common.transform import HomographyTransform, FullTransform
+from pvinspect.common.util import objdetect_metrics
 import numpy as np
 from .utilities import assert_equal
 
@@ -128,3 +129,14 @@ def test_locate_partial_module():
     assert_equal(x1[1], x1_true[1], eps)
     assert_equal(x2[0], x2_true[0], eps)
     assert_equal(x2[1], x2_true[1], eps)
+
+
+def test_detect_multiple_modules():
+    anns, imgs = data.datasets.multi_module_detection(N=2)
+    modules, boxes = preproc.locate_multiple_modules(
+        imgs, return_bounding_boxes=True, padding=0.0
+    )
+
+    for path, prediction in boxes.items():
+        _, _, recall = objdetect_metrics(anns[path.name], prediction, iou_thresh=[0.5])
+        assert recall[0] > 0.5

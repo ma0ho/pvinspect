@@ -136,6 +136,15 @@ def objdetect_metrics(
     """Calculate IOU for every pair from objects_label and objects_predicted,
     assign objects by maximum IOU and return mean IOU, precision and recall"""
 
+    t = objects_label[0][0]
+    for o in objects_label + objects_predicted:
+        if o[0] != t:
+            raise NotImplementedError("Method does not support different object types")
+
+    # get rid of object type
+    objects_label = [v[1] for v in objects_label]
+    objects_predicted = [v[1] for v in objects_predicted]
+
     # set up matrix of IOUs
     max_len = max(len(objects_label), len(objects_predicted))
     ious = np.zeros((max_len, max_len), dtype=np.float64)

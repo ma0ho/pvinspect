@@ -10,6 +10,7 @@ from pvinspect.common.transform import (
 from pvinspect.data.image import *
 from pvinspect.data.image import _sequence
 from pvinspect.data.exceptions import UnsupportedModalityException
+from pvinspect.data.io import ObjectAnnotations
 from typing import Union, List, Optional, Dict
 from tqdm.auto import tqdm
 from copy import deepcopy
@@ -402,7 +403,7 @@ def _do_locate_multiple_modules(
             min(image.shape[0], bbox[2] + pad),
             min(image.shape[1], bbox[3] + pad),
         )
-        boxes.append(Polygon.from_bounds(x0, y0, x1, y1))
+        boxes.append(("Module", Polygon.from_bounds(x0, y0, x1, y1)))
         crop = image._data[y0:y1, x0:x1]
         p = image.path.parent / "{}_module{:02d}{}".format(
             image.path.stem, i, image.path.suffix
@@ -420,15 +421,15 @@ def _do_locate_multiple_modules(
 @_sequence(True)
 def locate_multiple_modules(
     sequence: ImageOrSequence,
-    scale: float = 0.5,
-    reject_size_thresh: float = 0.75,
-    reject_fill_thresh: float = 0.5,
+    scale: float = 0.31,
+    reject_size_thresh: float = 0.26,
+    reject_fill_thresh: float = 0.42,
     padding: float = 0.05,
     drop_clipped_modules: bool = True,
     cols: int = None,
     rows: int = None,
     return_bounding_boxes: bool = False,
-) -> Tuple[ModuleImageSequence, Optional[Dict[Path, List[Polygon]]]]:
+) -> Tuple[ModuleImageSequence, ObjectAnnotations]:
     """Perform localization and segmentation of multiple modules
 
     Args:

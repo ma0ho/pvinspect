@@ -1,4 +1,6 @@
 from pvinspect import data
+from pvinspect.data.io import ObjectAnnotations
+from pvinspect.data.image import *
 
 
 def test_poly10x6():
@@ -39,3 +41,10 @@ def test_calibration_ipv40CCD_FF():
     assert "0A" in d.keys()
     assert len(d) == 3
     assert len(d["0A"]) == 2
+
+
+def test_multi_module_detection():
+    anns, imgs = data.datasets.multi_module_detection(N=2)
+    assert isinstance(imgs, ImageSequence)
+    for img in imgs:
+        assert img.path.name in anns.keys()

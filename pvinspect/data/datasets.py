@@ -135,3 +135,19 @@ def calibration_ipv40CCD_distortion(N: int = 0) -> ImageSequence:
     """
     p = _check_and_download_ds("20200303_calibration_iPV40CCD")
     return read_images(path=p / "distortion", same_camera=True, N=N)
+
+
+def multi_module_detection(N: int = 0) -> Tuple[ObjectAnnotations, ImageSequence]:
+    """Dataset for multi module detection (private dataset)
+
+    Args:
+        N (int): Number of images
+
+    Returns:
+        anns: Dict of annotations by image
+        imgs: Sequence of images
+    """
+    p = _check_and_download_ds("20200331_multi_module_detection")
+    imgs = read_images(path=p, same_camera=False, N=N, pattern="**/*.png")
+    anns = load_json_object_masks(path=p / "labels.json")
+    return anns, imgs

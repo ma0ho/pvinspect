@@ -14,6 +14,7 @@ import json
 
 
 PathOrStr = Union[Path, str]
+ObjectAnnotations = Dict[str, List[Tuple[str, Polygon]]]
 
 
 def __assurePath(p: PathOrStr) -> Path:
@@ -367,7 +368,7 @@ def save_images(
         save_image(path / name, image, with_visusalization=with_visualization, **kwargs)
 
 
-def load_json_object_masks(path: PathOrStr) -> Dict[str, List[Tuple[str, Polygon]]]:
+def load_json_object_masks(path: PathOrStr) -> ObjectAnnotations:
     """Load object annotations from file
 
     Args:
