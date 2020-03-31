@@ -8,13 +8,32 @@ install:
   - pip install pdoc3
 script:
   - pytest
-  - pdoc3 --html pvinspect
 
-deploy:
-  provider: pages
-  skip_cleanup: true
-  github_token: $GITHUB_TOKEN
-  keep_history: true
-  on:
-    tags: true
-  local_dir: html/pvinspect/
+jobs:
+  include:
+    - stage: deploy-release
+      if: tag IS present
+      python: 3.8
+      install: pip install .
+      script:
+        - pdoc3 --html pvinspect
+        - mv html/pvinspect html/release
+      deploy:
+        provider: pages
+        skip_cleanup: true
+        github_token: $GITHUB_TOKEN
+        keep_history: true
+        local_dir: html/
+    - stage: deploy-dev
+      if: tag IS blank
+      python: 3.8
+      install: pip install .
+      script:
+        - pdoc3 --html pvinspect
+        - mv html/pvinspect html/dev
+      deploy:
+        provider: pages
+        skip_cleanup: true
+        github_token: $GITHUB_TOKEN
+        keep_history: true
+        local_dir: html/
