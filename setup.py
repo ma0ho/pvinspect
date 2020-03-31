@@ -31,7 +31,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pvinspect",
-    version="0.0.2",
+    version="0.1.0",
     author="Mathis Hoffmann",
     author_email="mathis.hoffmann@fau.de",
     description="Provides methods for the analysis of PV modules using different modailities",
@@ -44,7 +44,6 @@ setuptools.setup(
         "numpy",
         "scikit-image",
         "matplotlib",
-        "ipywidgets",
         "pathlib",
         "tqdm",
         "pytest",
@@ -53,7 +52,6 @@ setuptools.setup(
         "opencv-python",
         "requests",
         "googledrivedownloader",
-        "jupyterlab",
         "opencv-python",
         "shapely",
         "optuna",
