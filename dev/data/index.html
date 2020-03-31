@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.5" />
+<title>pvinspect.data API documentation</title>
+<meta name="description" content="Data loading and viewing" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pvinspect.data</code></h1>
+</header>
+<section id="section-intro">
+<p>Data loading and viewing</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Data loading and viewing&#34;&#34;&#34;
+
+from .io import *
+from .image import EL_IMAGE, PL_IMAGE, _register_default_plugins
+from . import datasets
+
+__all__ = [
+    &#34;read_module_image&#34;,
+    &#34;read_module_images&#34;,
+    &#34;read_partial_module_image&#34;,
+    &#34;read_partial_module_images&#34;,
+    &#34;read_image&#34;,
+    &#34;read_images&#34;,
+    &#34;save_images&#34;,
+    &#34;save_image&#34;,
+    &#34;datasets&#34;,
+    &#34;EL_IMAGE&#34;,
+    &#34;PL_IMAGE&#34;,
+]
+
+_register_default_plugins()</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="pvinspect.data.datasets" href="datasets.html">pvinspect.data.datasets</a></code></dt>
+<dd>
+<section class="desc"><p>Provides access to demo datasets</p></section>
+</dd>
+<dt><code class="name"><a title="pvinspect.data.exceptions" href="exceptions.html">pvinspect.data.exceptions</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt><code class="name"><a title="pvinspect.data.image" href="image.html">pvinspect.data.image</a></code></dt>
+<dd>
+<section class="desc"><p>Provides classes to store and visualize images with metadata</p></section>
+</dd>
+<dt><code class="name"><a title="pvinspect.data.io" href="io.html">pvinspect.data.io</a></code></dt>
+<dd>
+<section class="desc"><p>Read and write images</p></section>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pvinspect.data.read_image"><code class="name flex">
+<span>def <span class="ident">read_image</span></span>(<span>path, modality=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read a single image of a solar module and return it</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Path to the file to be read</dd>
+<dt><strong><code>modality</code></strong> :&ensp;<code>int</code></dt>
+<dd>The imaging modality</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="pvinspect.data.image" href="image.html"><code>pvinspect.data.image</code></a></strong></dt>
+<dd>The module image</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_image(path: PathOrStr, modality: int = None) -&gt; Image:
+    &#34;&#34;&#34;Read a single image of a solar module and return it
+
+    Args:
+        path (PathOrStr): Path to the file to be read
+        modality (int): The imaging modality
+
+    Returns:
+        image: The module image
+    &#34;&#34;&#34;
+
+    return _read_image(
+        path=path, is_module_image=False, is_partial_module=False, modality=modality
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.read_images"><code class="name flex">
+<span>def <span class="ident">read_images</span></span>(<span>path, same_camera, modality=None, N=0, pattern=('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read a sequence of images and return it</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Path to the sequence</dd>
+<dt><strong><code>same_camera</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Indicate, if all images are from the same camera and hence share the same intrinsic parameters</dd>
+<dt><strong><code>modality</code></strong> :&ensp;<code>int</code></dt>
+<dd>The imaging modality</dd>
+<dt><strong><code>N</code></strong> :&ensp;<code>int</code></dt>
+<dd>Only read first N images</dd>
+<dt><strong><code>pattern</code></strong> :&ensp;<code>Union</code>[<code>str</code>, <code>Tuple</code>[<code>str</code>]]</dt>
+<dd>Files must match any of the given pattern</dd>
+<dt><strong><code>allow_different_dtypes</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Allow images to have different datatypes?</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="pvinspect.data.image" href="image.html"><code>pvinspect.data.image</code></a></strong></dt>
+<dd>The image sequence</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_images(
+    path: PathOrStr,
+    same_camera: bool,
+    modality: int = None,
+    N: int = 0,
+    pattern: Union[str, Tuple[str]] = (&#34;*.png&#34;, &#34;*.tif&#34;, &#34;*.tiff&#34;, &#34;*.bmp&#34;),
+    allow_different_dtypes=False,
+) -&gt; ImageSequence:
+    &#34;&#34;&#34;Read a sequence of images and return it
+
+    Args:
+        path (PathOrStr): Path to the sequence
+        same_camera (bool): Indicate, if all images are from the same camera and hence share the same intrinsic parameters
+        modality (int): The imaging modality
+        N (int): Only read first N images
+        pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
+        allow_different_dtypes (bool): Allow images to have different datatypes?
+
+    Returns:
+        image: The image sequence
+    &#34;&#34;&#34;
+
+    return _read_images(
+        path,
+        is_module_image=False,
+        same_camera=same_camera,
+        is_partial_module=False,
+        modality=modality,
+        pattern=pattern,
+        allow_different_dtypes=allow_different_dtypes,
+        N=N,
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.read_module_image"><code class="name flex">
+<span>def <span class="ident">read_module_image</span></span>(<span>path, modality, cols=None, rows=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read a single image of a solar module and return it</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Path to the file to be read</dd>
+<dt><strong><code>modality</code></strong> :&ensp;<code>int</code></dt>
+<dd>The imaging modality</dd>
+<dt><strong><code>cols</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of columns of cells</dd>
+<dt><strong><code>rows</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of rows of cells</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="pvinspect.data.image" href="image.html"><code>pvinspect.data.image</code></a></strong></dt>
+<dd>The module image</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_module_image(
+    path: PathOrStr, modality: int, cols: int = None, rows: int = None
+) -&gt; ModuleImage:
+    &#34;&#34;&#34;Read a single image of a solar module and return it
+
+    Args:
+        path (PathOrStr): Path to the file to be read
+        modality (int): The imaging modality
+        cols (int): Number of columns of cells
+        rows (int): Number of rows of cells
+
+    Returns:
+        image: The module image
+    &#34;&#34;&#34;
+
+    return _read_image(
+        path=path,
+        is_module_image=True,
+        is_partial_module=False,
+        modality=modality,
+        cols=cols,
+        rows=rows,
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.read_module_images"><code class="name flex">
+<span>def <span class="ident">read_module_images</span></span>(<span>path, modality, same_camera, cols=None, rows=None, N=0, pattern=('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read a sequence of module images and return it</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Path to the sequence</dd>
+<dt><strong><code>modality</code></strong> :&ensp;<code>int</code></dt>
+<dd>The imaging modality</dd>
+<dt><strong><code>same_camera</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Indicate, if all images are from the same camera and hence share the same intrinsic parameters</dd>
+<dt><strong><code>cols</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of columns of cells</dd>
+<dt><strong><code>rows</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of rows of cells</dd>
+<dt><strong><code>N</code></strong> :&ensp;<code>int</code></dt>
+<dd>Only read first N images</dd>
+<dt><strong><code>pattern</code></strong> :&ensp;<code>Union</code>[<code>str</code>, <code>Tuple</code>[<code>str</code>]]</dt>
+<dd>Files must match any of the given pattern</dd>
+<dt><strong><code>allow_different_dtypes</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Allow images to have different datatypes?</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="pvinspect.data.image" href="image.html"><code>pvinspect.data.image</code></a></strong></dt>
+<dd>The module image sequence</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_module_images(
+    path: PathOrStr,
+    modality: int,
+    same_camera: bool,
+    cols: int = None,
+    rows: int = None,
+    N: int = 0,
+    pattern: Union[str, Tuple[str]] = (&#34;*.png&#34;, &#34;*.tif&#34;, &#34;*.tiff&#34;, &#34;*.bmp&#34;),
+    allow_different_dtypes=False,
+) -&gt; ModuleImageSequence:
+    &#34;&#34;&#34;Read a sequence of module images and return it
+
+    Args:
+        path (PathOrStr): Path to the sequence
+        modality (int): The imaging modality
+        same_camera (bool): Indicate, if all images are from the same camera and hence share the same intrinsic parameters
+        cols (int): Number of columns of cells
+        rows (int): Number of rows of cells
+        N (int): Only read first N images
+        pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
+        allow_different_dtypes (bool): Allow images to have different datatypes?
+
+    Returns:
+        image: The module image sequence
+    &#34;&#34;&#34;
+
+    return _read_images(
+        path=path,
+        modality=modality,
+        same_camera=same_camera,
+        is_partial_module=False,
+        is_module_image=True,
+        cols=cols,
+        rows=rows,
+        N=N,
+        pattern=pattern,
+        allow_different_dtypes=allow_different_dtypes,
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.read_partial_module_image"><code class="name flex">
+<span>def <span class="ident">read_partial_module_image</span></span>(<span>path, modality, cols=None, rows=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read a single partial view of a solar module and return it</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Path to the file to be read</dd>
+<dt><strong><code>modality</code></strong> :&ensp;<code>int</code></dt>
+<dd>The imaging modality</dd>
+<dt><strong><code>cols</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of completely visible columns of cells</dd>
+<dt><strong><code>rows</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of completely visible rows of cells</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="pvinspect.data.image" href="image.html"><code>pvinspect.data.image</code></a></strong></dt>
+<dd>The module image</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_partial_module_image(
+    path: PathOrStr, modality: int, cols: int = None, rows: int = None
+) -&gt; ModuleImage:
+    &#34;&#34;&#34;Read a single partial view of a solar module and return it
+
+    Args:
+        path (PathOrStr): Path to the file to be read
+        modality (int): The imaging modality
+        cols (int): Number of completely visible columns of cells
+        rows (int): Number of completely visible rows of cells
+
+    Returns:
+        image: The module image
+    &#34;&#34;&#34;
+
+    return _read_image(
+        path=path,
+        is_module_image=False,
+        is_partial_module=True,
+        modality=modality,
+        cols=cols,
+        rows=rows,
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.read_partial_module_images"><code class="name flex">
+<span>def <span class="ident">read_partial_module_images</span></span>(<span>path, modality, same_camera, cols=None, rows=None, N=0, pattern=('*.png', '*.tif', '*.tiff', '*.bmp'), allow_different_dtypes=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Read a sequence of partial views of solar modules and return it</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Path to the sequence</dd>
+<dt><strong><code>modality</code></strong> :&ensp;<code>int</code></dt>
+<dd>The imaging modality</dd>
+<dt><strong><code>same_camera</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Indicate, if all images are from the same camera and hence share the same intrinsic parameters</dd>
+<dt><strong><code>cols</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of completely visible columns of cells</dd>
+<dt><strong><code>rows</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of completely visible rows of cells</dd>
+<dt><strong><code>N</code></strong> :&ensp;<code>int</code></dt>
+<dd>Only read first N images</dd>
+<dt><strong><code>pattern</code></strong> :&ensp;<code>Union</code>[<code>str</code>, <code>Tuple</code>[<code>str</code>]]</dt>
+<dd>Files must match any of the given pattern</dd>
+<dt><strong><code>allow_different_dtypes</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Allow images to have different datatypes?</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="pvinspect.data.image" href="image.html"><code>pvinspect.data.image</code></a></strong></dt>
+<dd>The module image sequence</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_partial_module_images(
+    path: PathOrStr,
+    modality: int,
+    same_camera: bool,
+    cols: int = None,
+    rows: int = None,
+    N: int = 0,
+    pattern: Union[str, Tuple[str]] = (&#34;*.png&#34;, &#34;*.tif&#34;, &#34;*.tiff&#34;, &#34;*.bmp&#34;),
+    allow_different_dtypes=False,
+) -&gt; ModuleImageSequence:
+    &#34;&#34;&#34;Read a sequence of partial views of solar modules and return it
+
+    Args:
+        path (PathOrStr): Path to the sequence
+        modality (int): The imaging modality
+        same_camera (bool): Indicate, if all images are from the same camera and hence share the same intrinsic parameters
+        cols (int): Number of completely visible columns of cells
+        rows (int): Number of completely visible rows of cells
+        N (int): Only read first N images
+        pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
+        allow_different_dtypes (bool): Allow images to have different datatypes?
+
+    Returns:
+        image: The module image sequence
+    &#34;&#34;&#34;
+
+    return _read_images(
+        path=path,
+        is_module_image=False,
+        is_partial_module=True,
+        same_camera=same_camera,
+        modality=modality,
+        cols=cols,
+        rows=rows,
+        N=N,
+        pattern=pattern,
+        allow_different_dtypes=allow_different_dtypes,
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.save_image"><code class="name flex">
+<span>def <span class="ident">save_image</span></span>(<span>filename, image, with_visusalization=False, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Write an image to disk. Float64 is automatically converted to float32 in order to be compatible to ImageJ.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Filename of the resulting image</dd>
+<dt><strong><a title="pvinspect.data.image" href="image.html"><code>pvinspect.data.image</code></a></strong> :&ensp;<code>Image</code></dt>
+<dd>The image</dd>
+<dt><strong><code>with_visualization</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Include the same visualizations as with image.show() or sequence.head()</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_image(
+    filename: PathOrStr, image: Image, with_visusalization: bool = False, **kwargs
+):
+    &#34;&#34;&#34;Write an image to disk. Float64 is automatically converted to float32 in order to be compatible to ImageJ.
+
+    Args:
+        filename (PathOrStr): Filename of the resulting image
+        image (Image): The image
+        with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
+    &#34;&#34;&#34;
+
+    if with_visusalization:
+        image.show(**kwargs)
+        plt.savefig(filename, **kwargs)
+    else:
+        if image.dtype == np.float64:
+            io.imsave(filename, image.data.astype(np.float32), check_contrast=False)
+        else:
+            io.imsave(filename, image.data, check_contrast=False)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.save_images"><code class="name flex">
+<span>def <span class="ident">save_images</span></span>(<span>path, sequence, mkdir=True, with_visualization=False, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Write a sequence of images to disk</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Target directory</dd>
+<dt><strong><code>sequence</code></strong> :&ensp;<code>ImageSequence</code></dt>
+<dd>The sequence of images</dd>
+<dt><strong><code>mkdir</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Automatically create missing directories</dd>
+<dt><strong><code>with_visualization</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Include the same visualizations as with image.show() or sequence.head()</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_images(
+    path: PathOrStr,
+    sequence: ImageSequence,
+    mkdir: bool = True,
+    with_visualization: bool = False,
+    **kwargs
+):
+    &#34;&#34;&#34;Write a sequence of images to disk
+
+    Args:
+        path (PathOrStr): Target directory
+        sequence (ImageSequence): The sequence of images
+        mkdir (bool): Automatically create missing directories
+        with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
+    &#34;&#34;&#34;
+
+    path = __assurePath(path)
+
+    if mkdir:
+        path.mkdir(parents=True, exist_ok=True)
+
+    for image in tqdm(sequence.images):
+        if isinstance(image, CellImage):
+            name = &#34;{}_row{:02d}_col{:02d}{}&#34;.format(
+                image.path.stem, image.row, image.col, image.path.suffix
+            )
+        else:
+            name = image.path.name
+        save_image(path / name, image, with_visusalization=with_visualization, **kwargs)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pvinspect" href="../index.html">pvinspect</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="pvinspect.data.datasets" href="datasets.html">pvinspect.data.datasets</a></code></li>
+<li><code><a title="pvinspect.data.exceptions" href="exceptions.html">pvinspect.data.exceptions</a></code></li>
+<li><code><a title="pvinspect.data.image" href="image.html">pvinspect.data.image</a></code></li>
+<li><code><a title="pvinspect.data.io" href="io.html">pvinspect.data.io</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pvinspect.data.read_image" href="#pvinspect.data.read_image">read_image</a></code></li>
+<li><code><a title="pvinspect.data.read_images" href="#pvinspect.data.read_images">read_images</a></code></li>
+<li><code><a title="pvinspect.data.read_module_image" href="#pvinspect.data.read_module_image">read_module_image</a></code></li>
+<li><code><a title="pvinspect.data.read_module_images" href="#pvinspect.data.read_module_images">read_module_images</a></code></li>
+<li><code><a title="pvinspect.data.read_partial_module_image" href="#pvinspect.data.read_partial_module_image">read_partial_module_image</a></code></li>
+<li><code><a title="pvinspect.data.read_partial_module_images" href="#pvinspect.data.read_partial_module_images">read_partial_module_images</a></code></li>
+<li><code><a title="pvinspect.data.save_image" href="#pvinspect.data.save_image">save_image</a></code></li>
+<li><code><a title="pvinspect.data.save_images" href="#pvinspect.data.save_images">save_images</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

@@ -1,0 +1,1146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.5" />
+<title>pvinspect.preproc.detection API documentation</title>
+<meta name="description" content="Detection, localization and segmentation of solar modules" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pvinspect.preproc.detection</code></h1>
+</header>
+<section id="section-intro">
+<p>Detection, localization and segmentation of solar modules</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Detection, localization and segmentation of solar modules&#34;&#34;&#34;
+
+from pvinspect.preproc._mdetect.locate import apply
+from pvinspect.common.transform import (
+    HomographyTransform,
+    warp_image,
+    FullMultiTransform,
+    FullTransform,
+)
+from pvinspect.data.image import *
+from pvinspect.data.image import _sequence
+from pvinspect.data.exceptions import UnsupportedModalityException
+from pvinspect.data.io import ObjectAnnotations
+from typing import Union, List, Optional, Dict
+from tqdm.auto import tqdm
+from copy import deepcopy
+import logging
+from pvinspect.common._ipy_exit import exit
+import numpy as np
+from skimage import measure, filters, morphology, transform
+from shapely.geometry import Polygon
+
+
+@_sequence
+def locate_module_and_cells(
+    sequence: ModuleImageOrSequence,
+    estimate_distortion: bool = True,
+    orientation: str = None,
+) -&gt; ModuleImageOrSequence:
+    &#34;&#34;&#34;Locate a single module and its cells
+
+    Note:
+        This methods implements the following paper:
+        Hoffmann, Mathis, et al. &#34;Fast and robust detection of solar modules in electroluminescence images.&#34;
+        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.
+
+    Args:
+        sequence (ModuleImageOrSequence): A single module image or a sequence of module images 
+        estimate_distortion (bool): Set True to estimate lens distortion, else False 
+        orientation (str): Orientation of the module (&#39;horizontal&#39; or &#39;vertical&#39; or None).
+            If set to None (default), orientation is automatically determined
+
+    Returns:
+        images: The same image/sequence with location information added
+    &#34;&#34;&#34;
+
+    if sequence[0].modality != EL_IMAGE:
+        logging.error(&#34;Module localization is not supporting given imaging modality&#34;)
+        exit()
+
+    result = list()
+    failures = 0
+    mcs = list()
+    dts = list()
+    flags = list()
+    transforms = list()
+    for img in tqdm(sequence.images):
+        t, mc, dt, f = apply(
+            img.data,
+            img.cols,
+            img.rows,
+            is_module_detail=isinstance(img, PartialModuleImage),
+            orientation=orientation,
+        )
+        transforms.append(t)
+        flags.append(f)
+        mcs.append(mc)
+        dts.append(dt)
+
+    if estimate_distortion:
+        if sequence.same_camera:
+            # do joint estimation
+            logging.info(
+                &#34;Jointly estimating parameters for lens distortion. This might take some time..&#34;
+            )
+
+            mcs_new = list()
+            dts_new = list()
+            valid = list()
+            for mc, dt, f in zip(mcs, dts, flags):
+                if mc is not None and dt is not None:
+                    mcs_new.append(mc[f])
+                    dts_new.append(dt[f])
+                    valid.append(True)
+                else:
+                    valid.append(False)
+            transforms = FullMultiTransform(
+                mcs_new,
+                dts_new,
+                image_width=sequence.shape[1],
+                image_height=sequence.shape[0],
+                n_dist_coeff=1,
+            )
+            transforms_new = list()
+            i = 0
+            for v in valid:
+                if v:
+                    transforms_new.append(transforms[i])
+                    i += 1
+                else:
+                    transforms_new.append(None)
+            transforms = transforms_new
+
+        else:
+            transforms = list()
+            for mc, dt, f, img in zip(mcs, dts, flags, sequence.images):
+                if mc is not None and dt is not None:
+                    t = FullTransform(
+                        mc[f],
+                        dt[f],
+                        image_width=img.shape[1],
+                        image_height=img.shape[0],
+                        n_dist_coeff=1,
+                    )
+                    transforms.append(t)
+                else:
+                    transforms.append(None)
+
+    for t, img in zip(transforms, sequence.images):
+        if t is not None and t.valid:
+            img_res = type(img).from_other(img, meta={&#34;transform&#34;: t})
+            result.append(img_res)
+        else:
+            result.append(deepcopy(img))
+            failures += 1
+    if failures &gt; 0:
+        logging.warning(&#34;Module localization falied for {:d} images&#34;.format(failures))
+
+    return ModuleImageSequence.from_other(sequence, images=result)
+
+
+def segment_module_part(
+    image: ModuleImage,
+    first_col: int,
+    first_row: int,
+    cols: int,
+    rows: int,
+    size: int = None,
+    padding: float = 0.0,
+) -&gt; PartialModuleImage:
+    &#34;&#34;&#34;Segment a part of a module
+
+    Args:
+        image (ModuleImage): The corresponding module image
+        first_col (int): First column to appear in the segment
+        first_row (int): First row to appear in the segment
+        cols (int): Number of columns of the segment
+        rows (int): Number of rows of the segment
+        size (int): Size of a cell in pixels (automatically chosen by default)
+        padding (float): Optional padding around the given segment relative to the cell size
+                         (must be in [0..1[ )
+
+    Returns:
+        segment: The resulting segment
+    &#34;&#34;&#34;
+
+    if not image.has_meta(&#34;transform&#34;) or not image.get_meta(&#34;transform&#34;).valid:
+        logging.error(
+            &#34;The ModuleImage does not have a valid transform. Did module localization succeed?&#34;
+        )
+        exit()
+
+    t = image.get_meta(&#34;transform&#34;)
+
+    if padding &gt;= 1.0 or padding &lt; 0.0:
+        logging.error(&#34;padding needs to be in [0..1[&#34;)
+        exit()
+
+    last_col = first_col + cols
+    last_row = first_row + rows
+    if last_row &gt; image.rows or last_col &gt; image.cols:
+        logging.error(&#34;The row or column index exceeds the module geometry&#34;)
+        exit()
+
+    size = t.mean_scale() if size is None else size
+    result = warp_image(
+        image.data,
+        t,
+        first_col - padding,
+        first_row - padding,
+        1 / size,
+        1 / size,
+        cols + 2 * padding,
+        rows + 2 * padding,
+    )
+    result = result.astype(image.dtype)
+    transform = HomographyTransform(
+        np.array(
+            [
+                [first_row - padding, first_col - padding],
+                [first_row - padding, last_col - padding],
+                [last_row - padding, first_col - padding],
+                [last_row - padding, last_col - padding],
+            ]
+        ),
+        np.array(
+            [
+                [0.0, 0.0],
+                [0.0, size * cols],
+                [size * rows, 0.0],
+                [size * rows, size * cols],
+            ]
+        ),
+    )
+    return PartialModuleImage(
+        result,
+        image.modality,
+        image.path,
+        cols,
+        rows,
+        first_col,
+        first_row,
+        meta={&#34;transform&#34;: transform},
+    )
+
+
+def segment_module(
+    image: ModuleImage, size: int = None, padding: float = 0.0
+) -&gt; ModuleImage:
+    &#34;&#34;&#34;Obtain a rectified, cropped and undistorted module image
+
+    Args:
+        image (ModuleImage): A single module image
+        size (int): Size of a cell in pixels (automatically chosen by default)
+        padding (float): Optional padding around the given segment relative to the cell size
+                         (must be in [0..1[ )
+
+    Returns:
+        module: The resulting module image
+    &#34;&#34;&#34;
+
+    result = segment_module_part(image, 0, 0, image.cols, image.rows, size, padding)
+    return ModuleImage(
+        result._data,
+        image.modality,
+        image.path,
+        image.cols,
+        image.rows,
+        meta={&#34;transform&#34;: result.get_meta(&#34;transform&#34;)},
+    )
+
+
+def segment_cell(
+    image: ModuleImage, row: int, col: int, size: int = None, padding: float = 0.0
+) -&gt; CellImage:
+    &#34;&#34;&#34;Obtain a cell image from a module image
+
+    Args:
+        image (ModuleImageOrSequence): A single module image
+        row (int): The row number (starting at 0)
+        col (int): The column number (starting at 0)
+        size (int): Size of the resulting cell image in pixels (automatically chosen by default)
+        padding (float): Optional padding around the cell relative to the cell size
+                         (must be in [0..1[ )
+
+    Returns:
+        cells: The segmented cell image
+    &#34;&#34;&#34;
+
+    result = segment_module_part(image, col, row, 1, 1, size, padding)
+    return CellImage(result._data, image.modality, image.path, row, col)
+
+
+@_sequence
+def segment_modules(
+    sequence: ModuleImageOrSequence, size: int = None
+) -&gt; ModuleImageSequence:
+    &#34;&#34;&#34;Obtain rectified, cropped and undistorted module images from a sequence. Note that images that do not have a valid transform,
+    possibly because the detection step failed, are silently ignored.
+
+    Args:
+        sequence (ModuleImageOrSequence): A single module image or a sequence of module images
+        size (int): Size of the resulting cell images in pixels (automatically chosen by default)
+
+    Returns:
+        module: The segmented module images
+    &#34;&#34;&#34;
+
+    scales = np.array(
+        [
+            img.get_meta(&#34;transform&#34;).mean_scale()
+            for img in sequence.images
+            if img.has_meta(&#34;transform&#34;) and img.get_meta(&#34;transform&#34;).valid
+        ]
+    )
+    if scales.std() &gt; 0.1 * scales.mean() and size is None:
+        logging.warning(
+            &#34;The size of cells within the sequences varies by more than 10%. However, segment_modules, \
+creates images of a fixed size. Please consider to split the sequence into multiple sequences \
+with less variation in size.&#34;
+        )
+    if size is None:
+        size = int(scales.mean())
+
+    result = list()
+    for img in tqdm(sequence.images):
+
+        # for the moment, we silently ignore images without a valid transform
+        if img.has_meta(&#34;transform&#34;) and img.get_meta(&#34;transform&#34;).valid:
+            result.append(segment_module(img, size))
+
+    return type(sequence).from_other(sequence, images=result, same_camera=False)
+
+
+@_sequence(True)
+def segment_cells(
+    sequence: ModuleImageOrSequence, size: int = None
+) -&gt; CellImageSequence:
+    &#34;&#34;&#34;Obtain cell images from a sequence of module images. Note that images that do not have a valid transform,
+    possibly because the detection step failed, are silently ignored.
+
+    Args:
+        sequence (ModuleImageOrSequence): A single module image or a sequence of module images
+        size (int): Size of the resulting cell images in pixels (automatically chosen by default)
+
+    Returns:
+        cells: The segmented cell images
+    &#34;&#34;&#34;
+
+    scales = np.array(
+        [
+            img.get_meta(&#34;transform&#34;).mean_scale()
+            for img in sequence.images
+            if img.has_meta(&#34;transform&#34;) and img.get_meta(&#34;transform&#34;).valid
+        ]
+    )
+    if scales.std() &gt; 0.1 * scales.mean() and size is None:
+        logging.warning(
+            &#34;The size of cells within the sequences varies by more than 10%. However, segment_cells, \
+creates cell images of a fixed size. Please consider to split the sequence into multiple sequences \
+with less variation in size.&#34;
+        )
+    if size is None:
+        size = int(scales.mean())
+
+    result = list()
+    for img in tqdm(sequence.images):
+        for row in range(img.rows):
+            for col in range(img.cols):
+
+                # for the moment, we silently ignore images without a valid transform
+                if (
+                    img.has_meta(&#34;transform&#34;) is not None
+                    and img.get_meta(&#34;transform&#34;).valid
+                ):
+                    result.append(segment_cell(img, row, col, size))
+
+    return CellImageSequence(result)
+
+
+def _do_locate_multiple_modules(
+    image: Image,
+    scale: float,
+    reject_size_thresh: float,
+    reject_fill_thresh: float,
+    padding: float,
+    cols: int,
+    rows: int,
+    drop_clipped_modules: bool,
+) -&gt; Tuple[List[ModuleImage], List[Polygon]]:
+
+    # filter + binarize
+    # image_f = filters.gaussian(image._data, filter_size)
+    image_f = transform.rescale(image._data, scale)
+    image_f = image_f &gt; filters.threshold_otsu(image_f)
+
+    # find regions
+    labeled = morphology.label(image_f)
+    regions = measure.regionprops(labeled)
+
+    # process regions
+    # check if bbox is filled to 100*reject_fill_thres%
+    regions = [r for r in regions if r.area / r.bbox_area &gt;= reject_fill_thresh]
+    if len(regions) == 0:
+        return [], []
+
+    max_area = int(np.max([r.bbox_area for r in regions]))
+    results = []
+    boxes = []
+    i = 0
+    for r in regions:
+        # check size
+        if r.bbox_area &lt; reject_size_thresh * max_area:
+            continue
+
+        # check not touching boundary
+        if (
+            r.bbox[0] == 0
+            or r.bbox[1] == 0
+            or r.bbox[2] == labeled.shape[0]
+            or r.bbox[3] == labeled.shape[1]
+        ) and drop_clipped_modules:
+            continue
+
+        # transform bounding box to original size
+        s = 1 / scale
+        bbox = [int(r.bbox[i] * s) for i in range(4)]
+
+        # crop module
+        pad = int(np.sqrt(r.bbox_area) * padding * s)
+        y0, x0 = max(0, bbox[0] - pad), max(0, bbox[1] - pad)
+        y1, x1 = (
+            min(image.shape[0], bbox[2] + pad),
+            min(image.shape[1], bbox[3] + pad),
+        )
+        boxes.append((&#34;Module&#34;, Polygon.from_bounds(x0, y0, x1, y1)))
+        crop = image._data[y0:y1, x0:x1]
+        p = image.path.parent / &#34;{}_module{:02d}{}&#34;.format(
+            image.path.stem, i, image.path.suffix
+        )
+        results.append(
+            ModuleImage(
+                data=crop, modality=image.modality, path=p, cols=cols, rows=rows
+            )
+        )
+        i += 1
+
+    return results, boxes
+
+
+@_sequence(True)
+def locate_multiple_modules(
+    sequence: ImageOrSequence,
+    scale: float = 0.31,
+    reject_size_thresh: float = 0.26,
+    reject_fill_thresh: float = 0.42,
+    padding: float = 0.05,
+    drop_clipped_modules: bool = True,
+    cols: int = None,
+    rows: int = None,
+    return_bounding_boxes: bool = False,
+) -&gt; Tuple[ModuleImageSequence, ObjectAnnotations]:
+    &#34;&#34;&#34;Perform localization and segmentation of multiple modules
+
+    Args:
+        sequence (ImageOrSequence): Input images
+        scale (float): Image is scaled to this size before processing
+        reject_size_thresh (float): Detections smaller than this times the median size of detections are rejected
+        reject_fill_thresh (float): Detections, where more that this parts of the area are black after thresholding are rejected
+        padding (float): Detections are padded by this times the average size length of the bounding box
+        drop_clipped_modules (bool): Indicate, if detections that touch the boundary are dropped
+        cols (int): Number of columns of cells of a single module
+        cols (rows): Number of rows of cells of a single module
+        return_bounding_boxes (bool): If true, return the bounding boxes in addition to the crops
+
+    Returns:
+        The cropped modules as a ModuleImageSequence as well as (optionally), the bounding boxes.
+    &#34;&#34;&#34;
+
+    # process sequence
+    results = list()
+    boxes = dict()
+    # for img in tqdm(sequence):
+    for img in tqdm(sequence):
+        modules, b = _do_locate_multiple_modules(
+            img,
+            scale,
+            reject_size_thresh,
+            reject_fill_thresh,
+            padding,
+            cols,
+            rows,
+            drop_clipped_modules,
+        )
+
+        # add original images with box annotations as meta
+        imgs_org = [
+            Image.from_other(img, meta={&#34;multimodule_index&#34;: i, &#34;multimodule_boxes&#34;: b})
+            for i in range(len(modules))
+        ]
+        modules = [
+            ModuleImage.from_other(m, meta={&#34;multimodule_original&#34;: o})
+            for m, o in zip(modules, imgs_org)
+        ]
+
+        results += modules
+        boxes[img.path] = b
+
+    if return_bounding_boxes:
+        if len(results) &gt; 0:
+            return ModuleImageSequence(results, same_camera=False), boxes
+        else:
+            return None, dict()
+    else:
+        if len(results) &gt; 0:
+            return ModuleImageSequence(results, same_camera=False)
+        else:
+            return None</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pvinspect.preproc.detection.locate_module_and_cells"><code class="name flex">
+<span>def <span class="ident">locate_module_and_cells</span></span>(<span>sequence, estimate_distortion=True, orientation=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Locate a single module and its cells</p>
+<h2 id="note">Note</h2>
+<p>This methods implements the following paper:
+Hoffmann, Mathis, et al. "Fast and robust detection of solar modules in electroluminescence images."
+International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sequence</code></strong> :&ensp;<code>ModuleImageOrSequence</code></dt>
+<dd>A single module image or a sequence of module images </dd>
+<dt><strong><code>estimate_distortion</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Set True to estimate lens distortion, else False </dd>
+<dt><strong><code>orientation</code></strong> :&ensp;<code>str</code></dt>
+<dd>Orientation of the module ('horizontal' or 'vertical' or None).
+If set to None (default), orientation is automatically determined</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>images</code></strong></dt>
+<dd>The same image/sequence with location information added</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@_sequence
+def locate_module_and_cells(
+    sequence: ModuleImageOrSequence,
+    estimate_distortion: bool = True,
+    orientation: str = None,
+) -&gt; ModuleImageOrSequence:
+    &#34;&#34;&#34;Locate a single module and its cells
+
+    Note:
+        This methods implements the following paper:
+        Hoffmann, Mathis, et al. &#34;Fast and robust detection of solar modules in electroluminescence images.&#34;
+        International Conference on Computer Analysis of Images and Patterns. Springer, Cham, 2019.
+
+    Args:
+        sequence (ModuleImageOrSequence): A single module image or a sequence of module images 
+        estimate_distortion (bool): Set True to estimate lens distortion, else False 
+        orientation (str): Orientation of the module (&#39;horizontal&#39; or &#39;vertical&#39; or None).
+            If set to None (default), orientation is automatically determined
+
+    Returns:
+        images: The same image/sequence with location information added
+    &#34;&#34;&#34;
+
+    if sequence[0].modality != EL_IMAGE:
+        logging.error(&#34;Module localization is not supporting given imaging modality&#34;)
+        exit()
+
+    result = list()
+    failures = 0
+    mcs = list()
+    dts = list()
+    flags = list()
+    transforms = list()
+    for img in tqdm(sequence.images):
+        t, mc, dt, f = apply(
+            img.data,
+            img.cols,
+            img.rows,
+            is_module_detail=isinstance(img, PartialModuleImage),
+            orientation=orientation,
+        )
+        transforms.append(t)
+        flags.append(f)
+        mcs.append(mc)
+        dts.append(dt)
+
+    if estimate_distortion:
+        if sequence.same_camera:
+            # do joint estimation
+            logging.info(
+                &#34;Jointly estimating parameters for lens distortion. This might take some time..&#34;
+            )
+
+            mcs_new = list()
+            dts_new = list()
+            valid = list()
+            for mc, dt, f in zip(mcs, dts, flags):
+                if mc is not None and dt is not None:
+                    mcs_new.append(mc[f])
+                    dts_new.append(dt[f])
+                    valid.append(True)
+                else:
+                    valid.append(False)
+            transforms = FullMultiTransform(
+                mcs_new,
+                dts_new,
+                image_width=sequence.shape[1],
+                image_height=sequence.shape[0],
+                n_dist_coeff=1,
+            )
+            transforms_new = list()
+            i = 0
+            for v in valid:
+                if v:
+                    transforms_new.append(transforms[i])
+                    i += 1
+                else:
+                    transforms_new.append(None)
+            transforms = transforms_new
+
+        else:
+            transforms = list()
+            for mc, dt, f, img in zip(mcs, dts, flags, sequence.images):
+                if mc is not None and dt is not None:
+                    t = FullTransform(
+                        mc[f],
+                        dt[f],
+                        image_width=img.shape[1],
+                        image_height=img.shape[0],
+                        n_dist_coeff=1,
+                    )
+                    transforms.append(t)
+                else:
+                    transforms.append(None)
+
+    for t, img in zip(transforms, sequence.images):
+        if t is not None and t.valid:
+            img_res = type(img).from_other(img, meta={&#34;transform&#34;: t})
+            result.append(img_res)
+        else:
+            result.append(deepcopy(img))
+            failures += 1
+    if failures &gt; 0:
+        logging.warning(&#34;Module localization falied for {:d} images&#34;.format(failures))
+
+    return ModuleImageSequence.from_other(sequence, images=result)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.detection.locate_multiple_modules"><code class="name flex">
+<span>def <span class="ident">locate_multiple_modules</span></span>(<span>sequence, scale=0.31, reject_size_thresh=0.26, reject_fill_thresh=0.42, padding=0.05, drop_clipped_modules=True, cols=None, rows=None, return_bounding_boxes=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Perform localization and segmentation of multiple modules</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sequence</code></strong> :&ensp;<code>ImageOrSequence</code></dt>
+<dd>Input images</dd>
+<dt><strong><code>scale</code></strong> :&ensp;<code>float</code></dt>
+<dd>Image is scaled to this size before processing</dd>
+<dt><strong><code>reject_size_thresh</code></strong> :&ensp;<code>float</code></dt>
+<dd>Detections smaller than this times the median size of detections are rejected</dd>
+<dt><strong><code>reject_fill_thresh</code></strong> :&ensp;<code>float</code></dt>
+<dd>Detections, where more that this parts of the area are black after thresholding are rejected</dd>
+<dt><strong><code>padding</code></strong> :&ensp;<code>float</code></dt>
+<dd>Detections are padded by this times the average size length of the bounding box</dd>
+<dt><strong><code>drop_clipped_modules</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Indicate, if detections that touch the boundary are dropped</dd>
+<dt><strong><code>cols</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of columns of cells of a single module</dd>
+<dt><strong><code>cols</code></strong> :&ensp;<code>rows</code></dt>
+<dd>Number of rows of cells of a single module</dd>
+<dt><strong><code>return_bounding_boxes</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true, return the bounding boxes in addition to the crops</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The cropped modules as a ModuleImageSequence as well as (optionally), the bounding boxes.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@_sequence(True)
+def locate_multiple_modules(
+    sequence: ImageOrSequence,
+    scale: float = 0.31,
+    reject_size_thresh: float = 0.26,
+    reject_fill_thresh: float = 0.42,
+    padding: float = 0.05,
+    drop_clipped_modules: bool = True,
+    cols: int = None,
+    rows: int = None,
+    return_bounding_boxes: bool = False,
+) -&gt; Tuple[ModuleImageSequence, ObjectAnnotations]:
+    &#34;&#34;&#34;Perform localization and segmentation of multiple modules
+
+    Args:
+        sequence (ImageOrSequence): Input images
+        scale (float): Image is scaled to this size before processing
+        reject_size_thresh (float): Detections smaller than this times the median size of detections are rejected
+        reject_fill_thresh (float): Detections, where more that this parts of the area are black after thresholding are rejected
+        padding (float): Detections are padded by this times the average size length of the bounding box
+        drop_clipped_modules (bool): Indicate, if detections that touch the boundary are dropped
+        cols (int): Number of columns of cells of a single module
+        cols (rows): Number of rows of cells of a single module
+        return_bounding_boxes (bool): If true, return the bounding boxes in addition to the crops
+
+    Returns:
+        The cropped modules as a ModuleImageSequence as well as (optionally), the bounding boxes.
+    &#34;&#34;&#34;
+
+    # process sequence
+    results = list()
+    boxes = dict()
+    # for img in tqdm(sequence):
+    for img in tqdm(sequence):
+        modules, b = _do_locate_multiple_modules(
+            img,
+            scale,
+            reject_size_thresh,
+            reject_fill_thresh,
+            padding,
+            cols,
+            rows,
+            drop_clipped_modules,
+        )
+
+        # add original images with box annotations as meta
+        imgs_org = [
+            Image.from_other(img, meta={&#34;multimodule_index&#34;: i, &#34;multimodule_boxes&#34;: b})
+            for i in range(len(modules))
+        ]
+        modules = [
+            ModuleImage.from_other(m, meta={&#34;multimodule_original&#34;: o})
+            for m, o in zip(modules, imgs_org)
+        ]
+
+        results += modules
+        boxes[img.path] = b
+
+    if return_bounding_boxes:
+        if len(results) &gt; 0:
+            return ModuleImageSequence(results, same_camera=False), boxes
+        else:
+            return None, dict()
+    else:
+        if len(results) &gt; 0:
+            return ModuleImageSequence(results, same_camera=False)
+        else:
+            return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.detection.segment_cell"><code class="name flex">
+<span>def <span class="ident">segment_cell</span></span>(<span>image, row, col, size=None, padding=0.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Obtain a cell image from a module image</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>ModuleImageOrSequence</code></dt>
+<dd>A single module image</dd>
+<dt><strong><code>row</code></strong> :&ensp;<code>int</code></dt>
+<dd>The row number (starting at 0)</dd>
+<dt><strong><code>col</code></strong> :&ensp;<code>int</code></dt>
+<dd>The column number (starting at 0)</dd>
+<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
+<dd>Size of the resulting cell image in pixels (automatically chosen by default)</dd>
+<dt><strong><code>padding</code></strong> :&ensp;<code>float</code></dt>
+<dd>Optional padding around the cell relative to the cell size
+(must be in [0..1[ )</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>cells</code></strong></dt>
+<dd>The segmented cell image</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def segment_cell(
+    image: ModuleImage, row: int, col: int, size: int = None, padding: float = 0.0
+) -&gt; CellImage:
+    &#34;&#34;&#34;Obtain a cell image from a module image
+
+    Args:
+        image (ModuleImageOrSequence): A single module image
+        row (int): The row number (starting at 0)
+        col (int): The column number (starting at 0)
+        size (int): Size of the resulting cell image in pixels (automatically chosen by default)
+        padding (float): Optional padding around the cell relative to the cell size
+                         (must be in [0..1[ )
+
+    Returns:
+        cells: The segmented cell image
+    &#34;&#34;&#34;
+
+    result = segment_module_part(image, col, row, 1, 1, size, padding)
+    return CellImage(result._data, image.modality, image.path, row, col)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.detection.segment_cells"><code class="name flex">
+<span>def <span class="ident">segment_cells</span></span>(<span>sequence, size=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Obtain cell images from a sequence of module images. Note that images that do not have a valid transform,
+possibly because the detection step failed, are silently ignored.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sequence</code></strong> :&ensp;<code>ModuleImageOrSequence</code></dt>
+<dd>A single module image or a sequence of module images</dd>
+<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
+<dd>Size of the resulting cell images in pixels (automatically chosen by default)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>cells</code></strong></dt>
+<dd>The segmented cell images</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@_sequence(True)
+def segment_cells(
+    sequence: ModuleImageOrSequence, size: int = None
+) -&gt; CellImageSequence:
+    &#34;&#34;&#34;Obtain cell images from a sequence of module images. Note that images that do not have a valid transform,
+    possibly because the detection step failed, are silently ignored.
+
+    Args:
+        sequence (ModuleImageOrSequence): A single module image or a sequence of module images
+        size (int): Size of the resulting cell images in pixels (automatically chosen by default)
+
+    Returns:
+        cells: The segmented cell images
+    &#34;&#34;&#34;
+
+    scales = np.array(
+        [
+            img.get_meta(&#34;transform&#34;).mean_scale()
+            for img in sequence.images
+            if img.has_meta(&#34;transform&#34;) and img.get_meta(&#34;transform&#34;).valid
+        ]
+    )
+    if scales.std() &gt; 0.1 * scales.mean() and size is None:
+        logging.warning(
+            &#34;The size of cells within the sequences varies by more than 10%. However, segment_cells, \
+creates cell images of a fixed size. Please consider to split the sequence into multiple sequences \
+with less variation in size.&#34;
+        )
+    if size is None:
+        size = int(scales.mean())
+
+    result = list()
+    for img in tqdm(sequence.images):
+        for row in range(img.rows):
+            for col in range(img.cols):
+
+                # for the moment, we silently ignore images without a valid transform
+                if (
+                    img.has_meta(&#34;transform&#34;) is not None
+                    and img.get_meta(&#34;transform&#34;).valid
+                ):
+                    result.append(segment_cell(img, row, col, size))
+
+    return CellImageSequence(result)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.detection.segment_module"><code class="name flex">
+<span>def <span class="ident">segment_module</span></span>(<span>image, size=None, padding=0.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Obtain a rectified, cropped and undistorted module image</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>ModuleImage</code></dt>
+<dd>A single module image</dd>
+<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
+<dd>Size of a cell in pixels (automatically chosen by default)</dd>
+<dt><strong><code>padding</code></strong> :&ensp;<code>float</code></dt>
+<dd>Optional padding around the given segment relative to the cell size
+(must be in [0..1[ )</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>module</code></strong></dt>
+<dd>The resulting module image</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def segment_module(
+    image: ModuleImage, size: int = None, padding: float = 0.0
+) -&gt; ModuleImage:
+    &#34;&#34;&#34;Obtain a rectified, cropped and undistorted module image
+
+    Args:
+        image (ModuleImage): A single module image
+        size (int): Size of a cell in pixels (automatically chosen by default)
+        padding (float): Optional padding around the given segment relative to the cell size
+                         (must be in [0..1[ )
+
+    Returns:
+        module: The resulting module image
+    &#34;&#34;&#34;
+
+    result = segment_module_part(image, 0, 0, image.cols, image.rows, size, padding)
+    return ModuleImage(
+        result._data,
+        image.modality,
+        image.path,
+        image.cols,
+        image.rows,
+        meta={&#34;transform&#34;: result.get_meta(&#34;transform&#34;)},
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.detection.segment_module_part"><code class="name flex">
+<span>def <span class="ident">segment_module_part</span></span>(<span>image, first_col, first_row, cols, rows, size=None, padding=0.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Segment a part of a module</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>ModuleImage</code></dt>
+<dd>The corresponding module image</dd>
+<dt><strong><code>first_col</code></strong> :&ensp;<code>int</code></dt>
+<dd>First column to appear in the segment</dd>
+<dt><strong><code>first_row</code></strong> :&ensp;<code>int</code></dt>
+<dd>First row to appear in the segment</dd>
+<dt><strong><code>cols</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of columns of the segment</dd>
+<dt><strong><code>rows</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of rows of the segment</dd>
+<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
+<dd>Size of a cell in pixels (automatically chosen by default)</dd>
+<dt><strong><code>padding</code></strong> :&ensp;<code>float</code></dt>
+<dd>Optional padding around the given segment relative to the cell size
+(must be in [0..1[ )</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>segment</code></strong></dt>
+<dd>The resulting segment</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def segment_module_part(
+    image: ModuleImage,
+    first_col: int,
+    first_row: int,
+    cols: int,
+    rows: int,
+    size: int = None,
+    padding: float = 0.0,
+) -&gt; PartialModuleImage:
+    &#34;&#34;&#34;Segment a part of a module
+
+    Args:
+        image (ModuleImage): The corresponding module image
+        first_col (int): First column to appear in the segment
+        first_row (int): First row to appear in the segment
+        cols (int): Number of columns of the segment
+        rows (int): Number of rows of the segment
+        size (int): Size of a cell in pixels (automatically chosen by default)
+        padding (float): Optional padding around the given segment relative to the cell size
+                         (must be in [0..1[ )
+
+    Returns:
+        segment: The resulting segment
+    &#34;&#34;&#34;
+
+    if not image.has_meta(&#34;transform&#34;) or not image.get_meta(&#34;transform&#34;).valid:
+        logging.error(
+            &#34;The ModuleImage does not have a valid transform. Did module localization succeed?&#34;
+        )
+        exit()
+
+    t = image.get_meta(&#34;transform&#34;)
+
+    if padding &gt;= 1.0 or padding &lt; 0.0:
+        logging.error(&#34;padding needs to be in [0..1[&#34;)
+        exit()
+
+    last_col = first_col + cols
+    last_row = first_row + rows
+    if last_row &gt; image.rows or last_col &gt; image.cols:
+        logging.error(&#34;The row or column index exceeds the module geometry&#34;)
+        exit()
+
+    size = t.mean_scale() if size is None else size
+    result = warp_image(
+        image.data,
+        t,
+        first_col - padding,
+        first_row - padding,
+        1 / size,
+        1 / size,
+        cols + 2 * padding,
+        rows + 2 * padding,
+    )
+    result = result.astype(image.dtype)
+    transform = HomographyTransform(
+        np.array(
+            [
+                [first_row - padding, first_col - padding],
+                [first_row - padding, last_col - padding],
+                [last_row - padding, first_col - padding],
+                [last_row - padding, last_col - padding],
+            ]
+        ),
+        np.array(
+            [
+                [0.0, 0.0],
+                [0.0, size * cols],
+                [size * rows, 0.0],
+                [size * rows, size * cols],
+            ]
+        ),
+    )
+    return PartialModuleImage(
+        result,
+        image.modality,
+        image.path,
+        cols,
+        rows,
+        first_col,
+        first_row,
+        meta={&#34;transform&#34;: transform},
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.detection.segment_modules"><code class="name flex">
+<span>def <span class="ident">segment_modules</span></span>(<span>sequence, size=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Obtain rectified, cropped and undistorted module images from a sequence. Note that images that do not have a valid transform,
+possibly because the detection step failed, are silently ignored.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sequence</code></strong> :&ensp;<code>ModuleImageOrSequence</code></dt>
+<dd>A single module image or a sequence of module images</dd>
+<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
+<dd>Size of the resulting cell images in pixels (automatically chosen by default)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>module</code></strong></dt>
+<dd>The segmented module images</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@_sequence
+def segment_modules(
+    sequence: ModuleImageOrSequence, size: int = None
+) -&gt; ModuleImageSequence:
+    &#34;&#34;&#34;Obtain rectified, cropped and undistorted module images from a sequence. Note that images that do not have a valid transform,
+    possibly because the detection step failed, are silently ignored.
+
+    Args:
+        sequence (ModuleImageOrSequence): A single module image or a sequence of module images
+        size (int): Size of the resulting cell images in pixels (automatically chosen by default)
+
+    Returns:
+        module: The segmented module images
+    &#34;&#34;&#34;
+
+    scales = np.array(
+        [
+            img.get_meta(&#34;transform&#34;).mean_scale()
+            for img in sequence.images
+            if img.has_meta(&#34;transform&#34;) and img.get_meta(&#34;transform&#34;).valid
+        ]
+    )
+    if scales.std() &gt; 0.1 * scales.mean() and size is None:
+        logging.warning(
+            &#34;The size of cells within the sequences varies by more than 10%. However, segment_modules, \
+creates images of a fixed size. Please consider to split the sequence into multiple sequences \
+with less variation in size.&#34;
+        )
+    if size is None:
+        size = int(scales.mean())
+
+    result = list()
+    for img in tqdm(sequence.images):
+
+        # for the moment, we silently ignore images without a valid transform
+        if img.has_meta(&#34;transform&#34;) and img.get_meta(&#34;transform&#34;).valid:
+            result.append(segment_module(img, size))
+
+    return type(sequence).from_other(sequence, images=result, same_camera=False)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pvinspect.preproc" href="index.html">pvinspect.preproc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pvinspect.preproc.detection.locate_module_and_cells" href="#pvinspect.preproc.detection.locate_module_and_cells">locate_module_and_cells</a></code></li>
+<li><code><a title="pvinspect.preproc.detection.locate_multiple_modules" href="#pvinspect.preproc.detection.locate_multiple_modules">locate_multiple_modules</a></code></li>
+<li><code><a title="pvinspect.preproc.detection.segment_cell" href="#pvinspect.preproc.detection.segment_cell">segment_cell</a></code></li>
+<li><code><a title="pvinspect.preproc.detection.segment_cells" href="#pvinspect.preproc.detection.segment_cells">segment_cells</a></code></li>
+<li><code><a title="pvinspect.preproc.detection.segment_module" href="#pvinspect.preproc.detection.segment_module">segment_module</a></code></li>
+<li><code><a title="pvinspect.preproc.detection.segment_module_part" href="#pvinspect.preproc.detection.segment_module_part">segment_module_part</a></code></li>
+<li><code><a title="pvinspect.preproc.detection.segment_modules" href="#pvinspect.preproc.detection.segment_modules">segment_modules</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
