@@ -1,6 +1,6 @@
 # Changelog
 
-## In development
+## 0.0.2
 
 * Rework + cleanup module detection
 * Allow detection of partial modules
