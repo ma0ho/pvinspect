@@ -3,18 +3,17 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-install:
-  - pip install .
-  - pip install pdoc3
-script:
-  - pytest
+install: pip install .
+script: pytest
 
 jobs:
   include:
     - stage: deploy-release
       if: tag IS present
       python: 3.8
-      install: pip install .
+      install: 
+        - pip install .
+        - pip install pdoc3
       script:
         - pdoc3 --html pvinspect
         - mv html/pvinspect html/release
@@ -27,7 +26,9 @@ jobs:
     - stage: deploy-dev
       if: tag IS blank
       python: 3.8
-      install: pip install .
+      install: 
+        - pip install .
+        - pip install pdoc3
       script:
         - pdoc3 --html pvinspect
         - mv html/pvinspect html/dev
