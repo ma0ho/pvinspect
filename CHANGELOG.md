@@ -17,6 +17,7 @@
 * Add `calibrate_distortion`and `compensate_distortion`
 * Implement elementwise operators on Images and ImageSequences
 * Implement `locate_multiple_modules`
+* Support Python 3.8
 
 ## 0.0.1
 
