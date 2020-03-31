@@ -16,6 +16,7 @@
 * Add `calibrate_flatfield` and `compensate_flatfield`
 * Add `calibrate_distortion`and `compensate_distortion`
 * Implement elementwise operators on Images and ImageSequences
+* Implement `locate_multiple_modules`
 
 ## 0.0.1
 
