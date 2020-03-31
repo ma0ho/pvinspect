@@ -1,40 +1,32 @@
 language: python
 python:
-  - "3.6"
-  - "3.7"
-  - "3.8"
+- '3.6'
+- '3.7'
+- '3.8'
 install: pip install .
 script: pytest
-
 jobs:
   include:
-    - stage: deploy-release
-      if: tag IS present
-      python: 3.8
-      install: 
-        - pip install .
-        - pip install pdoc3
-      script:
-        - pdoc3 --html pvinspect
-        - mv html/pvinspect html/release
-      deploy:
-        provider: pages
+  - stage: deploy-release
+    if: tag IS present
+    python: 3.8
+    install:
+    - pip install .
+    - pip install pdoc3
+    script:
+    - pdoc3 --html pvinspect
+    deploy:
+      - provider: pages
         skip_cleanup: true
-        github_token: $GITHUB_TOKEN
+        github_token: "$GITHUB_TOKEN"
         keep_history: true
-        local_dir: html/
-    - stage: deploy-dev
-      if: tag IS blank
-      python: 3.8
-      install: 
-        - pip install .
-        - pip install pdoc3
-      script:
-        - pdoc3 --html pvinspect
-        - mv html/pvinspect html/dev
-      deploy:
-        provider: pages
+        local_dir: html/pvinspect/
+        on:
+          tags: true
+      - provider: pypi
         skip_cleanup: true
-        github_token: $GITHUB_TOKEN
-        keep_history: true
-        local_dir: html/
+        user: "__token__"
+        password:
+          secure: BTLKYA8CFwaCKMPna9RFnjlBVauv6KpYE9lwkISX5Vn4TllYIrTdKUBjAZte/hKjQ4gJiPU38f0zaXWwlgPueivsBFPAb+tuSgwuDS1AZRD6SSRI7cR9CDKofhA1/BFW/ncsUJ8qtVmbhmXkq1TAzxbJzHOATrCuNw+pmtkbwG0vNBN6MvUbTJB0ZXjAocc7RTgoFiFL5bNLkLUjYXmrTFx/LntQqY9AycoYMUkuUUe1V2AiDWVS+gSX2PGrDRr9Q7oUpIeNcse6Ct8asKTgiu2TdNa/wP6Et/voyYX+lpb+fzr147V3SujGfovVai5auAA0diVxUuJbvPciUskHGaItrlhC21tFBRIzaqEz0aXXp7xoTmiRiMvNz1WDUlcUCCjNl+UnhVSlkiFKteGRAfD9MLL9CADog+ckww97iEyYLwi8hRelXULHaG8ThXIN5JHP4f5RvuYJizj4ZxeNCXChmPeOQmjCnzNXW5jG4IpcD+uaphHY6VyxkRK78gE0HyyM/0fZwCuMCglZgxTCpG07Krawyhqr3s5G5PaFS+L51BYq4CmxuNSXIhCegHysvmO0LCED41jiFpwf3pLiAIwsqereqxbBr7WtxKPSA/R1iemY0KSeEJWY1pJgXXieMecjD5PEkK3ZHJ4rUIcj+e8V7M6ujc+QmQjm8+rjbh0=
+        on:
+          tags: true
