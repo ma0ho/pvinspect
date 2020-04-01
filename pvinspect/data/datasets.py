@@ -148,6 +148,8 @@ def multi_module_detection(N: int = 0) -> Tuple[ObjectAnnotations, ImageSequence
         imgs: Sequence of images
     """
     p = _check_and_download_ds("20200331_multi_module_detection")
-    imgs = read_images(path=p, same_camera=False, N=N, pattern="**/*.png")
+    imgs = read_images(
+        path=p, same_camera=False, N=N, pattern="**/*.png", modality=EL_IMAGE
+    )
     anns = load_json_object_masks(path=p / "labels.json")
     return anns, imgs
