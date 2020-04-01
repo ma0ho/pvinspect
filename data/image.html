@@ -480,7 +480,15 @@ ImageOrSequence = Union[Image, ImageSequence]
 class CellImage(Image):
     &#34;&#34;&#34;An image of a solar cell with additional meta data&#34;&#34;&#34;
 
-    def __init__(self, data: np.ndarray, modality: int, path: Path, row: int, col: int):
+    def __init__(
+        self,
+        data: np.ndarray,
+        modality: int,
+        path: Path,
+        row: int,
+        col: int,
+        meta: Dict[str, Any] = {},
+    ):
         &#34;&#34;&#34;Initialize a cell image
 
         Args:
@@ -489,9 +497,10 @@ class CellImage(Image):
             path (Path): Path to the image
             row (int): Row index (zero-based)
             col (int): Cell index (zero-based)
+            meta (Dict[str, Any]): Meta data
         &#34;&#34;&#34;
 
-        super().__init__(data, path, modality)
+        super().__init__(data, path=path, modality=modality, meta=meta)
         self._row = row
         self._col = col
 
@@ -741,7 +750,7 @@ last and hence appears on top)</dd>
 <dl>
 <dt id="pvinspect.data.image.CellImage"><code class="flex name class">
 <span>class <span class="ident">CellImage</span></span>
-<span>(</span><span>data, modality, path, row, col)</span>
+<span>(</span><span>data, modality, path, row, col, meta={})</span>
 </code></dt>
 <dd>
 <section class="desc"><p>An image of a solar cell with additional meta data</p>
@@ -758,6 +767,8 @@ last and hence appears on top)</dd>
 <dd>Row index (zero-based)</dd>
 <dt><strong><code>col</code></strong> :&ensp;<code>int</code></dt>
 <dd>Cell index (zero-based)</dd>
+<dt><strong><code>meta</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>Any</code>]</dt>
+<dd>Meta data</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -766,7 +777,15 @@ last and hence appears on top)</dd>
 <pre><code class="python">class CellImage(Image):
     &#34;&#34;&#34;An image of a solar cell with additional meta data&#34;&#34;&#34;
 
-    def __init__(self, data: np.ndarray, modality: int, path: Path, row: int, col: int):
+    def __init__(
+        self,
+        data: np.ndarray,
+        modality: int,
+        path: Path,
+        row: int,
+        col: int,
+        meta: Dict[str, Any] = {},
+    ):
         &#34;&#34;&#34;Initialize a cell image
 
         Args:
@@ -775,9 +794,10 @@ last and hence appears on top)</dd>
             path (Path): Path to the image
             row (int): Row index (zero-based)
             col (int): Cell index (zero-based)
+            meta (Dict[str, Any]): Meta data
         &#34;&#34;&#34;
 
-        super().__init__(data, path, modality)
+        super().__init__(data, path=path, modality=modality, meta=meta)
         self._row = row
         self._col = col
 
