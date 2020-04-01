@@ -175,7 +175,9 @@ def multi_module_detection(N: int = 0) -&gt; Tuple[ObjectAnnotations, ImageSeque
         imgs: Sequence of images
     &#34;&#34;&#34;
     p = _check_and_download_ds(&#34;20200331_multi_module_detection&#34;)
-    imgs = read_images(path=p, same_camera=False, N=N, pattern=&#34;**/*.png&#34;)
+    imgs = read_images(
+        path=p, same_camera=False, N=N, pattern=&#34;**/*.png&#34;, modality=EL_IMAGE
+    )
     anns = load_json_object_masks(path=p / &#34;labels.json&#34;)
     return anns, imgs</code></pre>
 </details>
@@ -406,7 +408,9 @@ International Conference on Computer Analysis of Images and Patterns. Springer, 
         imgs: Sequence of images
     &#34;&#34;&#34;
     p = _check_and_download_ds(&#34;20200331_multi_module_detection&#34;)
-    imgs = read_images(path=p, same_camera=False, N=N, pattern=&#34;**/*.png&#34;)
+    imgs = read_images(
+        path=p, same_camera=False, N=N, pattern=&#34;**/*.png&#34;, modality=EL_IMAGE
+    )
     anns = load_json_object_masks(path=p / &#34;labels.json&#34;)
     return anns, imgs</code></pre>
 </details>

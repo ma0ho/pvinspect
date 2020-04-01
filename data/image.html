@@ -108,7 +108,9 @@ def _register_default_plugins():
                     else &#34;yellow&#34;
                 )
                 plt.plot(
-                    *box.exterior.xy, linewidth=multimodule_boxes_linewidth, color=color
+                    *box[1].exterior.xy,
+                    linewidth=multimodule_boxes_linewidth,
+                    color=color
                 )
 
     register_show_plugin(multimodule_show_boxes)
@@ -139,8 +141,8 @@ def _register_default_plugins():
                     else &#34;black&#34;
                 )
                 plt.text(
-                    box.centroid.x,
-                    box.centroid.y,
+                    box[1].centroid.x,
+                    box[1].centroid.y,
                     s=str(i),
                     color=textcolor,
                     fontsize=multimodule_numbers_fontsize,
@@ -195,8 +197,10 @@ class _Base:
         for name in required:
             if name == &#34;meta&#34; and &#34;meta&#34; in kwargs.keys():
                 # joint meta dictionaries
-                kwargs[&#34;meta&#34;].update(other._meta)
-            if name not in kwargs and name != &#34;self&#34;:
+                tmp = deepcopy(other._meta)
+                tmp.update(kwargs[&#34;meta&#34;])
+                kwargs[&#34;meta&#34;] = tmp
+            if name not in kwargs.keys() and name != &#34;self&#34;:
                 other_args[name] = getattr(other, &#34;_&#34; + name)
 
         return cls(**kwargs, **other_args)

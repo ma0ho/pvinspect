@@ -229,14 +229,13 @@ def segment_module_part(
             ]
         ),
     )
-    return PartialModuleImage(
-        result,
-        image.modality,
-        image.path,
-        cols,
-        rows,
-        first_col,
-        first_row,
+    return PartialModuleImage.from_other(
+        image,
+        data=result,
+        cols=cols,
+        rows=rows,
+        first_col=first_col,
+        first_row=first_row,
         meta={&#34;transform&#34;: transform},
     )
 
@@ -257,14 +256,7 @@ def segment_module(
     &#34;&#34;&#34;
 
     result = segment_module_part(image, 0, 0, image.cols, image.rows, size, padding)
-    return ModuleImage(
-        result._data,
-        image.modality,
-        image.path,
-        image.cols,
-        image.rows,
-        meta={&#34;transform&#34;: result.get_meta(&#34;transform&#34;)},
-    )
+    return ModuleImage.from_other(result)
 
 
 def segment_cell(
@@ -285,7 +277,7 @@ def segment_cell(
     &#34;&#34;&#34;
 
     result = segment_module_part(image, col, row, 1, 1, size, padding)
-    return CellImage(result._data, image.modality, image.path, row, col)
+    return CellImage.from_other(result, row=row, col=col)
 
 
 @_sequence
@@ -806,7 +798,7 @@ def locate_multiple_modules(
     &#34;&#34;&#34;
 
     result = segment_module_part(image, col, row, 1, 1, size, padding)
-    return CellImage(result._data, image.modality, image.path, row, col)</code></pre>
+    return CellImage.from_other(result, row=row, col=col)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.preproc.detection.segment_cells"><code class="name flex">
@@ -917,14 +909,7 @@ with less variation in size.&#34;
     &#34;&#34;&#34;
 
     result = segment_module_part(image, 0, 0, image.cols, image.rows, size, padding)
-    return ModuleImage(
-        result._data,
-        image.modality,
-        image.path,
-        image.cols,
-        image.rows,
-        meta={&#34;transform&#34;: result.get_meta(&#34;transform&#34;)},
-    )</code></pre>
+    return ModuleImage.from_other(result)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.preproc.detection.segment_module_part"><code class="name flex">
@@ -1032,14 +1017,13 @@ with less variation in size.&#34;
             ]
         ),
     )
-    return PartialModuleImage(
-        result,
-        image.modality,
-        image.path,
-        cols,
-        rows,
-        first_col,
-        first_row,
+    return PartialModuleImage.from_other(
+        image,
+        data=result,
+        cols=cols,
+        rows=rows,
+        first_col=first_col,
+        first_row=first_row,
         meta={&#34;transform&#34;: transform},
     )</code></pre>
 </details>
