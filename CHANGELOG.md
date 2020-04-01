@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+* Fix missing meta argument to `CellImage`
+
 ## 0.1.1
 
 * Fix multi module overlay

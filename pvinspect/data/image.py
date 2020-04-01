@@ -453,7 +453,15 @@ ImageOrSequence = Union[Image, ImageSequence]
 class CellImage(Image):
     """An image of a solar cell with additional meta data"""
 
-    def __init__(self, data: np.ndarray, modality: int, path: Path, row: int, col: int):
+    def __init__(
+        self,
+        data: np.ndarray,
+        modality: int,
+        path: Path,
+        row: int,
+        col: int,
+        meta: Dict[str, Any] = {},
+    ):
         """Initialize a cell image
 
         Args:
@@ -462,9 +470,10 @@ class CellImage(Image):
             path (Path): Path to the image
             row (int): Row index (zero-based)
             col (int): Cell index (zero-based)
+            meta (Dict[str, Any]): Meta data
         """
 
-        super().__init__(data, path, modality)
+        super().__init__(data, path=path, modality=modality, meta=meta)
         self._row = row
         self._col = col
 
