@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+* Fix multi module overlay
+* Fix missing modality in multi module dataset
+* Fix dropped meta data in `segment_module_part`, `segment_module` and `segment_cells`
+
 ## 0.1.0
 
 * Rework + cleanup module detection
