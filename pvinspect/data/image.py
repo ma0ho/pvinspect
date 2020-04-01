@@ -81,7 +81,9 @@ def _register_default_plugins():
                     else "yellow"
                 )
                 plt.plot(
-                    *box.exterior.xy, linewidth=multimodule_boxes_linewidth, color=color
+                    *box[1].exterior.xy,
+                    linewidth=multimodule_boxes_linewidth,
+                    color=color
                 )
 
     register_show_plugin(multimodule_show_boxes)
@@ -112,8 +114,8 @@ def _register_default_plugins():
                     else "black"
                 )
                 plt.text(
-                    box.centroid.x,
-                    box.centroid.y,
+                    box[1].centroid.x,
+                    box[1].centroid.y,
                     s=str(i),
                     color=textcolor,
                     fontsize=multimodule_numbers_fontsize,
