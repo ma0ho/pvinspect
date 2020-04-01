@@ -4,7 +4,7 @@ from pathlib import Path
 from pvinspect.common.transform import HomographyTransform, FullTransform
 from pvinspect.common.util import objdetect_metrics
 import numpy as np
-from .utilities import assert_equal
+from test.utilities import assert_equal
 
 
 def test_locate_homography():

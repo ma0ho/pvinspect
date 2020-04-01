@@ -1,7 +1,7 @@
 import numpy as np
 from pvinspect.common import transform as t
 from pvinspect.common import util
-from .utilities import assert_equal
+from test.utilities import assert_equal
 
 
 def test_distort_undistort():

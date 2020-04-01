@@ -6,7 +6,7 @@ import numpy as np
 from pvinspect.data.image import *
 
 EXAMPLES = (
-    Path(__file__).absolute().parent.parent
+    Path(__file__).absolute().parent.parent.parent
     / "pvinspect"
     / "data"
     / "datasets"

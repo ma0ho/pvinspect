@@ -1,5 +1,9 @@
 # Changelog
 
+## In development
+
+* Refactor tests and introduce some integration tests
+
 ## 0.1.2
 
 * Fix missing meta argument to `CellImage`

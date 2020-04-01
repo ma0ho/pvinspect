@@ -1,6 +1,6 @@
 from pvinspect.common.util import *
 from shapely import *
-from .utilities import *
+from test.utilities import *
 
 
 def test_iou():
