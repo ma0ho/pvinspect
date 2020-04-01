@@ -202,14 +202,13 @@ def segment_module_part(
             ]
         ),
     )
-    return PartialModuleImage(
-        result,
-        image.modality,
-        image.path,
-        cols,
-        rows,
-        first_col,
-        first_row,
+    return PartialModuleImage.from_other(
+        image,
+        data=result,
+        cols=cols,
+        rows=rows,
+        first_col=first_col,
+        first_row=first_row,
         meta={"transform": transform},
     )
 
@@ -230,14 +229,7 @@ def segment_module(
     """
 
     result = segment_module_part(image, 0, 0, image.cols, image.rows, size, padding)
-    return ModuleImage(
-        result._data,
-        image.modality,
-        image.path,
-        image.cols,
-        image.rows,
-        meta={"transform": result.get_meta("transform")},
-    )
+    return ModuleImage.from_other(result)
 
 
 def segment_cell(
@@ -258,7 +250,7 @@ def segment_cell(
     """
 
     result = segment_module_part(image, col, row, 1, 1, size, padding)
-    return CellImage(result._data, image.modality, image.path, row, col)
+    return CellImage.from_other(result, row=row, col=col)
 
 
 @_sequence
