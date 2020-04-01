@@ -170,8 +170,10 @@ class _Base:
         for name in required:
             if name == "meta" and "meta" in kwargs.keys():
                 # joint meta dictionaries
-                kwargs["meta"].update(other._meta)
-            if name not in kwargs and name != "self":
+                tmp = deepcopy(other._meta)
+                tmp.update(kwargs["meta"])
+                kwargs["meta"] = tmp
+            if name not in kwargs.keys() and name != "self":
                 other_args[name] = getattr(other, "_" + name)
 
         return cls(**kwargs, **other_args)
