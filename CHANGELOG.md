@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+* Fix broken pillow version
+
 ## 0.1.3
 
 * Refactor tests and introduce some integration tests
