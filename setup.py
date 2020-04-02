@@ -57,6 +57,7 @@ setuptools.setup(
         "optuna",
         "sklearn",
         "pre-commit",
+        "pillow < 7.1.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
