@@ -1,8 +1,9 @@
 # Changelog
 
-## In development
+## 0.1.3
 
 * Refactor tests and introduce some integration tests
+* Add `__version__`
 
 ## 0.1.2
 
