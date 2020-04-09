@@ -1,5 +1,9 @@
 # Changelog
 
+## In development
+
+* Cleanup too verbose imports
+
 ## 0.1.4
 
 * Fix broken pillow version

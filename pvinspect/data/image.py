@@ -2,7 +2,7 @@
 
 import numpy as np
 from skimage import io, img_as_uint, img_as_float
-from pvinspect.common import Transform
+from pvinspect.common.transform import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
 from typing import List, Tuple, Union, Callable, Type, TypeVar, Any, Dict

@@ -1,6 +1,6 @@
 from pvinspect.data.datasets import multi_module_detection
 from pvinspect.common.util import objdetect_metrics
-from pvinspect.preproc import locate_multiple_modules
+from pvinspect.preproc.detection import locate_multiple_modules
 import numpy as np
 
 

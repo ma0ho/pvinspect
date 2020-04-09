@@ -1,5 +1,10 @@
 from pvinspect.data import datasets
-from pvinspect.preproc import *
+from pvinspect.preproc.detection import (
+    locate_multiple_modules,
+    locate_module_and_cells,
+    segment_modules,
+    segment_cells,
+)
 from pvinspect.data.image import *
 from test.utilities import *
 

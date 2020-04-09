@@ -2,6 +2,7 @@ __pycache__
 *.egg-info
 .vscode
 .pytest_cache
+.ipynb_checkpoints
 results
 html
 dist
