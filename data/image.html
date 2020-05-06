@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.5" />
+<meta name="generator" content="pdoc 0.8.1" />
 <title>pvinspect.data.image API documentation</title>
 <meta name="description" content="Provides classes to store and visualize images with metadata" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
 <body>
@@ -28,8 +28,8 @@
 <pre><code class="python">&#34;&#34;&#34;Provides classes to store and visualize images with metadata&#34;&#34;&#34;
 
 import numpy as np
-from skimage import io, img_as_uint, img_as_float
-from pvinspect.common import Transform
+from skimage import io, img_as_uint, img_as_float64, img_as_int
+from pvinspect.common.transform import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
 from typing import List, Tuple, Union, Callable, Type, TypeVar, Any, Dict
@@ -40,6 +40,7 @@ import logging
 from pvinspect.common._ipy_exit import exit
 import inspect
 import sys
+from enum import Enum
 
 # this is a pointer to the module object instance itself
 this = sys.modules[__name__]
@@ -50,6 +51,19 @@ EL_IMAGE = 0
 &#34;&#34;&#34;Indicate an electroluminescense (EL) image&#34;&#34;&#34;
 PL_IMAGE = 1
 &#34;&#34;&#34;Indicate a photoluminescense (PL) image&#34;&#34;&#34;
+
+
+# datatypes
+DTYPE_INT = np.int64
+DTYPE_UNSIGNED_INT = np.uint32
+DTYPE_FLOAT = np.float64
+img_as_float = img_as_float64
+
+
+class DType(Enum):
+    INT = (0,)
+    UNSIGNED_INT = 1
+    FLOAT = 2
 
 
 # global list of plugins that are called on every .show()
@@ -147,6 +161,8 @@ def _register_default_plugins():
                     color=textcolor,
                     fontsize=multimodule_numbers_fontsize,
                     bbox=dict(facecolor=bgcolor, alpha=0.8),
+                    ha=&#34;center&#34;,
+                    va=&#34;center&#34;,
                 )
 
     register_show_plugin(multimodule_show_numbers)
@@ -224,10 +240,6 @@ class Image(_Base):
             modality (int): The imaging modality (EL_IMAGE or PL_IMAGE) or None
             meta (Dict[str, Any]): Meta attributes of this image
         &#34;&#34;&#34;
-        # convert to a common dtype
-        if data.dtype != np.float32 and data.dtype != np.float64:
-            data = img_as_uint(data)
-
         self._data = data
         self._path = path
         self._modality = modality
@@ -239,11 +251,13 @@ class Image(_Base):
 
     _T = TypeVar(&#34;T&#34;)
 
-    def as_type(self: _T, dtype: np.ndarray.dtype) -&gt; _T:
-        if dtype == np.float32 or dtype == np.float64:
+    def as_type(self: _T, dtype: DType) -&gt; _T:
+        if dtype == DType.FLOAT:
             return type(self).from_other(self, data=img_as_float(self._data))
-        else:
+        elif dtype == DType.UNSIGNED_INT:
             return type(self).from_other(self, data=img_as_uint(self._data))
+        elif dtype == DType.INT:
+            return type(self).from_other(self, data=img_as_int(self._data))
 
     def __add__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
@@ -253,11 +267,13 @@ class Image(_Base):
     def __sub__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        if self.dtype != np.float32 and self.dtype != np.float64:
-            # unsigned -&gt; signed
-            self._data = self._data.astype(np.int64)
-            other._data = other._data.astype(np.int64)
-        return type(self).from_other(self, data=self._data - other._data)
+        if self.dtype == DType.UNSIGNED_INT:
+            res = self._data.astype(DTYPE_INT) - other._data.astype(DTYPE_INT)
+            iinfo = np.iinfo(DTYPE_UNSIGNED_INT)
+            res = np.clip(res, 0, iinfo.max)
+            return type(self).from_other(self, data=res)
+        else:
+            return type(self).from_other(self, data=self._data - other._data)
 
     def __mul__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
@@ -265,10 +281,7 @@ class Image(_Base):
         return type(self).from_other(self, data=self._data * other._data)
 
     def __truediv__(self: _T, other: _T) -&gt; _T:
-        if self.dtype not in (np.float64, np.float32) or other.dtype not in (
-            np.float64,
-            np.float32,
-        ):
+        if self.dtype != DType.FLOAT or other.dtype != DType.FLOAT:
             raise RuntimeError(&#34;Images must be of type float&#34;)
         return type(self).from_other(self, data=self._data / other._data)
 
@@ -298,9 +311,24 @@ class Image(_Base):
         return deepcopy(self._path)
 
     @property
-    def dtype(self) -&gt; np.dtype:
+    def dtype(self) -&gt; DType:
         &#34;&#34;&#34;Datatype of the image&#34;&#34;&#34;
-        return deepcopy(self.data.dtype)
+        if self.data.dtype == np.float32 or self.data.dtype == np.float64:
+            return DType.FLOAT
+        elif (
+            self.data.dtype == np.uint8
+            or self.data.dtype == np.uint16
+            or self.data.dtype == np.uint32
+            or self.data.dtype == np.uint64
+        ):
+            return DType.UNSIGNED_INT
+        elif (
+            self.data.dtype == np.int8
+            or self.data.dtype == np.int16
+            or self.data.dtype == np.int32
+            or self.data.dtype == np.int64
+        ):
+            return DType.INT
 
     @property
     def shape(self) -&gt; Tuple[int, int]:
@@ -319,6 +347,10 @@ class Image(_Base):
     def has_meta(self, key: str) -&gt; bool:
         &#34;&#34;&#34;Check if a meta attribute is set&#34;&#34;&#34;
         return key in self._meta.keys()
+
+    def list_meta(self) -&gt; List[str]:
+        &#34;&#34;&#34;List avaliable meta keys&#34;&#34;&#34;
+        return list(self._meta.keys())
 
 
 class ImageSequence(_Base):
@@ -407,11 +439,9 @@ class ImageSequence(_Base):
             result.append(type(img).from_other(img, data=res))
         return type(self).from_other(self, images=result)
 
-    def as_type(self: _T, dtype: np.ndarray.dtype) -&gt; _T:
+    def as_type(self: _T, dtype: DType) -&gt; _T:
         &#34;&#34;&#34;Convert sequence to specified dtype&#34;&#34;&#34;
-        result = []
-        for img in self._images:
-            result.append(img.as_type(dtype))
+        result = [img.as_type(dtype) for img in self._images]
         return type(self).from_other(self, images=result)
 
     def __add__(self: _T, other: _T) -&gt; _T:
@@ -448,7 +478,7 @@ class ImageSequence(_Base):
         return deepcopy(self._images)
 
     @property
-    def dtype(self) -&gt; np.dtype:
+    def dtype(self) -&gt; DType:
         &#34;&#34;&#34;Access the image datatype&#34;&#34;&#34;
         return self.images[0].dtype if not self._allow_different_dtypes else None
 
@@ -703,11 +733,11 @@ def _sequence(*args):
 <dl>
 <dt id="pvinspect.data.image.EL_IMAGE"><code class="name">var <span class="ident">EL_IMAGE</span></code></dt>
 <dd>
-<section class="desc"><p>Indicate an electroluminescense (EL) image</p></section>
+<div class="desc"><p>Indicate an electroluminescense (EL) image</p></div>
 </dd>
 <dt id="pvinspect.data.image.PL_IMAGE"><code class="name">var <span class="ident">PL_IMAGE</span></code></dt>
 <dd>
-<section class="desc"><p>Indicate a photoluminescense (PL) image</p></section>
+<div class="desc"><p>Indicate a photoluminescense (PL) image</p></div>
 </dd>
 </dl>
 </section>
@@ -715,10 +745,10 @@ def _sequence(*args):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pvinspect.data.image.register_show_plugin"><code class="name flex">
-<span>def <span class="ident">register_show_plugin</span></span>(<span>callable, priority=0)</span>
+<span>def <span class="ident">register_show_plugin</span></span>(<span>callable, priority: int = 0)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Register a new plugin that is called on every .show()</p>
+<div class="desc"><p>Register a new plugin that is called on every .show()</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>callable</code></strong></dt>
@@ -726,7 +756,7 @@ def _sequence(*args):
 <dt><strong><code>priority</code></strong> :&ensp;<code>int</code></dt>
 <dd>Plugins are invoked in the order of increasing priority (highest priority is invoked
 last and hence appears on top)</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -750,10 +780,10 @@ last and hence appears on top)</dd>
 <dl>
 <dt id="pvinspect.data.image.CellImage"><code class="flex name class">
 <span>class <span class="ident">CellImage</span></span>
-<span>(</span><span>data, modality, path, row, col, meta={})</span>
+<span>(</span><span>data: numpy.ndarray, modality: int, path: pathlib.Path, row: int, col: int, meta: Dict[str, Any] = {})</span>
 </code></dt>
 <dd>
-<section class="desc"><p>An image of a solar cell with additional meta data</p>
+<div class="desc"><p>An image of a solar cell with additional meta data</p>
 <p>Initialize a cell image</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -767,9 +797,9 @@ last and hence appears on top)</dd>
 <dd>Row index (zero-based)</dd>
 <dt><strong><code>col</code></strong> :&ensp;<code>int</code></dt>
 <dd>Cell index (zero-based)</dd>
-<dt><strong><code>meta</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>Any</code>]</dt>
+<dt><strong><code>meta</code></strong> :&ensp;<code>Dict[str, Any]</code></dt>
 <dd>Meta data</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -825,9 +855,9 @@ last and hence appears on top)</dd>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="pvinspect.data.image.CellImage.col"><code class="name">var <span class="ident">col</span></code></dt>
+<dt id="pvinspect.data.image.CellImage.col"><code class="name">var <span class="ident">col</span> : int</code></dt>
 <dd>
-<section class="desc"><p>0-based column index of the cell in the original module</p></section>
+<div class="desc"><p>0-based column index of the cell in the original module</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -838,9 +868,9 @@ def col(self) -&gt; int:
     return self._col</code></pre>
 </details>
 </dd>
-<dt id="pvinspect.data.image.CellImage.row"><code class="name">var <span class="ident">row</span></code></dt>
+<dt id="pvinspect.data.image.CellImage.row"><code class="name">var <span class="ident">row</span> : int</code></dt>
 <dd>
-<section class="desc"><p>0-based row index of the cell in the original module</p></section>
+<div class="desc"><p>0-based row index of the cell in the original module</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -860,6 +890,7 @@ def row(self) -&gt; int:
 <li><code><a title="pvinspect.data.image.Image.dtype" href="#pvinspect.data.image.Image.dtype">dtype</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.get_meta" href="#pvinspect.data.image.Image.get_meta">get_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.has_meta" href="#pvinspect.data.image.Image.has_meta">has_meta</a></code></li>
+<li><code><a title="pvinspect.data.image.Image.list_meta" href="#pvinspect.data.image.Image.list_meta">list_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.modality" href="#pvinspect.data.image.Image.modality">modality</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.path" href="#pvinspect.data.image.Image.path">path</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.shape" href="#pvinspect.data.image.Image.shape">shape</a></code></li>
@@ -870,18 +901,18 @@ def row(self) -&gt; int:
 </dd>
 <dt id="pvinspect.data.image.CellImageSequence"><code class="flex name class">
 <span>class <span class="ident">CellImageSequence</span></span>
-<span>(</span><span>images, copy=True)</span>
+<span>(</span><span>images: List[<a title="pvinspect.data.image.CellImage" href="#pvinspect.data.image.CellImage">CellImage</a>], copy=True)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>An immutable sequence of cell images, allowing for access to single images as well as analysis of the sequence</p>
+<div class="desc"><p>An immutable sequence of cell images, allowing for access to single images as well as analysis of the sequence</p>
 <p>Initialize a module image sequence</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>images</code></strong> :&ensp;<code>List</code>[<code>CellImage</code>]</dt>
+<dt><strong><code>images</code></strong> :&ensp;<code>List[<a title="pvinspect.data.image.CellImage" href="#pvinspect.data.image.CellImage">CellImage</a>]</code></dt>
 <dd>The list of images</dd>
 <dt><strong><code>copy</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Copy the images?</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -921,12 +952,47 @@ def row(self) -&gt; int:
 </li>
 </ul>
 </dd>
-<dt id="pvinspect.data.image.Image"><code class="flex name class">
-<span>class <span class="ident">Image</span></span>
-<span>(</span><span>data, path, modality=None, meta={})</span>
+<dt id="pvinspect.data.image.DType"><code class="flex name class">
+<span>class <span class="ident">DType</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>A general image</p>
+<div class="desc"><p>An enumeration.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DType(Enum):
+    INT = (0,)
+    UNSIGNED_INT = 1
+    FLOAT = 2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="pvinspect.data.image.DType.FLOAT"><code class="name">var <span class="ident">FLOAT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pvinspect.data.image.DType.INT"><code class="name">var <span class="ident">INT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pvinspect.data.image.DType.UNSIGNED_INT"><code class="name">var <span class="ident">UNSIGNED_INT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="pvinspect.data.image.Image"><code class="flex name class">
+<span>class <span class="ident">Image</span></span>
+<span>(</span><span>data: numpy.ndarray, path: pathlib.Path, modality: int = None, meta: Dict[str, Any] = {})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A general image</p>
 <p>Create a new image. All non-float images as automatically converted to uint.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -936,9 +1002,9 @@ def row(self) -&gt; int:
 <dd>Path to the image</dd>
 <dt><strong><code>modality</code></strong> :&ensp;<code>int</code></dt>
 <dd>The imaging modality (EL_IMAGE or PL_IMAGE) or None</dd>
-<dt><strong><code>meta</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>Any</code>]</dt>
+<dt><strong><code>meta</code></strong> :&ensp;<code>Dict[str, Any]</code></dt>
 <dd>Meta attributes of this image</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -961,10 +1027,6 @@ def row(self) -&gt; int:
             modality (int): The imaging modality (EL_IMAGE or PL_IMAGE) or None
             meta (Dict[str, Any]): Meta attributes of this image
         &#34;&#34;&#34;
-        # convert to a common dtype
-        if data.dtype != np.float32 and data.dtype != np.float64:
-            data = img_as_uint(data)
-
         self._data = data
         self._path = path
         self._modality = modality
@@ -976,11 +1038,13 @@ def row(self) -&gt; int:
 
     _T = TypeVar(&#34;T&#34;)
 
-    def as_type(self: _T, dtype: np.ndarray.dtype) -&gt; _T:
-        if dtype == np.float32 or dtype == np.float64:
+    def as_type(self: _T, dtype: DType) -&gt; _T:
+        if dtype == DType.FLOAT:
             return type(self).from_other(self, data=img_as_float(self._data))
-        else:
+        elif dtype == DType.UNSIGNED_INT:
             return type(self).from_other(self, data=img_as_uint(self._data))
+        elif dtype == DType.INT:
+            return type(self).from_other(self, data=img_as_int(self._data))
 
     def __add__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
@@ -990,11 +1054,13 @@ def row(self) -&gt; int:
     def __sub__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        if self.dtype != np.float32 and self.dtype != np.float64:
-            # unsigned -&gt; signed
-            self._data = self._data.astype(np.int64)
-            other._data = other._data.astype(np.int64)
-        return type(self).from_other(self, data=self._data - other._data)
+        if self.dtype == DType.UNSIGNED_INT:
+            res = self._data.astype(DTYPE_INT) - other._data.astype(DTYPE_INT)
+            iinfo = np.iinfo(DTYPE_UNSIGNED_INT)
+            res = np.clip(res, 0, iinfo.max)
+            return type(self).from_other(self, data=res)
+        else:
+            return type(self).from_other(self, data=self._data - other._data)
 
     def __mul__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
@@ -1002,10 +1068,7 @@ def row(self) -&gt; int:
         return type(self).from_other(self, data=self._data * other._data)
 
     def __truediv__(self: _T, other: _T) -&gt; _T:
-        if self.dtype not in (np.float64, np.float32) or other.dtype not in (
-            np.float64,
-            np.float32,
-        ):
+        if self.dtype != DType.FLOAT or other.dtype != DType.FLOAT:
             raise RuntimeError(&#34;Images must be of type float&#34;)
         return type(self).from_other(self, data=self._data / other._data)
 
@@ -1035,9 +1098,24 @@ def row(self) -&gt; int:
         return deepcopy(self._path)
 
     @property
-    def dtype(self) -&gt; np.dtype:
+    def dtype(self) -&gt; DType:
         &#34;&#34;&#34;Datatype of the image&#34;&#34;&#34;
-        return deepcopy(self.data.dtype)
+        if self.data.dtype == np.float32 or self.data.dtype == np.float64:
+            return DType.FLOAT
+        elif (
+            self.data.dtype == np.uint8
+            or self.data.dtype == np.uint16
+            or self.data.dtype == np.uint32
+            or self.data.dtype == np.uint64
+        ):
+            return DType.UNSIGNED_INT
+        elif (
+            self.data.dtype == np.int8
+            or self.data.dtype == np.int16
+            or self.data.dtype == np.int32
+            or self.data.dtype == np.int64
+        ):
+            return DType.INT
 
     @property
     def shape(self) -&gt; Tuple[int, int]:
@@ -1055,7 +1133,11 @@ def row(self) -&gt; int:
 
     def has_meta(self, key: str) -&gt; bool:
         &#34;&#34;&#34;Check if a meta attribute is set&#34;&#34;&#34;
-        return key in self._meta.keys()</code></pre>
+        return key in self._meta.keys()
+
+    def list_meta(self) -&gt; List[str]:
+        &#34;&#34;&#34;List avaliable meta keys&#34;&#34;&#34;
+        return list(self._meta.keys())</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1068,9 +1150,9 @@ def row(self) -&gt; int:
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="pvinspect.data.image.Image.data"><code class="name">var <span class="ident">data</span></code></dt>
+<dt id="pvinspect.data.image.Image.data"><code class="name">var <span class="ident">data</span> : numpy.ndarray</code></dt>
 <dd>
-<section class="desc"><p>The underlying image data</p></section>
+<div class="desc"><p>The underlying image data</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1081,22 +1163,37 @@ def data(self) -&gt; np.ndarray:
     return deepcopy(self._data)</code></pre>
 </details>
 </dd>
-<dt id="pvinspect.data.image.Image.dtype"><code class="name">var <span class="ident">dtype</span></code></dt>
+<dt id="pvinspect.data.image.Image.dtype"><code class="name">var <span class="ident">dtype</span> : <a title="pvinspect.data.image.DType" href="#pvinspect.data.image.DType">DType</a></code></dt>
 <dd>
-<section class="desc"><p>Datatype of the image</p></section>
+<div class="desc"><p>Datatype of the image</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def dtype(self) -&gt; np.dtype:
+def dtype(self) -&gt; DType:
     &#34;&#34;&#34;Datatype of the image&#34;&#34;&#34;
-    return deepcopy(self.data.dtype)</code></pre>
+    if self.data.dtype == np.float32 or self.data.dtype == np.float64:
+        return DType.FLOAT
+    elif (
+        self.data.dtype == np.uint8
+        or self.data.dtype == np.uint16
+        or self.data.dtype == np.uint32
+        or self.data.dtype == np.uint64
+    ):
+        return DType.UNSIGNED_INT
+    elif (
+        self.data.dtype == np.int8
+        or self.data.dtype == np.int16
+        or self.data.dtype == np.int32
+        or self.data.dtype == np.int64
+    ):
+        return DType.INT</code></pre>
 </details>
 </dd>
-<dt id="pvinspect.data.image.Image.modality"><code class="name">var <span class="ident">modality</span></code></dt>
+<dt id="pvinspect.data.image.Image.modality"><code class="name">var <span class="ident">modality</span> : int</code></dt>
 <dd>
-<section class="desc"><p>The imaging modality</p></section>
+<div class="desc"><p>The imaging modality</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1107,9 +1204,9 @@ def modality(self) -&gt; int:
     return self._modality</code></pre>
 </details>
 </dd>
-<dt id="pvinspect.data.image.Image.path"><code class="name">var <span class="ident">path</span></code></dt>
+<dt id="pvinspect.data.image.Image.path"><code class="name">var <span class="ident">path</span> : pathlib.Path</code></dt>
 <dd>
-<section class="desc"><p>Path to the original image</p></section>
+<div class="desc"><p>Path to the original image</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1120,9 +1217,9 @@ def path(self) -&gt; Path:
     return deepcopy(self._path)</code></pre>
 </details>
 </dd>
-<dt id="pvinspect.data.image.Image.shape"><code class="name">var <span class="ident">shape</span></code></dt>
+<dt id="pvinspect.data.image.Image.shape"><code class="name">var <span class="ident">shape</span> : Tuple[int, int]</code></dt>
 <dd>
-<section class="desc"><p>Shape of the image</p></section>
+<div class="desc"><p>Shape of the image</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1137,26 +1234,28 @@ def shape(self) -&gt; Tuple[int, int]:
 <h3>Methods</h3>
 <dl>
 <dt id="pvinspect.data.image.Image.as_type"><code class="name flex">
-<span>def <span class="ident">as_type</span></span>(<span>self, dtype)</span>
+<span>def <span class="ident">as_type</span></span>(<span>self: ~T, dtype: <a title="pvinspect.data.image.DType" href="#pvinspect.data.image.DType">DType</a>) -> ~T</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def as_type(self: _T, dtype: np.ndarray.dtype) -&gt; _T:
-    if dtype == np.float32 or dtype == np.float64:
+<pre><code class="python">def as_type(self: _T, dtype: DType) -&gt; _T:
+    if dtype == DType.FLOAT:
         return type(self).from_other(self, data=img_as_float(self._data))
-    else:
-        return type(self).from_other(self, data=img_as_uint(self._data))</code></pre>
+    elif dtype == DType.UNSIGNED_INT:
+        return type(self).from_other(self, data=img_as_uint(self._data))
+    elif dtype == DType.INT:
+        return type(self).from_other(self, data=img_as_int(self._data))</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.get_meta"><code class="name flex">
-<span>def <span class="ident">get_meta</span></span>(<span>self, key)</span>
+<span>def <span class="ident">get_meta</span></span>(<span>self, key: str) -> Any</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Access a meta attribute</p></section>
+<div class="desc"><p>Access a meta attribute</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1167,10 +1266,10 @@ def shape(self) -&gt; Tuple[int, int]:
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.has_meta"><code class="name flex">
-<span>def <span class="ident">has_meta</span></span>(<span>self, key)</span>
+<span>def <span class="ident">has_meta</span></span>(<span>self, key: str) -> bool</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Check if a meta attribute is set</p></section>
+<div class="desc"><p>Check if a meta attribute is set</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1180,11 +1279,25 @@ def shape(self) -&gt; Tuple[int, int]:
     return key in self._meta.keys()</code></pre>
 </details>
 </dd>
+<dt id="pvinspect.data.image.Image.list_meta"><code class="name flex">
+<span>def <span class="ident">list_meta</span></span>(<span>self) -> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>List avaliable meta keys</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_meta(self) -&gt; List[str]:
+    &#34;&#34;&#34;List avaliable meta keys&#34;&#34;&#34;
+    return list(self._meta.keys())</code></pre>
+</details>
+</dd>
 <dt id="pvinspect.data.image.Image.show"><code class="name flex">
 <span>def <span class="ident">show</span></span>(<span>self, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Show this image</p></section>
+<div class="desc"><p>Show this image</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1198,20 +1311,20 @@ def shape(self) -&gt; Tuple[int, int]:
 </dd>
 <dt id="pvinspect.data.image.ImageSequence"><code class="flex name class">
 <span>class <span class="ident">ImageSequence</span></span>
-<span>(</span><span>images, same_camera, allow_different_dtypes=False)</span>
+<span>(</span><span>images: List[<a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a>], same_camera: bool, allow_different_dtypes=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>An immutable sequence of images, allowing for access to single images as well as analysis of the sequence</p>
+<div class="desc"><p>An immutable sequence of images, allowing for access to single images as well as analysis of the sequence</p>
 <p>Initialize a module image sequence</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>images</code></strong> :&ensp;<code>List</code>[<code>Image</code>]</dt>
+<dt><strong><code>images</code></strong> :&ensp;<code>List[<a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a>]</code></dt>
 <dd>The list of images</dd>
 <dt><strong><code>came_camera</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Indicates, if all images are from the same camera and hence share the same intrinsic parameters</dd>
 <dt><strong><code>allow_different_dtypes</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Allow images to have different datatypes?</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1302,11 +1415,9 @@ def shape(self) -&gt; Tuple[int, int]:
             result.append(type(img).from_other(img, data=res))
         return type(self).from_other(self, images=result)
 
-    def as_type(self: _T, dtype: np.ndarray.dtype) -&gt; _T:
+    def as_type(self: _T, dtype: DType) -&gt; _T:
         &#34;&#34;&#34;Convert sequence to specified dtype&#34;&#34;&#34;
-        result = []
-        for img in self._images:
-            result.append(img.as_type(dtype))
+        result = [img.as_type(dtype) for img in self._images]
         return type(self).from_other(self, images=result)
 
     def __add__(self: _T, other: _T) -&gt; _T:
@@ -1343,7 +1454,7 @@ def shape(self) -&gt; Tuple[int, int]:
         return deepcopy(self._images)
 
     @property
-    def dtype(self) -&gt; np.dtype:
+    def dtype(self) -&gt; DType:
         &#34;&#34;&#34;Access the image datatype&#34;&#34;&#34;
         return self.images[0].dtype if not self._allow_different_dtypes else None
 
@@ -1379,22 +1490,22 @@ def shape(self) -&gt; Tuple[int, int]:
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="pvinspect.data.image.ImageSequence.dtype"><code class="name">var <span class="ident">dtype</span></code></dt>
+<dt id="pvinspect.data.image.ImageSequence.dtype"><code class="name">var <span class="ident">dtype</span> : <a title="pvinspect.data.image.DType" href="#pvinspect.data.image.DType">DType</a></code></dt>
 <dd>
-<section class="desc"><p>Access the image datatype</p></section>
+<div class="desc"><p>Access the image datatype</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def dtype(self) -&gt; np.dtype:
+def dtype(self) -&gt; DType:
     &#34;&#34;&#34;Access the image datatype&#34;&#34;&#34;
     return self.images[0].dtype if not self._allow_different_dtypes else None</code></pre>
 </details>
 </dd>
-<dt id="pvinspect.data.image.ImageSequence.images"><code class="name">var <span class="ident">images</span></code></dt>
+<dt id="pvinspect.data.image.ImageSequence.images"><code class="name">var <span class="ident">images</span> : List[<a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a>]</code></dt>
 <dd>
-<section class="desc"><p>Access the list of images</p></section>
+<div class="desc"><p>Access the list of images</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1405,9 +1516,9 @@ def images(self) -&gt; List[Image]:
     return deepcopy(self._images)</code></pre>
 </details>
 </dd>
-<dt id="pvinspect.data.image.ImageSequence.modality"><code class="name">var <span class="ident">modality</span></code></dt>
+<dt id="pvinspect.data.image.ImageSequence.modality"><code class="name">var <span class="ident">modality</span> : int</code></dt>
 <dd>
-<section class="desc"><p>Access the imaging modaility</p></section>
+<div class="desc"><p>Access the imaging modaility</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1418,9 +1529,9 @@ def modality(self) -&gt; int:
     return self.images[0].modality</code></pre>
 </details>
 </dd>
-<dt id="pvinspect.data.image.ImageSequence.same_camera"><code class="name">var <span class="ident">same_camera</span></code></dt>
+<dt id="pvinspect.data.image.ImageSequence.same_camera"><code class="name">var <span class="ident">same_camera</span> : bool</code></dt>
 <dd>
-<section class="desc"><p>Indicate, if the images originate from the same camera</p></section>
+<div class="desc"><p>Indicate, if the images originate from the same camera</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1431,9 +1542,9 @@ def same_camera(self) -&gt; bool:
     return self._same_camera</code></pre>
 </details>
 </dd>
-<dt id="pvinspect.data.image.ImageSequence.shape"><code class="name">var <span class="ident">shape</span></code></dt>
+<dt id="pvinspect.data.image.ImageSequence.shape"><code class="name">var <span class="ident">shape</span> : Tuple[int, int]</code></dt>
 <dd>
-<section class="desc"><p>Access the image shape</p></section>
+<div class="desc"><p>Access the image shape</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1448,10 +1559,10 @@ def shape(self) -&gt; Tuple[int, int]:
 <h3>Methods</h3>
 <dl>
 <dt id="pvinspect.data.image.ImageSequence.apply_image_data"><code class="name flex">
-<span>def <span class="ident">apply_image_data</span></span>(<span>self, fn, *argv, **kwargs)</span>
+<span>def <span class="ident">apply_image_data</span></span>(<span>self: ~T, fn: Callable[[numpy.ndarray], numpy.ndarray], *argv, **kwargs) -> ~T</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Apply the given callable on every image data.</p></section>
+<div class="desc"><p>Apply the given callable on every image data.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1469,34 +1580,32 @@ def shape(self) -&gt; Tuple[int, int]:
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.as_type"><code class="name flex">
-<span>def <span class="ident">as_type</span></span>(<span>self, dtype)</span>
+<span>def <span class="ident">as_type</span></span>(<span>self: ~T, dtype: <a title="pvinspect.data.image.DType" href="#pvinspect.data.image.DType">DType</a>) -> ~T</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Convert sequence to specified dtype</p></section>
+<div class="desc"><p>Convert sequence to specified dtype</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def as_type(self: _T, dtype: np.ndarray.dtype) -&gt; _T:
+<pre><code class="python">def as_type(self: _T, dtype: DType) -&gt; _T:
     &#34;&#34;&#34;Convert sequence to specified dtype&#34;&#34;&#34;
-    result = []
-    for img in self._images:
-        result.append(img.as_type(dtype))
+    result = [img.as_type(dtype) for img in self._images]
     return type(self).from_other(self, images=result)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.head"><code class="name flex">
-<span>def <span class="ident">head</span></span>(<span>self, N=4, cols=2, *args, **kwargs)</span>
+<span>def <span class="ident">head</span></span>(<span>self, N: int = 4, cols: int = 2, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Show the first N images</p>
+<div class="desc"><p>Show the first N images</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>N</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of images to show</dd>
 <dt><strong><code>cols</code></strong> :&ensp;<code>int</code></dt>
 <dd>How many images to show in a column</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1512,17 +1621,17 @@ def shape(self) -&gt; Tuple[int, int]:
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.tail"><code class="name flex">
-<span>def <span class="ident">tail</span></span>(<span>self, N=4, cols=2, *args, **kwargs)</span>
+<span>def <span class="ident">tail</span></span>(<span>self, N: int = 4, cols: int = 2, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Show the last N images</p>
+<div class="desc"><p>Show the last N images</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>N</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of images to show</dd>
 <dt><strong><code>cols</code></strong> :&ensp;<code>int</code></dt>
 <dd>How many images to show in a column</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1541,10 +1650,10 @@ def shape(self) -&gt; Tuple[int, int]:
 </dd>
 <dt id="pvinspect.data.image.ModuleImage"><code class="flex name class">
 <span>class <span class="ident">ModuleImage</span></span>
-<span>(</span><span>data, modality, path, cols=None, rows=None, meta={})</span>
+<span>(</span><span>data: numpy.ndarray, modality: int, path: pathlib.Path, cols: int = None, rows: int = None, meta: dict = {})</span>
 </code></dt>
 <dd>
-<section class="desc"><p>An image of a solar module with additional meta data</p>
+<div class="desc"><p>An image of a solar module with additional meta data</p>
 <p>Initialize a module image</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -1558,7 +1667,7 @@ def shape(self) -&gt; Tuple[int, int]:
 <dd>Number of cells in a column</dd>
 <dt><strong><code>rows</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of cells in a row</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1627,7 +1736,7 @@ def shape(self) -&gt; Tuple[int, int]:
 <dl>
 <dt id="pvinspect.data.image.ModuleImage.cols"><code class="name">var <span class="ident">cols</span></code></dt>
 <dd>
-<section class="desc"><p>Number of cell-columns</p></section>
+<div class="desc"><p>Number of cell-columns</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1640,7 +1749,7 @@ def cols(self):
 </dd>
 <dt id="pvinspect.data.image.ModuleImage.rows"><code class="name">var <span class="ident">rows</span></code></dt>
 <dd>
-<section class="desc"><p>Number of row-columns</p></section>
+<div class="desc"><p>Number of row-columns</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1655,15 +1764,15 @@ def rows(self):
 <h3>Methods</h3>
 <dl>
 <dt id="pvinspect.data.image.ModuleImage.grid"><code class="name flex">
-<span>def <span class="ident">grid</span></span>(<span>self)</span>
+<span>def <span class="ident">grid</span></span>(<span>self) -> numpy.ndarray</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Create a grid of corners according to the module geometry</p>
+<div class="desc"><p>Create a grid of corners according to the module geometry</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>grid</code></strong></dt>
+<dt><code>grid</code></dt>
 <dd>(cols*rows, 2)-array of coordinates on a regular grid</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1693,6 +1802,7 @@ def rows(self):
 <li><code><a title="pvinspect.data.image.Image.dtype" href="#pvinspect.data.image.Image.dtype">dtype</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.get_meta" href="#pvinspect.data.image.Image.get_meta">get_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.has_meta" href="#pvinspect.data.image.Image.has_meta">has_meta</a></code></li>
+<li><code><a title="pvinspect.data.image.Image.list_meta" href="#pvinspect.data.image.Image.list_meta">list_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.modality" href="#pvinspect.data.image.Image.modality">modality</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.path" href="#pvinspect.data.image.Image.path">path</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.shape" href="#pvinspect.data.image.Image.shape">shape</a></code></li>
@@ -1703,20 +1813,20 @@ def rows(self):
 </dd>
 <dt id="pvinspect.data.image.ModuleImageSequence"><code class="flex name class">
 <span>class <span class="ident">ModuleImageSequence</span></span>
-<span>(</span><span>images, same_camera, allow_different_dtypes=False)</span>
+<span>(</span><span>images: List[Union[pvinspect.data.image.ModuleImage, pvinspect.data.image.PartialModuleImage]], same_camera: bool, allow_different_dtypes=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>An immutable sequence of module images, allowing for access to single images as well as analysis of the sequence</p>
+<div class="desc"><p>An immutable sequence of module images, allowing for access to single images as well as analysis of the sequence</p>
 <p>Initialize a module image sequence</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>images</code></strong> :&ensp;<code>List</code>[<code>ModuleImage</code>]</dt>
+<dt><strong><code>images</code></strong> :&ensp;<code>List[<a title="pvinspect.data.image.ModuleImage" href="#pvinspect.data.image.ModuleImage">ModuleImage</a>]</code></dt>
 <dd>The list of images</dd>
 <dt><strong><code>same_camera</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Indicates if all images are from the same camera</dd>
 <dt><strong><code>allow_different_dtypes</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Allow images to have different datatypes?</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1778,10 +1888,10 @@ def rows(self):
 </dd>
 <dt id="pvinspect.data.image.PartialModuleImage"><code class="flex name class">
 <span>class <span class="ident">PartialModuleImage</span></span>
-<span>(</span><span>data, modality, path, cols=None, rows=None, first_col=None, first_row=None, meta={})</span>
+<span>(</span><span>data: numpy.ndarray, modality: int, path: pathlib.Path, cols: int = None, rows: int = None, first_col: int = None, first_row: int = None, meta: dict = {})</span>
 </code></dt>
 <dd>
-<section class="desc"><p>An image of a solar module with additional meta data</p>
+<div class="desc"><p>An image of a solar module with additional meta data</p>
 <p>Initialize a module image</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -1799,7 +1909,7 @@ def rows(self):
 <dd>Index of the first complete column shown</dd>
 <dt><strong><code>first_row</code></strong> :&ensp;<code>int</code></dt>
 <dd>Index of the first complete row shown</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1851,6 +1961,7 @@ def rows(self):
 <li><code><a title="pvinspect.data.image.ModuleImage.get_meta" href="#pvinspect.data.image.Image.get_meta">get_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.grid" href="#pvinspect.data.image.ModuleImage.grid">grid</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.has_meta" href="#pvinspect.data.image.Image.has_meta">has_meta</a></code></li>
+<li><code><a title="pvinspect.data.image.ModuleImage.list_meta" href="#pvinspect.data.image.Image.list_meta">list_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.modality" href="#pvinspect.data.image.Image.modality">modality</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.path" href="#pvinspect.data.image.Image.path">path</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.rows" href="#pvinspect.data.image.ModuleImage.rows">rows</a></code></li>
@@ -1898,6 +2009,14 @@ def rows(self):
 <h4><code><a title="pvinspect.data.image.CellImageSequence" href="#pvinspect.data.image.CellImageSequence">CellImageSequence</a></code></h4>
 </li>
 <li>
+<h4><code><a title="pvinspect.data.image.DType" href="#pvinspect.data.image.DType">DType</a></code></h4>
+<ul class="">
+<li><code><a title="pvinspect.data.image.DType.FLOAT" href="#pvinspect.data.image.DType.FLOAT">FLOAT</a></code></li>
+<li><code><a title="pvinspect.data.image.DType.INT" href="#pvinspect.data.image.DType.INT">INT</a></code></li>
+<li><code><a title="pvinspect.data.image.DType.UNSIGNED_INT" href="#pvinspect.data.image.DType.UNSIGNED_INT">UNSIGNED_INT</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a></code></h4>
 <ul class="two-column">
 <li><code><a title="pvinspect.data.image.Image.as_type" href="#pvinspect.data.image.Image.as_type">as_type</a></code></li>
@@ -1905,6 +2024,7 @@ def rows(self):
 <li><code><a title="pvinspect.data.image.Image.dtype" href="#pvinspect.data.image.Image.dtype">dtype</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.get_meta" href="#pvinspect.data.image.Image.get_meta">get_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.has_meta" href="#pvinspect.data.image.Image.has_meta">has_meta</a></code></li>
+<li><code><a title="pvinspect.data.image.Image.list_meta" href="#pvinspect.data.image.Image.list_meta">list_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.modality" href="#pvinspect.data.image.Image.modality">modality</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.path" href="#pvinspect.data.image.Image.path">path</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.shape" href="#pvinspect.data.image.Image.shape">shape</a></code></li>
@@ -1945,7 +2065,7 @@ def rows(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

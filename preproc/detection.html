@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.5" />
+<meta name="generator" content="pdoc 0.8.1" />
 <title>pvinspect.preproc.detection API documentation</title>
 <meta name="description" content="Detection, localization and segmentation of solar modules" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
 <body>
@@ -210,7 +210,7 @@ def segment_module_part(
         cols + 2 * padding,
         rows + 2 * padding,
     )
-    result = result.astype(image.dtype)
+    result = result.astype(image.data.dtype)
     transform = HomographyTransform(
         np.array(
             [
@@ -515,10 +515,10 @@ def locate_multiple_modules(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pvinspect.preproc.detection.locate_module_and_cells"><code class="name flex">
-<span>def <span class="ident">locate_module_and_cells</span></span>(<span>sequence, estimate_distortion=True, orientation=None)</span>
+<span>def <span class="ident">locate_module_and_cells</span></span>(<span>sequence: Union[pvinspect.data.image.ModuleImageSequence, pvinspect.data.image.ModuleImage, pvinspect.data.image.PartialModuleImage, pvinspect.data.image.Image], estimate_distortion: bool = True, orientation: str = None) -> Union[<a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>, <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a>, <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>]</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Locate a single module and its cells</p>
+<div class="desc"><p>Locate a single module and its cells</p>
 <h2 id="note">Note</h2>
 <p>This methods implements the following paper:
 Hoffmann, Mathis, et al. "Fast and robust detection of solar modules in electroluminescence images."
@@ -535,9 +535,9 @@ If set to None (default), orientation is automatically determined</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>images</code></strong></dt>
+<dt><code>images</code></dt>
 <dd>The same image/sequence with location information added</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -651,10 +651,10 @@ def locate_module_and_cells(
 </details>
 </dd>
 <dt id="pvinspect.preproc.detection.locate_multiple_modules"><code class="name flex">
-<span>def <span class="ident">locate_multiple_modules</span></span>(<span>sequence, scale=0.31, reject_size_thresh=0.26, reject_fill_thresh=0.42, padding=0.05, drop_clipped_modules=True, cols=None, rows=None, return_bounding_boxes=False)</span>
+<span>def <span class="ident">locate_multiple_modules</span></span>(<span>sequence: Union[pvinspect.data.image.Image, pvinspect.data.image.ImageSequence], scale: float = 0.31, reject_size_thresh: float = 0.26, reject_fill_thresh: float = 0.42, padding: float = 0.05, drop_clipped_modules: bool = True, cols: int = None, rows: int = None, return_bounding_boxes: bool = False) -> Tuple[<a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>, Dict[str, List[Tuple[str, shapely.geometry.polygon.Polygon]]]]</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Perform localization and segmentation of multiple modules</p>
+<div class="desc"><p>Perform localization and segmentation of multiple modules</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>sequence</code></strong> :&ensp;<code>ImageOrSequence</code></dt>
@@ -677,7 +677,7 @@ def locate_module_and_cells(
 <dd>If true, return the bounding boxes in addition to the crops</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>The cropped modules as a ModuleImageSequence as well as (optionally), the bounding boxes.</p></section>
+<p>The cropped modules as a ModuleImageSequence as well as (optionally), the bounding boxes.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -753,10 +753,10 @@ def locate_multiple_modules(
 </details>
 </dd>
 <dt id="pvinspect.preproc.detection.segment_cell"><code class="name flex">
-<span>def <span class="ident">segment_cell</span></span>(<span>image, row, col, size=None, padding=0.0)</span>
+<span>def <span class="ident">segment_cell</span></span>(<span>image: <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, row: int, col: int, size: int = None, padding: float = 0.0) -> <a title="pvinspect.data.image.CellImage" href="../data/image.html#pvinspect.data.image.CellImage">CellImage</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Obtain a cell image from a module image</p>
+<div class="desc"><p>Obtain a cell image from a module image</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>image</code></strong> :&ensp;<code>ModuleImageOrSequence</code></dt>
@@ -773,9 +773,9 @@ def locate_multiple_modules(
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>cells</code></strong></dt>
+<dt><code>cells</code></dt>
 <dd>The segmented cell image</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -802,10 +802,10 @@ def locate_multiple_modules(
 </details>
 </dd>
 <dt id="pvinspect.preproc.detection.segment_cells"><code class="name flex">
-<span>def <span class="ident">segment_cells</span></span>(<span>sequence, size=None)</span>
+<span>def <span class="ident">segment_cells</span></span>(<span>sequence: Union[pvinspect.data.image.ModuleImageSequence, pvinspect.data.image.ModuleImage, pvinspect.data.image.PartialModuleImage, pvinspect.data.image.Image], size: int = None) -> <a title="pvinspect.data.image.CellImageSequence" href="../data/image.html#pvinspect.data.image.CellImageSequence">CellImageSequence</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Obtain cell images from a sequence of module images. Note that images that do not have a valid transform,
+<div class="desc"><p>Obtain cell images from a sequence of module images. Note that images that do not have a valid transform,
 possibly because the detection step failed, are silently ignored.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -816,9 +816,9 @@ possibly because the detection step failed, are silently ignored.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>cells</code></strong></dt>
+<dt><code>cells</code></dt>
 <dd>The segmented cell images</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -870,10 +870,10 @@ with less variation in size.&#34;
 </details>
 </dd>
 <dt id="pvinspect.preproc.detection.segment_module"><code class="name flex">
-<span>def <span class="ident">segment_module</span></span>(<span>image, size=None, padding=0.0)</span>
+<span>def <span class="ident">segment_module</span></span>(<span>image: <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, size: int = None, padding: float = 0.0) -> <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Obtain a rectified, cropped and undistorted module image</p>
+<div class="desc"><p>Obtain a rectified, cropped and undistorted module image</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>image</code></strong> :&ensp;<code>ModuleImage</code></dt>
@@ -886,9 +886,9 @@ with less variation in size.&#34;
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>module</code></strong></dt>
+<dt><code>module</code></dt>
 <dd>The resulting module image</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -913,10 +913,10 @@ with less variation in size.&#34;
 </details>
 </dd>
 <dt id="pvinspect.preproc.detection.segment_module_part"><code class="name flex">
-<span>def <span class="ident">segment_module_part</span></span>(<span>image, first_col, first_row, cols, rows, size=None, padding=0.0)</span>
+<span>def <span class="ident">segment_module_part</span></span>(<span>image: <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, first_col: int, first_row: int, cols: int, rows: int, size: int = None, padding: float = 0.0) -> <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Segment a part of a module</p>
+<div class="desc"><p>Segment a part of a module</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>image</code></strong> :&ensp;<code>ModuleImage</code></dt>
@@ -937,9 +937,9 @@ with less variation in size.&#34;
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>segment</code></strong></dt>
+<dt><code>segment</code></dt>
 <dd>The resulting segment</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -998,7 +998,7 @@ with less variation in size.&#34;
         cols + 2 * padding,
         rows + 2 * padding,
     )
-    result = result.astype(image.dtype)
+    result = result.astype(image.data.dtype)
     transform = HomographyTransform(
         np.array(
             [
@@ -1029,10 +1029,10 @@ with less variation in size.&#34;
 </details>
 </dd>
 <dt id="pvinspect.preproc.detection.segment_modules"><code class="name flex">
-<span>def <span class="ident">segment_modules</span></span>(<span>sequence, size=None)</span>
+<span>def <span class="ident">segment_modules</span></span>(<span>sequence: Union[pvinspect.data.image.ModuleImageSequence, pvinspect.data.image.ModuleImage, pvinspect.data.image.PartialModuleImage, pvinspect.data.image.Image], size: int = None) -> <a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Obtain rectified, cropped and undistorted module images from a sequence. Note that images that do not have a valid transform,
+<div class="desc"><p>Obtain rectified, cropped and undistorted module images from a sequence. Note that images that do not have a valid transform,
 possibly because the detection step failed, are silently ignored.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -1043,9 +1043,9 @@ possibly because the detection step failed, are silently ignored.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>module</code></strong></dt>
+<dt><code>module</code></dt>
 <dd>The segmented module images</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1122,7 +1122,7 @@ with less variation in size.&#34;
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>
