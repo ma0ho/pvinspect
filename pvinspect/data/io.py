@@ -31,6 +31,7 @@ def _read_image(
     modality: int = None,
     cols: int = None,
     rows: int = None,
+    force_dtype: DType = None,
 ):
     assert (
         is_module_image
@@ -53,11 +54,16 @@ def _read_image(
     elif img.ndim == 3:
         img = img_as_uint(color.rgb2gray(img))
 
+    if force_dtype == DType.FLOAT:
+        img = img_as_float(img)
+    elif force_dtype == DType.UNSIGNED_INT:
+        img = img_as_uint(img)
+
     if (img.dtype == np.float32 or img.dtype == np.float64) and (
         img.min() < 0.0 or img.max() > 1.0
     ):
         raise RuntimeWarning(
-            'Image "{}" is of type float but not scaled between 0 and 1. This might cause trouble later.'.format(
+            'Image "{}" is of type float but not scaled between 0 and 1. This might cause trouble later. You might want to force conversion to another datatype using force_dtype=DType.UNSIGNED_INT (for example).'.format(
                 path
             )
         )
@@ -81,6 +87,7 @@ def _read_images(
     N: int = 0,
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
+    force_dtype: DType = None,
 ):
     path = __assurePath(path)
 
@@ -98,7 +105,15 @@ def _read_images(
     imgs = list()
     for fn in tqdm(imgpaths):
         imgs.append(
-            _read_image(fn, is_module_image, is_partial_module, modality, cols, rows)
+            _read_image(
+                fn,
+                is_module_image,
+                is_partial_module,
+                modality,
+                cols,
+                rows,
+                force_dtype=force_dtype,
+            )
         )
 
     if not same_camera:
@@ -159,6 +174,7 @@ def read_images(
     N: int = 0,
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
+    force_dtype: DType = None,
 ) -> ImageSequence:
     """Read a sequence of images and return it
 
@@ -169,6 +185,7 @@ def read_images(
         N (int): Only read first N images
         pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
         allow_different_dtypes (bool): Allow images to have different datatypes?
+        force_dtype (DType): Force images to have this datatype
 
     Returns:
         image: The image sequence
@@ -183,6 +200,7 @@ def read_images(
         pattern=pattern,
         allow_different_dtypes=allow_different_dtypes,
         N=N,
+        force_dtype=force_dtype,
     )
 
 
@@ -220,6 +238,7 @@ def read_module_images(
     N: int = 0,
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
+    force_dtype: DType = None,
 ) -> ModuleImageSequence:
     """Read a sequence of module images and return it
 
@@ -232,6 +251,7 @@ def read_module_images(
         N (int): Only read first N images
         pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
         allow_different_dtypes (bool): Allow images to have different datatypes?
+        force_dtype (DType): Force images to have this datatype
 
     Returns:
         image: The module image sequence
@@ -248,6 +268,7 @@ def read_module_images(
         N=N,
         pattern=pattern,
         allow_different_dtypes=allow_different_dtypes,
+        force_dtype=force_dtype,
     )
 
 
@@ -285,6 +306,7 @@ def read_partial_module_images(
     N: int = 0,
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
+    force_dtype: DType = None,
 ) -> ModuleImageSequence:
     """Read a sequence of partial views of solar modules and return it
 
@@ -297,6 +319,7 @@ def read_partial_module_images(
         N (int): Only read first N images
         pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
         allow_different_dtypes (bool): Allow images to have different datatypes?
+        force_dtype (DType): Force images to have this datatype
 
     Returns:
         image: The module image sequence
@@ -313,6 +336,7 @@ def read_partial_module_images(
         N=N,
         pattern=pattern,
         allow_different_dtypes=allow_different_dtypes,
+        force_dtype=force_dtype,
     )
 
 

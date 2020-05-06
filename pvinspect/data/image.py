@@ -1,7 +1,7 @@
 """Provides classes to store and visualize images with metadata"""
 
 import numpy as np
-from skimage import io, img_as_uint, img_as_float
+from skimage import io, img_as_uint, img_as_float64, img_as_int
 from pvinspect.common.transform import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -13,6 +13,7 @@ import logging
 from pvinspect.common._ipy_exit import exit
 import inspect
 import sys
+from enum import Enum
 
 # this is a pointer to the module object instance itself
 this = sys.modules[__name__]
@@ -23,6 +24,19 @@ EL_IMAGE = 0
 """Indicate an electroluminescense (EL) image"""
 PL_IMAGE = 1
 """Indicate a photoluminescense (PL) image"""
+
+
+# datatypes
+DTYPE_INT = np.int64
+DTYPE_UNSIGNED_INT = np.uint32
+DTYPE_FLOAT = np.float64
+img_as_float = img_as_float64
+
+
+class DType(Enum):
+    INT = (0,)
+    UNSIGNED_INT = 1
+    FLOAT = 2
 
 
 # global list of plugins that are called on every .show()
@@ -197,10 +211,6 @@ class Image(_Base):
             modality (int): The imaging modality (EL_IMAGE or PL_IMAGE) or None
             meta (Dict[str, Any]): Meta attributes of this image
         """
-        # convert to a common dtype
-        if data.dtype != np.float32 and data.dtype != np.float64:
-            data = img_as_uint(data)
-
         self._data = data
         self._path = path
         self._modality = modality
@@ -212,11 +222,13 @@ class Image(_Base):
 
     _T = TypeVar("T")
 
-    def as_type(self: _T, dtype: np.ndarray.dtype) -> _T:
-        if dtype == np.float32 or dtype == np.float64:
+    def as_type(self: _T, dtype: DType) -> _T:
+        if dtype == DType.FLOAT:
             return type(self).from_other(self, data=img_as_float(self._data))
-        else:
+        elif dtype == DType.UNSIGNED_INT:
             return type(self).from_other(self, data=img_as_uint(self._data))
+        elif dtype == DType.INT:
+            return type(self).from_other(self, data=img_as_int(self._data))
 
     def __add__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
@@ -226,11 +238,13 @@ class Image(_Base):
     def __sub__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        if self.dtype != np.float32 and self.dtype != np.float64:
-            # unsigned -> signed
-            self._data = self._data.astype(np.int64)
-            other._data = other._data.astype(np.int64)
-        return type(self).from_other(self, data=self._data - other._data)
+        if self.dtype == DType.UNSIGNED_INT:
+            res = self._data.astype(DTYPE_INT) - other._data.astype(DTYPE_INT)
+            iinfo = np.iinfo(DTYPE_UNSIGNED_INT)
+            res = np.clip(res, 0, iinfo.max)
+            return type(self).from_other(self, data=res)
+        else:
+            return type(self).from_other(self, data=self._data - other._data)
 
     def __mul__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
@@ -238,10 +252,7 @@ class Image(_Base):
         return type(self).from_other(self, data=self._data * other._data)
 
     def __truediv__(self: _T, other: _T) -> _T:
-        if self.dtype not in (np.float64, np.float32) or other.dtype not in (
-            np.float64,
-            np.float32,
-        ):
+        if self.dtype != DType.FLOAT or other.dtype != DType.FLOAT:
             raise RuntimeError("Images must be of type float")
         return type(self).from_other(self, data=self._data / other._data)
 
@@ -271,9 +282,24 @@ class Image(_Base):
         return deepcopy(self._path)
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> DType:
         """Datatype of the image"""
-        return deepcopy(self.data.dtype)
+        if self.data.dtype == np.float32 or self.data.dtype == np.float64:
+            return DType.FLOAT
+        elif (
+            self.data.dtype == np.uint8
+            or self.data.dtype == np.uint16
+            or self.data.dtype == np.uint32
+            or self.data.dtype == np.uint64
+        ):
+            return DType.UNSIGNED_INT
+        elif (
+            self.data.dtype == np.int8
+            or self.data.dtype == np.int16
+            or self.data.dtype == np.int32
+            or self.data.dtype == np.int64
+        ):
+            return DType.INT
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -380,11 +406,9 @@ class ImageSequence(_Base):
             result.append(type(img).from_other(img, data=res))
         return type(self).from_other(self, images=result)
 
-    def as_type(self: _T, dtype: np.ndarray.dtype) -> _T:
+    def as_type(self: _T, dtype: DType) -> _T:
         """Convert sequence to specified dtype"""
-        result = []
-        for img in self._images:
-            result.append(img.as_type(dtype))
+        result = [img.as_type(dtype) for img in self._images]
         return type(self).from_other(self, images=result)
 
     def __add__(self: _T, other: _T) -> _T:
@@ -421,7 +445,7 @@ class ImageSequence(_Base):
         return deepcopy(self._images)
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> DType:
         """Access the image datatype"""
         return self.images[0].dtype if not self._allow_different_dtypes else None
 

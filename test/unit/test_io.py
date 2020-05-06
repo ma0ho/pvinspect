@@ -54,7 +54,7 @@ def test_different_dtypes():
 def test_dtype():
     _check_download_demo()
     seq = read_module_images(EXAMPLES, EL_IMAGE, False)
-    assert seq.dtype == np.uint16
+    assert seq.dtype == DType.UNSIGNED_INT
 
 
 def test_shape():
@@ -137,3 +137,12 @@ def test_save_image_with_visualization(tmp_path: Path):
     p = tmp_path / "img.pdf"
     save_image(p, img, with_visusalization=True)
     assert p.is_file()
+
+
+def test_force_dtype():
+    _check_download_demo()
+    seq = read_images(EXAMPLES, same_camera=False, force_dtype=DType.FLOAT)
+    assert seq.dtype == DType.FLOAT
+
+    seq = read_images(EXAMPLES, same_camera=False, force_dtype=DType.UNSIGNED_INT)
+    assert seq.dtype == DType.UNSIGNED_INT

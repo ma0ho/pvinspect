@@ -183,7 +183,7 @@ def segment_module_part(
         cols + 2 * padding,
         rows + 2 * padding,
     )
-    result = result.astype(image.dtype)
+    result = result.astype(image.data.dtype)
     transform = HomographyTransform(
         np.array(
             [

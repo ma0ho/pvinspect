@@ -20,7 +20,7 @@ def _compensate_flatfield(
     Returns:
         sequence: The corrected images
     """
-    assert sequence.dtype == np.float
+    assert sequence.dtype == DType.FLOAT
 
     def fn(data, coeff):
         res = coeff[0].copy()
@@ -46,7 +46,7 @@ def compensate_flatfield(
     Returns:
         sequence: The corrected images
     """
-    sequence = sequence.as_type(np.float64)
+    sequence = sequence.as_type(DType.FLOAT)
     sequence = _compensate_flatfield(sequence, coeff)
 
     return sequence

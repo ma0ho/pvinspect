@@ -3,6 +3,8 @@
 ## In development
 
 * Cleanup too verbose imports
+* Introduce `DType` enum for uniform typing within the package
+* Add `force_dtype` argument to methods from `io`
 
 ## 0.1.4
 

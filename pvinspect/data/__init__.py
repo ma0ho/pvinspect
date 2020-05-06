@@ -6,6 +6,7 @@ from . import image
 from .image import (
     EL_IMAGE,
     PL_IMAGE,
+    DType,
     _register_default_plugins,
     Image,
     ImageSequence,
@@ -16,9 +17,6 @@ from .image import (
     CellImageSequence,
 )
 
-__all__ = [
-    "EL_IMAGE",
-    "PL_IMAGE",
-]
+__all__ = ["EL_IMAGE", "PL_IMAGE", "DType"]
 
 _register_default_plugins()

@@ -11,7 +11,7 @@ def _random_image() -> Image:
 
 
 def _random_uint_image() -> Image:
-    data = (np.random.random((10, 10)) * 100).astype(np.uint)
+    data = (np.random.random((10, 10)) * 100).astype(np.uint32)
     return Image(data, EL_IMAGE, Path() / "test.png")
 
 
@@ -110,20 +110,13 @@ def test_module_image_from_other():
     assert img2._rows == 6
 
 
-def test_image_dtype_conversion():
-    data = np.array([127], dtype=np.uint8)
-    img = ModuleImage(data, EL_IMAGE, Path() / "test.png")
-    assert img.dtype == np.uint16
-    assert_equal(img._data.max(), int(127 / 255 * 65535), 2)
-
-
 def test_float_image_is_not_converted():
     data = np.array([[0.1]], dtype=np.float32)
     img = ModuleImage(data, EL_IMAGE, Path() / "test.png")
-    assert img.dtype == np.float32
+    assert img.dtype == DType.FLOAT
     data = np.array([[0.1]], dtype=np.float64)
     img = ModuleImage(data, EL_IMAGE, Path() / "test.png")
-    assert img.dtype == np.float64
+    assert img.dtype == DType.FLOAT
 
 
 def test_apply_does_copy():
@@ -140,16 +133,16 @@ def test_apply_does_copy():
 
 def test_image_as_type():
     img = _random_image()
-    assert img.dtype == np.float32 or img.dtype == np.float64
-    img = img.as_type(np.uint16)
-    assert img.dtype == np.uint16
+    assert img.dtype == DType.FLOAT
+    img = img.as_type(DType.UNSIGNED_INT)
+    assert img.dtype == DType.UNSIGNED_INT
 
 
 def test_sequence_as_type():
     seq = _random_image_sequence()
-    assert seq.dtype == np.float32 or seq.dtype == np.float64
-    seq = seq.as_type(np.uint16)
-    assert seq.dtype == np.uint16
+    assert seq.dtype == DType.FLOAT
+    seq = seq.as_type(DType.UNSIGNED_INT)
+    assert seq.dtype == DType.UNSIGNED_INT
 
 
 def test_image_data_returns_copy():

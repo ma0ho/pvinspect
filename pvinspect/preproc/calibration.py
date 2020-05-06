@@ -49,7 +49,7 @@ def calibrate_flatfield(
     Returns:
         coeff: order+1 coefficients starting with the lowest order coefficient
     """
-    images = images.as_type(np.float64)
+    images = images.as_type(DType.FLOAT)
 
     if use_median:
         images_new = list()
