@@ -153,19 +153,26 @@ def _read_images(
         return ImageSequence(imgs, same_camera, allow_different_dtypes)
 
 
-def read_image(path: PathOrStr, modality: int = None) -> Image:
+def read_image(
+    path: PathOrStr, modality: int = None, force_dtype: DType = None
+) -> Image:
     """Read a single image of a solar module and return it
 
     Args:
         path (PathOrStr): Path to the file to be read
         modality (int): The imaging modality
+        force_dtype (DType): Force images to have this datatype
 
     Returns:
         image: The module image
     """
 
     return _read_image(
-        path=path, is_module_image=False, is_partial_module=False, modality=modality
+        path=path,
+        is_module_image=False,
+        is_partial_module=False,
+        modality=modality,
+        force_dtype=force_dtype,
     )
 
 

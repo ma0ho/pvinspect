@@ -5,6 +5,7 @@ from pvinspect.data.io import (
     read_module_image,
     read_partial_module_images,
     read_images,
+    read_image,
 )
 from pvinspect.data import datasets
 import pvinspect.data as data
@@ -12,6 +13,7 @@ from pvinspect.preproc.detection import locate_module_and_cells, segment_cells
 from pathlib import Path
 import numpy as np
 from pvinspect.data.image import *
+from skimage.io import imsave
 
 EXAMPLES = (
     Path(__file__).absolute().parent.parent.parent
@@ -139,10 +141,10 @@ def test_save_image_with_visualization(tmp_path: Path):
     assert p.is_file()
 
 
-def test_force_dtype():
-    _check_download_demo()
-    seq = read_images(EXAMPLES, same_camera=False, force_dtype=DType.FLOAT)
-    assert seq.dtype == DType.FLOAT
+def test_force_dtype(tmp_path: Path):
+    # create samples
+    a = np.random.rand(10, 10) * 100
+    imsave(tmp_path / "wrong_float.tif", a)
 
-    seq = read_images(EXAMPLES, same_camera=False, force_dtype=DType.UNSIGNED_INT)
+    seq = read_image(tmp_path / "wrong_float.tif", force_dtype=DType.UNSIGNED_INT)
     assert seq.dtype == DType.UNSIGNED_INT
