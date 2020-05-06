@@ -134,6 +134,8 @@ def _register_default_plugins():
                     color=textcolor,
                     fontsize=multimodule_numbers_fontsize,
                     bbox=dict(facecolor=bgcolor, alpha=0.8),
+                    ha="center",
+                    va="center",
                 )
 
     register_show_plugin(multimodule_show_numbers)
