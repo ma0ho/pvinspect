@@ -55,9 +55,11 @@ def _read_image(
         img = img_as_uint(color.rgb2gray(img))
 
     if force_dtype == DType.FLOAT:
-        img = img_as_float(img)
+        img = img.astype(DTYPE_FLOAT)
     elif force_dtype == DType.UNSIGNED_INT:
-        img = img_as_uint(img)
+        img = img.astype(DTYPE_UNSIGNED_INT)
+    elif force_dtype == DType.INT:
+        img = img.astype(DTYPE_INT)
 
     if (img.dtype == np.float32 or img.dtype == np.float64) and (
         img.min() < 0.0 or img.max() > 1.0

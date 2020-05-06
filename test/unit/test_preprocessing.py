@@ -74,7 +74,7 @@ def test_calibrate_and_compensate_flatfield():
 def test_calibrate_and_compensate_preserves_range():
     img0 = np.array([[0]], dtype=np.uint32)
     img1 = np.array([[10000]], dtype=np.uint32)
-    img_test = np.array([[8000]])
+    img_test = np.array([[8000]], dtype=np.uint32)
 
     coeff = calibrate_flatfield(_make_image_seq([img0, img1]), [0, 1.0])
     compensated = compensate_flatfield(_make_image_seq([img_test]), coeff)
