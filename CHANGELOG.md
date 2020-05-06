@@ -5,6 +5,7 @@
 * Cleanup too verbose imports
 * Introduce `DType` enum for uniform typing within the package
 * Add `force_dtype` argument to methods from `io`
+* Add `list_meta`-method to `Image`
 
 ## 0.1.4
 

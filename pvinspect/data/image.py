@@ -319,6 +319,10 @@ class Image(_Base):
         """Check if a meta attribute is set"""
         return key in self._meta.keys()
 
+    def list_meta(self) -> List[str]:
+        """List avaliable meta keys"""
+        return list(self._meta.keys())
+
 
 class ImageSequence(_Base):
     """An immutable sequence of images, allowing for access to single images as well as analysis of the sequence"""

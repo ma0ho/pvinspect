@@ -367,6 +367,7 @@ def test_image_meta():
     assert img_test.has_meta("key")
     assert not img_test.has_meta("key2")
     assert img_test.get_meta("key") == "value"
+    assert "key" in img_test.list_meta()
 
     # check from_other preserves meta
     img_other = Image.from_other(img_test, data=_random_image().data)
@@ -376,6 +377,8 @@ def test_image_meta():
     img_other2 = Image.from_other(img_other, meta={"key2": "value2"})
     assert img_other2.get_meta("key") == "value"
     assert img_other2.get_meta("key2") == "value2"
+    assert "key" in img_other2.list_meta()
+    assert "key2" in img_other2.list_meta()
 
     # but img_other not modified
     assert not img_other.has_meta("key2")
