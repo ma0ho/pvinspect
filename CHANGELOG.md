@@ -1,6 +1,6 @@
 # Changelog
 
-## In development
+## 0.1.5
 
 * Cleanup too verbose imports
 * Introduce `DType` enum for uniform typing within the package

@@ -31,7 +31,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pvinspect",
-    version="0.1.4",
+    version="0.1.5",
     author="Mathis Hoffmann",
     author_email="mathis.hoffmann@fau.de",
     description="Provides methods for the analysis of PV modules using different modailities",
