@@ -11,10 +11,7 @@ from tqdm.auto import tqdm
 import logging
 from shapely.geometry import Polygon, Point
 import json
-
-
-PathOrStr = Union[Path, str]
-ObjectAnnotations = Dict[str, List[Tuple[str, Polygon]]]
+from pvinspect.common.types import PathOrStr, ObjectAnnotations
 
 
 def __assurePath(p: PathOrStr) -> Path:

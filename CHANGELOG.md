@@ -1,5 +1,9 @@
 # Changelog
 
+## In development
+
+* Implement `preproc.calibration.Calibration` to handle all calibration in a single object
+
 ## 0.1.5
 
 * Cleanup too verbose imports
