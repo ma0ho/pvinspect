@@ -71,7 +71,6 @@ def calibrate_flatfield(
 
     # flatten multiple sequences
     if isinstance(images, list):
-        print(images)
         images_new, targets_new = list(), list()
         for l, t in zip(images, targets):
             targets_new += [t] * len(l)
