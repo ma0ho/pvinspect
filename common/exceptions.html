@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>pvinspect.preproc API documentation</title>
-<meta name="description" content="Methods for preprocessing data" />
+<title>pvinspect.common.exceptions API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,38 +17,69 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pvinspect.preproc</code></h1>
+<h1 class="title">Module <code>pvinspect.common.exceptions</code></h1>
 </header>
 <section id="section-intro">
-<p>Methods for preprocessing data</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Methods for preprocessing data&#34;&#34;&#34;
+<pre><code class="python">class MisconfigurationException(Exception):
+    pass
 
-from . import calibration
-from . import detection</code></pre>
+
+class InvalidArgumentException(Exception):
+    pass</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="pvinspect.preproc.calibration" href="calibration.html">pvinspect.preproc.calibration</a></code></dt>
+<dt id="pvinspect.common.exceptions.InvalidArgumentException"><code class="flex name class">
+<span>class <span class="ident">InvalidArgumentException</span></span>
+<span>(</span><span>...)</span>
+</code></dt>
 <dd>
-<div class="desc"><p>Flatfield and lens calibration</p></div>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidArgumentException(Exception):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
 </dd>
-<dt><code class="name"><a title="pvinspect.preproc.detection" href="detection.html">pvinspect.preproc.detection</a></code></dt>
+<dt id="pvinspect.common.exceptions.MisconfigurationException"><code class="flex name class">
+<span>class <span class="ident">MisconfigurationException</span></span>
+<span>(</span><span>...)</span>
+</code></dt>
 <dd>
-<div class="desc"><p>Detection, localization and segmentation of solar modules</p></div>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MisconfigurationException(Exception):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
 </section>
 </article>
 <nav id="sidebar">
@@ -59,13 +90,17 @@ from . import detection</code></pre>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pvinspect" href="../index.html">pvinspect</a></code></li>
+<li><code><a title="pvinspect.common" href="index.html">pvinspect.common</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="pvinspect.preproc.calibration" href="calibration.html">pvinspect.preproc.calibration</a></code></li>
-<li><code><a title="pvinspect.preproc.detection" href="detection.html">pvinspect.preproc.detection</a></code></li>
+<li>
+<h4><code><a title="pvinspect.common.exceptions.InvalidArgumentException" href="#pvinspect.common.exceptions.InvalidArgumentException">InvalidArgumentException</a></code></h4>
+</li>
+<li>
+<h4><code><a title="pvinspect.common.exceptions.MisconfigurationException" href="#pvinspect.common.exceptions.MisconfigurationException">MisconfigurationException</a></code></h4>
+</li>
 </ul>
 </li>
 </ul>

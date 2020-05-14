@@ -28,24 +28,30 @@
 <pre><code class="python">&#34;&#34;&#34;Flatfield and lens calibration&#34;&#34;&#34;
 from pvinspect.data.image import *
 from pvinspect.data.image import _sequence
-from typing import List, Tuple
+from pvinspect.common.exceptions import (
+    MisconfigurationException,
+    InvalidArgumentException,
+)
+from pvinspect.common.types import PathOrStr
+from typing import List, Tuple, Union
 import numpy as np
 from skimage import img_as_float
 from tqdm.autonotebook import trange, tqdm
 import numpy as np
 import cv2
 from skimage.exposure import rescale_intensity
+import os
+import logging
+import pickle
 
 
 def _calibrate_flatfield(
-    images: List[np.ndarray], targets: List[float], order: int = 0
+    images: List[np.ndarray], targets: List[float], order: int
 ) -&gt; np.array:
-    assert images[0].dtype == np.float64 or images[0].dtype == np.float32
 
     imgs = [img.flatten() for img in images]
 
-    assert order &lt;= len(imgs) - 1
-    order = min(len(imgs) - 1, 2) if order == 0 else order
+    order = min(len(imgs) - 1, 2) if order == -1 else order
     coeff = np.empty((order + 1, imgs[0].shape[0]), dtype=images[0].dtype)
 
     if order == 1 and len(images) == 2:
@@ -62,20 +68,44 @@ def _calibrate_flatfield(
 
 
 def calibrate_flatfield(
-    images: ImageSequence, targets: List[float], order: int = 0, use_median: bool = True
+    images: Union[ImageSequence, List[ImageSequence]],
+    targets: List[float],
+    order: int = -1,
+    use_median: bool = True,
 ) -&gt; np.array:
     &#34;&#34;&#34;Perform flat-field calibration. Note that there might be several calibration shots
     with the same normalization target. In that case, a least-squares estimate is computed.
 
     Args:
-        images (ImageSequence): Sequence of calibration shots
-        targets (List[float]): Corresponding list of normalization targets
-        order (int): Order of compensation polynomial. The order is chosen automatically, if order == 0 (default)
+        images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots or list of sequences
+        targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+            one target per element of the sequence. If images is a list of ImageSequence, specify one target
+            per element of the list.
+        order (int): Order of compensation polynomial. The order is chosen automatically, if order == -1 (default)
         use_median (bool): Use the median of all images with the same target
 
     Returns:
         coeff: order+1 coefficients starting with the lowest order coefficient
     &#34;&#34;&#34;
+    if order == 0:
+        raise InvalidArgumentException(&#34;Order of flat-field-polynom must not be 0&#34;)
+    if order &gt; len(images) - 1:
+        raise MisconfigurationException(
+            &#34;Need at least {:d} images to calibrate a flat-field-polynom of degree {:d} ({:d} given)&#34;.format(
+                order + 1, order, len(images)
+            )
+        )
+
+    # flatten multiple sequences
+    if isinstance(images, list):
+        images_new, targets_new = list(), list()
+        for l, t in zip(images, targets):
+            targets_new += [t] * len(l)
+            images_new += l.images
+        targets = targets_new
+        images = ImageSequence(images=images_new, same_camera=True)
+
+    # assure float type
     images = images.as_type(DType.FLOAT)
 
     if use_median:
@@ -90,9 +120,11 @@ def calibrate_flatfield(
             images_new.append(np.median(group, axis=0))
             targets_new.append(t1)
 
-        return _calibrate_flatfield(images_new, targets_new, order)
+        return _calibrate_flatfield(images=images_new, targets=targets_new, order=order)
 
-    return _calibrate_flatfield([img.data for img in images], targets, order)
+    return _calibrate_flatfield(
+        images=[img.data for img in images], targets=targets, order=order
+    )
 
 
 def calibrate_distortion(
@@ -134,6 +166,14 @@ def calibrate_distortion(
             objpoints.append(objp)
             imgpoints.append(corners)
 
+    # sanity check
+    if len(objpoints) &lt; 0.8 * len(images):
+        logging.warn(
+            &#34;Checkerboard detection failed on more than 20% percent of the images (only {:d} succeeded). Please consider preprocessing the images, such that the checkerboard has a better contrast.&#34;.format(
+                len(objpoints)
+            )
+        )
+
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
         objpoints, imgpoints, images[0].shape[::-1], None, None
     )
@@ -141,7 +181,181 @@ def calibrate_distortion(
         mtx, dist, img.shape, 1, img.shape
     )
 
-    return mtx, dist, newcameramtx, roi</code></pre>
+    return mtx, dist, newcameramtx, roi
+
+
+@_sequence
+def _compensate_flatfield(
+    sequence: ModuleImageOrSequence, coeff: np.ndarray
+) -&gt; ModuleImageOrSequence:
+    &#34;&#34;&#34;Low level method to perform flat field correction
+
+    Args:
+        sequence (ModuleImageOrSequence): Sequence of images or single image (needs to be of type float)
+        coeff (np.ndarray): Compensation coefficients
+
+    Returns:
+        sequence: The corrected images
+    &#34;&#34;&#34;
+    if sequence.dtype != DType.FLOAT:
+        raise InvalidArgumentException(
+            &#34;Images must be converted to DType.FLOAT, before applying flat-field-correction&#34;
+        )
+
+    def fn(data, coeff):
+        res = coeff[0].copy()
+        data = data.copy()
+        for i in range(1, coeff.shape[0]):
+            res += coeff[i] * data
+            data *= data
+        return np.clip(res, 0.0, 1.0)
+
+    return sequence.apply_image_data(fn, coeff)
+
+
+@_sequence
+def compensate_flatfield(
+    sequence: ModuleImageOrSequence, coeff: np.ndarray
+) -&gt; ModuleImageOrSequence:
+    &#34;&#34;&#34;Perform flat field correction
+
+    Args:
+        sequence (ModuleImageOrSequence): Sequence of images or single image
+        coeff (np.ndarray): Compensation coefficients
+
+    Returns:
+        sequence: The corrected images
+    &#34;&#34;&#34;
+    sequence = sequence.as_type(DType.FLOAT)
+    sequence = _compensate_flatfield(sequence, coeff)
+
+    return sequence
+
+
+@_sequence
+def compensate_distortion(
+    sequence: ModuleImageOrSequence,
+    mtx: np.ndarray,
+    dist: np.ndarray,
+    newcameramtx: np.ndarray,
+    roi: Tuple[int, int, int, int],
+) -&gt; ModuleImageOrSequence:
+    &#34;&#34;&#34;Perform lens distortion correction
+
+    Args:
+        sequence (ModuleImageOrSequence): Sequence of images or single image
+        mtx (np.ndarray): Matrix of instrinsic camera parameters
+        dist (np.ndarray): Matrix of distortion coefficients
+        newcameramtx (np.ndarray): Matrix that performs additional scaling to account for black borders
+        roi (Tuple[int, int, int, int]): ROI of valid pixels
+
+    Returns:
+        sequence: The corrected images
+    &#34;&#34;&#34;
+
+    def corr(x):
+        dst = cv2.undistort(x, mtx, dist, None, newcameramtx)
+        return dst[roi[0] : roi[2], roi[1] : roi[3]]
+
+    return sequence.apply_image_data(corr)
+
+
+class Calibration:
+    &#34;&#34;&#34;Handles camera calibration and processing of images&#34;&#34;&#34;
+
+    def __init__(self, ff_poly_order: int = -1, ff_use_median: bool = True):
+        &#34;&#34;&#34;Initialize calibration object
+
+        Args:
+            ff_poly_order (int): Order of flat-field compensation polynomial. The order is chosen automatically, if order == -1 (default)
+            ff_use_median (bool): Use the median of all images with the same target
+        &#34;&#34;&#34;
+
+        self._ff_poly_order = ff_poly_order
+        self._ff_use_median = ff_use_median
+        self._ff_calibration = None
+        self._dist_calibration = None
+
+    def calibrate_flatfield(
+        self, images: Union[ImageSequence, List[ImageSequence]], targets: List[float]
+    ):
+        &#34;&#34;&#34;Perform flat-field calibration. Note that there might be several calibration shots
+        with the same normalization target. In that case, a least-squares estimate is computed.
+
+        Args:
+            images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots
+            targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+                one target per element of the sequence. If images is a list of ImageSequence, specify one target
+                per element of the list.
+        &#34;&#34;&#34;
+
+        self._ff_calibration = calibrate_flatfield(
+            images=images,
+            targets=targets,
+            order=self._ff_poly_order,
+            use_median=self._ff_use_median,
+        )
+
+    def calibrate_distortion(
+        self, images: ImageSequence, checkerboard_size: Tuple[int, int]
+    ):
+        &#34;&#34;&#34;Perform lens calibration
+
+        Args:
+            images (ImageSequence): Sequence of calibration shots
+            checkerboard_size (Tuple[int, int]): Size of the checkerboard (outer corners do not count)
+        &#34;&#34;&#34;
+
+        self._dist_calibration = calibrate_distortion(
+            images=images, checkerboard_size=checkerboard_size
+        )
+
+    def process(self, images: ImageOrSequence):
+        &#34;&#34;&#34;Process images and compensate camera artifacts
+
+        Args:
+            images (ImageOrSequence): Sequence of images or single image
+        &#34;&#34;&#34;
+
+        if self._ff_calibration is not None:
+            images = compensate_flatfield(images, self._ff_calibration)
+        else:
+            logging.warn(
+                &#34;No flat-field calibration data available. Use calibrate_flatfield to perform calibration. Skipping flat-field compensation..&#34;
+            )
+
+        if self._dist_calibration is not None:
+            images = compensate_distortion(images, *self._dist_calibration)
+        else:
+            logging.warn(
+                &#34;No distortion calibration data available. Use calibrate_distortion to perform calibration. Skipping distortion compensation..&#34;
+            )
+
+        return images
+
+    def save(self, path: PathOrStr):
+        &#34;&#34;&#34;Save calibration data to disk
+
+        Args:
+            path (PathOrStr): Target to save file to
+        &#34;&#34;&#34;
+
+        with open(path, &#34;wb&#34;) as f:
+            pickle.dump(self, f)
+
+
+def load_calibration(path: PathOrStr) -&gt; Calibration:
+    &#34;&#34;&#34;Load calibration data from file
+
+    Args:
+        path (PathOrStr): Path to calibration file
+    
+    Returns:
+        calibration (Calibration): The calibration object
+    &#34;&#34;&#34;
+
+    with open(path, &#34;rb&#34;) as f:
+        return pickle.load(f)</code></pre>
 </details>
 </section>
 <section>
@@ -217,6 +431,14 @@ def calibrate_distortion(
             objpoints.append(objp)
             imgpoints.append(corners)
 
+    # sanity check
+    if len(objpoints) &lt; 0.8 * len(images):
+        logging.warn(
+            &#34;Checkerboard detection failed on more than 20% percent of the images (only {:d} succeeded). Please consider preprocessing the images, such that the checkerboard has a better contrast.&#34;.format(
+                len(objpoints)
+            )
+        )
+
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
         objpoints, imgpoints, images[0].shape[::-1], None, None
     )
@@ -228,19 +450,21 @@ def calibrate_distortion(
 </details>
 </dd>
 <dt id="pvinspect.preproc.calibration.calibrate_flatfield"><code class="name flex">
-<span>def <span class="ident">calibrate_flatfield</span></span>(<span>images: <a title="pvinspect.data.image.ImageSequence" href="../data/image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, targets: List[float], order: int = 0, use_median: bool = True) -> <built-in function array></span>
+<span>def <span class="ident">calibrate_flatfield</span></span>(<span>images: Union[pvinspect.data.image.ImageSequence, List[pvinspect.data.image.ImageSequence]], targets: List[float], order: int = -1, use_median: bool = True) -> <built-in function array></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Perform flat-field calibration. Note that there might be several calibration shots
 with the same normalization target. In that case, a least-squares estimate is computed.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>images</code></strong> :&ensp;<code>ImageSequence</code></dt>
-<dd>Sequence of calibration shots</dd>
+<dt><strong><code>images</code></strong> :&ensp;<code>Union[ImageSequence, List[ImageSequence]]</code></dt>
+<dd>Sequence of calibration shots or list of sequences</dd>
 <dt><strong><code>targets</code></strong> :&ensp;<code>List[float]</code></dt>
-<dd>Corresponding list of normalization targets</dd>
+<dd>Corresponding list of normalization targets. If images is an ImageSequence, specify
+one target per element of the sequence. If images is a list of ImageSequence, specify one target
+per element of the list.</dd>
 <dt><strong><code>order</code></strong> :&ensp;<code>int</code></dt>
-<dd>Order of compensation polynomial. The order is chosen automatically, if order == 0 (default)</dd>
+<dd>Order of compensation polynomial. The order is chosen automatically, if order == -1 (default)</dd>
 <dt><strong><code>use_median</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Use the median of all images with the same target</dd>
 </dl>
@@ -254,20 +478,44 @@ with the same normalization target. In that case, a least-squares estimate is co
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def calibrate_flatfield(
-    images: ImageSequence, targets: List[float], order: int = 0, use_median: bool = True
+    images: Union[ImageSequence, List[ImageSequence]],
+    targets: List[float],
+    order: int = -1,
+    use_median: bool = True,
 ) -&gt; np.array:
     &#34;&#34;&#34;Perform flat-field calibration. Note that there might be several calibration shots
     with the same normalization target. In that case, a least-squares estimate is computed.
 
     Args:
-        images (ImageSequence): Sequence of calibration shots
-        targets (List[float]): Corresponding list of normalization targets
-        order (int): Order of compensation polynomial. The order is chosen automatically, if order == 0 (default)
+        images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots or list of sequences
+        targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+            one target per element of the sequence. If images is a list of ImageSequence, specify one target
+            per element of the list.
+        order (int): Order of compensation polynomial. The order is chosen automatically, if order == -1 (default)
         use_median (bool): Use the median of all images with the same target
 
     Returns:
         coeff: order+1 coefficients starting with the lowest order coefficient
     &#34;&#34;&#34;
+    if order == 0:
+        raise InvalidArgumentException(&#34;Order of flat-field-polynom must not be 0&#34;)
+    if order &gt; len(images) - 1:
+        raise MisconfigurationException(
+            &#34;Need at least {:d} images to calibrate a flat-field-polynom of degree {:d} ({:d} given)&#34;.format(
+                order + 1, order, len(images)
+            )
+        )
+
+    # flatten multiple sequences
+    if isinstance(images, list):
+        images_new, targets_new = list(), list()
+        for l, t in zip(images, targets):
+            targets_new += [t] * len(l)
+            images_new += l.images
+        targets = targets_new
+        images = ImageSequence(images=images_new, same_camera=True)
+
+    # assure float type
     images = images.as_type(DType.FLOAT)
 
     if use_median:
@@ -282,14 +530,386 @@ with the same normalization target. In that case, a least-squares estimate is co
             images_new.append(np.median(group, axis=0))
             targets_new.append(t1)
 
-        return _calibrate_flatfield(images_new, targets_new, order)
+        return _calibrate_flatfield(images=images_new, targets=targets_new, order=order)
 
-    return _calibrate_flatfield([img.data for img in images], targets, order)</code></pre>
+    return _calibrate_flatfield(
+        images=[img.data for img in images], targets=targets, order=order
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.calibration.compensate_distortion"><code class="name flex">
+<span>def <span class="ident">compensate_distortion</span></span>(<span>sequence: Union[pvinspect.data.image.ModuleImageSequence, pvinspect.data.image.ModuleImage, pvinspect.data.image.PartialModuleImage, pvinspect.data.image.Image], mtx: numpy.ndarray, dist: numpy.ndarray, newcameramtx: numpy.ndarray, roi: Tuple[int, int, int, int]) -> Union[<a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>, <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a>, <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform lens distortion correction</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sequence</code></strong> :&ensp;<code>ModuleImageOrSequence</code></dt>
+<dd>Sequence of images or single image</dd>
+<dt><strong><code>mtx</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Matrix of instrinsic camera parameters</dd>
+<dt><strong><code>dist</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Matrix of distortion coefficients</dd>
+<dt><strong><code>newcameramtx</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Matrix that performs additional scaling to account for black borders</dd>
+<dt><strong><code>roi</code></strong> :&ensp;<code>Tuple[int, int, int, int]</code></dt>
+<dd>ROI of valid pixels</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>sequence</code></dt>
+<dd>The corrected images</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@_sequence
+def compensate_distortion(
+    sequence: ModuleImageOrSequence,
+    mtx: np.ndarray,
+    dist: np.ndarray,
+    newcameramtx: np.ndarray,
+    roi: Tuple[int, int, int, int],
+) -&gt; ModuleImageOrSequence:
+    &#34;&#34;&#34;Perform lens distortion correction
+
+    Args:
+        sequence (ModuleImageOrSequence): Sequence of images or single image
+        mtx (np.ndarray): Matrix of instrinsic camera parameters
+        dist (np.ndarray): Matrix of distortion coefficients
+        newcameramtx (np.ndarray): Matrix that performs additional scaling to account for black borders
+        roi (Tuple[int, int, int, int]): ROI of valid pixels
+
+    Returns:
+        sequence: The corrected images
+    &#34;&#34;&#34;
+
+    def corr(x):
+        dst = cv2.undistort(x, mtx, dist, None, newcameramtx)
+        return dst[roi[0] : roi[2], roi[1] : roi[3]]
+
+    return sequence.apply_image_data(corr)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.calibration.compensate_flatfield"><code class="name flex">
+<span>def <span class="ident">compensate_flatfield</span></span>(<span>sequence: Union[pvinspect.data.image.ModuleImageSequence, pvinspect.data.image.ModuleImage, pvinspect.data.image.PartialModuleImage, pvinspect.data.image.Image], coeff: numpy.ndarray) -> Union[<a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>, <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a>, <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform flat field correction</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>sequence</code></strong> :&ensp;<code>ModuleImageOrSequence</code></dt>
+<dd>Sequence of images or single image</dd>
+<dt><strong><code>coeff</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Compensation coefficients</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>sequence</code></dt>
+<dd>The corrected images</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@_sequence
+def compensate_flatfield(
+    sequence: ModuleImageOrSequence, coeff: np.ndarray
+) -&gt; ModuleImageOrSequence:
+    &#34;&#34;&#34;Perform flat field correction
+
+    Args:
+        sequence (ModuleImageOrSequence): Sequence of images or single image
+        coeff (np.ndarray): Compensation coefficients
+
+    Returns:
+        sequence: The corrected images
+    &#34;&#34;&#34;
+    sequence = sequence.as_type(DType.FLOAT)
+    sequence = _compensate_flatfield(sequence, coeff)
+
+    return sequence</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.calibration.load_calibration"><code class="name flex">
+<span>def <span class="ident">load_calibration</span></span>(<span>path: Union[pathlib.Path, str]) -> <a title="pvinspect.preproc.calibration.Calibration" href="#pvinspect.preproc.calibration.Calibration">Calibration</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load calibration data from file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Path to calibration file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>calibration (Calibration): The calibration object</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_calibration(path: PathOrStr) -&gt; Calibration:
+    &#34;&#34;&#34;Load calibration data from file
+
+    Args:
+        path (PathOrStr): Path to calibration file
+    
+    Returns:
+        calibration (Calibration): The calibration object
+    &#34;&#34;&#34;
+
+    with open(path, &#34;rb&#34;) as f:
+        return pickle.load(f)</code></pre>
 </details>
 </dd>
 </dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pvinspect.preproc.calibration.Calibration"><code class="flex name class">
+<span>class <span class="ident">Calibration</span></span>
+<span>(</span><span>ff_poly_order: int = -1, ff_use_median: bool = True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handles camera calibration and processing of images</p>
+<p>Initialize calibration object</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ff_poly_order</code></strong> :&ensp;<code>int</code></dt>
+<dd>Order of flat-field compensation polynomial. The order is chosen automatically, if order == -1 (default)</dd>
+<dt><strong><code>ff_use_median</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Use the median of all images with the same target</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Calibration:
+    &#34;&#34;&#34;Handles camera calibration and processing of images&#34;&#34;&#34;
+
+    def __init__(self, ff_poly_order: int = -1, ff_use_median: bool = True):
+        &#34;&#34;&#34;Initialize calibration object
+
+        Args:
+            ff_poly_order (int): Order of flat-field compensation polynomial. The order is chosen automatically, if order == -1 (default)
+            ff_use_median (bool): Use the median of all images with the same target
+        &#34;&#34;&#34;
+
+        self._ff_poly_order = ff_poly_order
+        self._ff_use_median = ff_use_median
+        self._ff_calibration = None
+        self._dist_calibration = None
+
+    def calibrate_flatfield(
+        self, images: Union[ImageSequence, List[ImageSequence]], targets: List[float]
+    ):
+        &#34;&#34;&#34;Perform flat-field calibration. Note that there might be several calibration shots
+        with the same normalization target. In that case, a least-squares estimate is computed.
+
+        Args:
+            images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots
+            targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+                one target per element of the sequence. If images is a list of ImageSequence, specify one target
+                per element of the list.
+        &#34;&#34;&#34;
+
+        self._ff_calibration = calibrate_flatfield(
+            images=images,
+            targets=targets,
+            order=self._ff_poly_order,
+            use_median=self._ff_use_median,
+        )
+
+    def calibrate_distortion(
+        self, images: ImageSequence, checkerboard_size: Tuple[int, int]
+    ):
+        &#34;&#34;&#34;Perform lens calibration
+
+        Args:
+            images (ImageSequence): Sequence of calibration shots
+            checkerboard_size (Tuple[int, int]): Size of the checkerboard (outer corners do not count)
+        &#34;&#34;&#34;
+
+        self._dist_calibration = calibrate_distortion(
+            images=images, checkerboard_size=checkerboard_size
+        )
+
+    def process(self, images: ImageOrSequence):
+        &#34;&#34;&#34;Process images and compensate camera artifacts
+
+        Args:
+            images (ImageOrSequence): Sequence of images or single image
+        &#34;&#34;&#34;
+
+        if self._ff_calibration is not None:
+            images = compensate_flatfield(images, self._ff_calibration)
+        else:
+            logging.warn(
+                &#34;No flat-field calibration data available. Use calibrate_flatfield to perform calibration. Skipping flat-field compensation..&#34;
+            )
+
+        if self._dist_calibration is not None:
+            images = compensate_distortion(images, *self._dist_calibration)
+        else:
+            logging.warn(
+                &#34;No distortion calibration data available. Use calibrate_distortion to perform calibration. Skipping distortion compensation..&#34;
+            )
+
+        return images
+
+    def save(self, path: PathOrStr):
+        &#34;&#34;&#34;Save calibration data to disk
+
+        Args:
+            path (PathOrStr): Target to save file to
+        &#34;&#34;&#34;
+
+        with open(path, &#34;wb&#34;) as f:
+            pickle.dump(self, f)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="pvinspect.preproc.calibration.Calibration.calibrate_distortion"><code class="name flex">
+<span>def <span class="ident">calibrate_distortion</span></span>(<span>self, images: <a title="pvinspect.data.image.ImageSequence" href="../data/image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, checkerboard_size: Tuple[int, int])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform lens calibration</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code>ImageSequence</code></dt>
+<dd>Sequence of calibration shots</dd>
+<dt><strong><code>checkerboard_size</code></strong> :&ensp;<code>Tuple[int, int]</code></dt>
+<dd>Size of the checkerboard (outer corners do not count)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calibrate_distortion(
+    self, images: ImageSequence, checkerboard_size: Tuple[int, int]
+):
+    &#34;&#34;&#34;Perform lens calibration
+
+    Args:
+        images (ImageSequence): Sequence of calibration shots
+        checkerboard_size (Tuple[int, int]): Size of the checkerboard (outer corners do not count)
+    &#34;&#34;&#34;
+
+    self._dist_calibration = calibrate_distortion(
+        images=images, checkerboard_size=checkerboard_size
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.calibration.Calibration.calibrate_flatfield"><code class="name flex">
+<span>def <span class="ident">calibrate_flatfield</span></span>(<span>self, images: Union[pvinspect.data.image.ImageSequence, List[pvinspect.data.image.ImageSequence]], targets: List[float])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform flat-field calibration. Note that there might be several calibration shots
+with the same normalization target. In that case, a least-squares estimate is computed.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code>Union[ImageSequence, List[ImageSequence]]</code></dt>
+<dd>Sequence of calibration shots</dd>
+<dt><strong><code>targets</code></strong> :&ensp;<code>List[float]</code></dt>
+<dd>Corresponding list of normalization targets. If images is an ImageSequence, specify
+one target per element of the sequence. If images is a list of ImageSequence, specify one target
+per element of the list.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calibrate_flatfield(
+    self, images: Union[ImageSequence, List[ImageSequence]], targets: List[float]
+):
+    &#34;&#34;&#34;Perform flat-field calibration. Note that there might be several calibration shots
+    with the same normalization target. In that case, a least-squares estimate is computed.
+
+    Args:
+        images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots
+        targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+            one target per element of the sequence. If images is a list of ImageSequence, specify one target
+            per element of the list.
+    &#34;&#34;&#34;
+
+    self._ff_calibration = calibrate_flatfield(
+        images=images,
+        targets=targets,
+        order=self._ff_poly_order,
+        use_median=self._ff_use_median,
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.calibration.Calibration.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>self, images: Union[pvinspect.data.image.Image, pvinspect.data.image.ImageSequence])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process images and compensate camera artifacts</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code>ImageOrSequence</code></dt>
+<dd>Sequence of images or single image</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def process(self, images: ImageOrSequence):
+    &#34;&#34;&#34;Process images and compensate camera artifacts
+
+    Args:
+        images (ImageOrSequence): Sequence of images or single image
+    &#34;&#34;&#34;
+
+    if self._ff_calibration is not None:
+        images = compensate_flatfield(images, self._ff_calibration)
+    else:
+        logging.warn(
+            &#34;No flat-field calibration data available. Use calibrate_flatfield to perform calibration. Skipping flat-field compensation..&#34;
+        )
+
+    if self._dist_calibration is not None:
+        images = compensate_distortion(images, *self._dist_calibration)
+    else:
+        logging.warn(
+            &#34;No distortion calibration data available. Use calibrate_distortion to perform calibration. Skipping distortion compensation..&#34;
+        )
+
+    return images</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.calibration.Calibration.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, path: Union[pathlib.Path, str])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save calibration data to disk</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>PathOrStr</code></dt>
+<dd>Target to save file to</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self, path: PathOrStr):
+    &#34;&#34;&#34;Save calibration data to disk
+
+    Args:
+        path (PathOrStr): Target to save file to
+    &#34;&#34;&#34;
+
+    with open(path, &#34;wb&#34;) as f:
+        pickle.dump(self, f)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -307,6 +927,22 @@ with the same normalization target. In that case, a least-squares estimate is co
 <ul class="">
 <li><code><a title="pvinspect.preproc.calibration.calibrate_distortion" href="#pvinspect.preproc.calibration.calibrate_distortion">calibrate_distortion</a></code></li>
 <li><code><a title="pvinspect.preproc.calibration.calibrate_flatfield" href="#pvinspect.preproc.calibration.calibrate_flatfield">calibrate_flatfield</a></code></li>
+<li><code><a title="pvinspect.preproc.calibration.compensate_distortion" href="#pvinspect.preproc.calibration.compensate_distortion">compensate_distortion</a></code></li>
+<li><code><a title="pvinspect.preproc.calibration.compensate_flatfield" href="#pvinspect.preproc.calibration.compensate_flatfield">compensate_flatfield</a></code></li>
+<li><code><a title="pvinspect.preproc.calibration.load_calibration" href="#pvinspect.preproc.calibration.load_calibration">load_calibration</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pvinspect.preproc.calibration.Calibration" href="#pvinspect.preproc.calibration.Calibration">Calibration</a></code></h4>
+<ul class="">
+<li><code><a title="pvinspect.preproc.calibration.Calibration.calibrate_distortion" href="#pvinspect.preproc.calibration.Calibration.calibrate_distortion">calibrate_distortion</a></code></li>
+<li><code><a title="pvinspect.preproc.calibration.Calibration.calibrate_flatfield" href="#pvinspect.preproc.calibration.Calibration.calibrate_flatfield">calibrate_flatfield</a></code></li>
+<li><code><a title="pvinspect.preproc.calibration.Calibration.process" href="#pvinspect.preproc.calibration.Calibration.process">process</a></code></li>
+<li><code><a title="pvinspect.preproc.calibration.Calibration.save" href="#pvinspect.preproc.calibration.Calibration.save">save</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
