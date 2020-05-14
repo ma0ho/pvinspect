@@ -139,6 +139,14 @@ def calibrate_distortion(
             objpoints.append(objp)
             imgpoints.append(corners)
 
+    # sanity check
+    if len(objpoints) < 0.8 * len(images):
+        logging.warn(
+            "Checkerboard detection failed on more than 20% percent of the images (only {:d} succeeded). Please consider preprocessing the images, such that the checkerboard has a better contrast.".format(
+                len(objpoints)
+            )
+        )
+
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
         objpoints, imgpoints, images[0].shape[::-1], None, None
     )
