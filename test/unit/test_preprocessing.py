@@ -175,3 +175,17 @@ def test_calibration_object(tmp_path: Path):
 
     # assert both result in the same image
     assert_equal(comp.data, comp_loaded.data)
+
+
+def test_flatfield_sequences_input():
+    seqs = list(datasets.calibration_ipv40CCD_FF(N=2).values())
+    seqs = [seqs[0], seqs[2]]
+    test_img = _prepare_ff_test_img()
+
+    coeff = calibrate_flatfield(seqs, targets=[0.0, 1.0])
+    comp = compensate_flatfield(test_img, coeff)
+
+    data = comp.data
+    assert data.min() >= 0.0
+    assert data.max() <= 1.0
+    assert data.std() <= 0.01

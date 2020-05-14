@@ -6,7 +6,7 @@ from pvinspect.common.exceptions import (
     InvalidArgumentException,
 )
 from pvinspect.common.types import PathOrStr
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import numpy as np
 from skimage import img_as_float
 from tqdm.autonotebook import trange, tqdm
@@ -41,7 +41,7 @@ def _calibrate_flatfield(
 
 
 def calibrate_flatfield(
-    images: ImageSequence,
+    images: Union[ImageSequence, List[ImageSequence]],
     targets: List[float],
     order: int = -1,
     use_median: bool = True,
@@ -50,8 +50,10 @@ def calibrate_flatfield(
     with the same normalization target. In that case, a least-squares estimate is computed.
 
     Args:
-        images (ImageSequence): Sequence of calibration shots
-        targets (List[float]): Corresponding list of normalization targets
+        images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots or list of sequences
+        targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+            one target per element of the sequence. If images is a list of ImageSequence, specify one target
+            per element of the list.
         order (int): Order of compensation polynomial. The order is chosen automatically, if order == -1 (default)
         use_median (bool): Use the median of all images with the same target
 
@@ -67,6 +69,17 @@ def calibrate_flatfield(
             )
         )
 
+    # flatten multiple sequences
+    if isinstance(images, list):
+        print(images)
+        images_new, targets_new = list(), list()
+        for l, t in zip(images, targets):
+            targets_new += [t] * len(l)
+            images_new += l.images
+        targets = targets_new
+        images = ImageSequence(images=images_new, same_camera=True)
+
+    # assure float type
     images = images.as_type(DType.FLOAT)
 
     if use_median:
@@ -81,9 +94,11 @@ def calibrate_flatfield(
             images_new.append(np.median(group, axis=0))
             targets_new.append(t1)
 
-        return _calibrate_flatfield(images_new, targets_new, order)
+        return _calibrate_flatfield(images=images_new, targets=targets_new, order=order)
 
-    return _calibrate_flatfield([img.data for img in images], targets, order)
+    return _calibrate_flatfield(
+        images=[img.data for img in images], targets=targets, order=order
+    )
 
 
 def calibrate_distortion(
@@ -227,13 +242,17 @@ class Calibration:
         self._ff_calibration = None
         self._dist_calibration = None
 
-    def calibrate_flatfield(self, images: ImageSequence, targets: List[float]):
+    def calibrate_flatfield(
+        self, images: Union[ImageSequence, List[ImageSequence]], targets: List[float]
+    ):
         """Perform flat-field calibration. Note that there might be several calibration shots
         with the same normalization target. In that case, a least-squares estimate is computed.
 
         Args:
-            images (ImageSequence): Sequence of calibration shots
-            targets (List[float]): Corresponding list of normalization targets
+            images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots
+            targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+                one target per element of the sequence. If images is a list of ImageSequence, specify one target
+                per element of the list.
         """
 
         self._ff_calibration = calibrate_flatfield(
