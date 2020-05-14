@@ -1,8 +1,9 @@
 # Changelog
 
-## In development
+## 0.1.6
 
 * Implement `preproc.calibration.Calibration` to handle all calibration in a single object
+* Sanity check for failed checkerboard detections
 
 ## 0.1.5
 
