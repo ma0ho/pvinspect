@@ -6,6 +6,8 @@
   same holds for accessing meta attributes that are `np.ndarray`
 * Change semantics of `ImageSequence.apply_image_data`: This method does not modify the original data anymore. Instead
   it returns a copy of the original data
+* Shorten too long image titles
+* Do no override title for `CellImage` (fixes #2)
 
 ## 0.1.6
 

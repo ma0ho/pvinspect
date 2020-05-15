@@ -158,12 +158,28 @@ def _register_default_plugins():
     register_show_plugin(show_image, -100)
 
     def axis_options(
-        image: Image, show_axis: bool = True, show_title: bool = True, **kwargs
+        image: Image,
+        show_axis: bool = True,
+        show_title: bool = True,
+        max_title_length: bool = 30,
+        **kwargs
     ):
         if not show_axis:
             plt.axis("off")
         if show_title:
-            plt.title(str(image.path.name))
+            if isinstance(image, CellImage):
+                t = "{} (r: {:d}, c: {:d})".format(
+                    str(image.path.name), image.row, image.col
+                )
+            else:
+                t = str(image.path.name)
+
+            if len(t) > max_title_length:
+                l1 = max_title_length // 2 - 2
+                l2 = max_title_length - l1 - 2
+                t = t[:l1] + ".." + t[len(t) - l2 :]
+
+            plt.title(t)
 
     register_show_plugin(axis_options, -200)
 
@@ -536,9 +552,6 @@ class CellImage(Image):
     def show(self, *argv, **kwargs):
         """Show this image"""
         super().show(*argv, **kwargs)
-        plt.title(
-            "{}: (row: {:d}, col: {:d})".format(self._path.name, self._row, self._col)
-        )
 
 
 class CellImageSequence(ImageSequence):
