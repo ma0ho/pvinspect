@@ -119,16 +119,18 @@ def test_float_image_is_not_converted():
     assert img.dtype == DType.FLOAT
 
 
-def test_apply_does_copy():
+def test_apply_image_data():
     seq = _random_image_sequence()
-    data = seq[0].data
+    original_data = seq[0].data.copy()
 
     def fn(x):
+        x = x.copy()
         x[:] = 0.0
         return x
 
-    seq.apply_image_data(fn)
-    assert_equal(seq[0].data, data)
+    seq2 = seq.apply_image_data(fn)
+    assert_equal(seq2[0].data, 0.0)
+    assert_equal(seq[0].data, original_data)
 
 
 def test_image_as_type():
@@ -143,14 +145,6 @@ def test_sequence_as_type():
     assert seq.dtype == DType.FLOAT
     seq = seq.as_type(DType.UNSIGNED_INT)
     assert seq.dtype == DType.UNSIGNED_INT
-
-
-def test_image_data_returns_copy():
-    img = _random_image()
-    original_data = img._data.copy()
-    data = img.data
-    data[:] = 0.0
-    assert_equal(img.data, original_data)
 
 
 def test_add_images():
@@ -382,3 +376,23 @@ def test_image_meta():
 
     # but img_other not modified
     assert not img_other.has_meta("key2")
+
+
+def test_image_data_is_immutable():
+    data = _random_image().data
+    assert data.flags["WRITEABLE"] == False
+
+
+def test_image_meta_is_immutable():
+    img = _random_image()
+    arraymeta = np.zeros(1)
+    othermeta = [1, 2, 3]
+    img_with_meta = Image.from_other(
+        img, meta={"arraymeta": arraymeta, "othermeta": othermeta}
+    )
+
+    # array should be immutable
+    assert img_with_meta.get_meta("arraymeta").flags["WRITEABLE"] == False
+
+    # other should return a copy
+    assert img_with_meta.get_meta("othermeta") is not othermeta

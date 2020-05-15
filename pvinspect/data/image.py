@@ -276,7 +276,9 @@ class Image(_Base):
     @property
     def data(self) -> np.ndarray:
         """The underlying image data"""
-        return deepcopy(self._data)
+        v = self._data.view()
+        v.setflags(write=False)
+        return v
 
     @property
     def path(self) -> Path:
@@ -315,7 +317,12 @@ class Image(_Base):
 
     def get_meta(self, key: str) -> Any:
         """Access a meta attribute"""
-        return self._meta[key]
+        if isinstance(self._meta[key], np.ndarray):
+            v = self._meta[key].view()
+            v.setflags(write=False)
+            return v
+        else:
+            return deepcopy(self._meta[key])
 
     def has_meta(self, key: str) -> bool:
         """Check if a meta attribute is set"""
@@ -404,7 +411,16 @@ class ImageSequence(_Base):
     def apply_image_data(
         self: _T, fn: Callable[[np.ndarray], np.ndarray], *argv, **kwargs
     ) -> _T:
-        """Apply the given callable on every image data."""
+        """Apply the given callable on every image data. Returns a copy of the
+        original sequence with modified data
+
+        Args:
+            fn (Callable[[np.ndarray], np.ndarray]): Callable that receives a np.ndarray
+                and returns a np.ndarray. Note that the argument is immutable.
+        
+        Returns:
+            sequence (ImageSequence): The copy with modified data
+        """
         result = []
         for img in self._images:
             data = img.data
@@ -448,7 +464,7 @@ class ImageSequence(_Base):
     @property
     def images(self) -> List[Image]:
         """Access the list of images"""
-        return deepcopy(self._images)
+        return self._images
 
     @property
     def dtype(self) -> DType:
@@ -474,7 +490,7 @@ class ImageSequence(_Base):
         return len(self.images)
 
     def __getitem__(self, i: int) -> Image:
-        return deepcopy(self.images[i])
+        return self.images[i]
 
 
 ImageOrSequence = Union[Image, ImageSequence]

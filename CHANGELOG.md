@@ -1,5 +1,12 @@
 # Changelog
 
+## In development
+
+* Remove unnecessary copy operations: `Image.data` now always returns an immutable view of the original data. The
+  same holds for accessing meta attributes that are `np.ndarray`
+* Change semantics of `ImageSequence.apply_image_data`: This method does not modify the original data anymore. Instead
+  it returns a copy of the original data
+
 ## 0.1.6
 
 * Implement `preproc.calibration.Calibration` to handle all calibration in a single object
