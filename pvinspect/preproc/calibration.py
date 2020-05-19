@@ -159,13 +159,14 @@ def calibrate_distortion(
 
 @_sequence
 def _compensate_flatfield(
-    sequence: ModuleImageOrSequence, coeff: np.ndarray
+    sequence: ModuleImageOrSequence, coeff: np.ndarray, clip_result: bool
 ) -> ModuleImageOrSequence:
     """Low level method to perform flat field correction
 
     Args:
         sequence (ModuleImageOrSequence): Sequence of images or single image (needs to be of type float)
         coeff (np.ndarray): Compensation coefficients
+        clip_result (bool): Clip the result such that all pixels are in the range [0,1]
 
     Returns:
         sequence: The corrected images
@@ -181,26 +182,31 @@ def _compensate_flatfield(
         for i in range(1, coeff.shape[0]):
             res += coeff[i] * data
             data *= data
-        return np.clip(res, 0.0, 1.0)
+
+        if clip_result:
+            res = np.clip(res, 0.0, 1.0)
+
+        return res
 
     return sequence.apply_image_data(fn, coeff)
 
 
 @_sequence
 def compensate_flatfield(
-    sequence: ModuleImageOrSequence, coeff: np.ndarray
+    sequence: ModuleImageOrSequence, coeff: np.ndarray, clip_result: bool = True
 ) -> ModuleImageOrSequence:
     """Perform flat field correction
 
     Args:
         sequence (ModuleImageOrSequence): Sequence of images or single image
         coeff (np.ndarray): Compensation coefficients
+        clip_result (bool): Clip the result such that all pixels are in the range [0,1]
 
     Returns:
         sequence: The corrected images
     """
     sequence = sequence.as_type(DType.FLOAT)
-    sequence = _compensate_flatfield(sequence, coeff)
+    sequence = _compensate_flatfield(sequence, coeff, clip_result)
 
     return sequence
 
@@ -283,23 +289,34 @@ class Calibration:
             images=images, checkerboard_size=checkerboard_size
         )
 
-    def process(self, images: ImageOrSequence):
+    def process(
+        self,
+        images: ImageOrSequence,
+        clip_result: bool = True,
+        flatfield: bool = True,
+        distortion: bool = True,
+    ):
         """Process images and compensate camera artifacts
 
         Args:
             images (ImageOrSequence): Sequence of images or single image
+            clip_result (bool): Clip the result such that all pixels are in the range [0,1]
+            flatfield (bool): Perform flat-field compensation
+            distortion (bool): Perform distortion compensation
         """
 
-        if self._ff_calibration is not None:
-            images = compensate_flatfield(images, self._ff_calibration)
-        else:
+        if self._ff_calibration is not None and flatfield:
+            images = compensate_flatfield(
+                images, self._ff_calibration, clip_result=clip_result
+            )
+        elif flatfield:
             logging.warn(
                 "No flat-field calibration data available. Use calibrate_flatfield to perform calibration. Skipping flat-field compensation.."
             )
 
-        if self._dist_calibration is not None:
+        if self._dist_calibration is not None and distortion:
             images = compensate_distortion(images, *self._dist_calibration)
-        else:
+        elif distortion:
             logging.warn(
                 "No distortion calibration data available. Use calibrate_distortion to perform calibration. Skipping distortion compensation.."
             )

@@ -189,3 +189,28 @@ def test_flatfield_sequences_input():
     assert data.min() >= 0.0
     assert data.max() <= 1.0
     assert data.std() <= 0.01
+
+
+def test_flatfield_clipping():
+    ff_imgs, ex_list = _prepare_ff_data()
+    test_img = _prepare_ff_test_img()
+
+    # perform calibration
+    calib = Calibration()
+    calib.calibrate_flatfield(images=ff_imgs, targets=ex_list)
+
+    # set very high/low intensity
+    data = test_img.data.copy()
+    data[:200] = np.iinfo(data.dtype).max
+    data[200:] = np.iinfo(data.dtype).min
+    test_img = Image.from_other(test_img, data=data)
+
+    # with clipping (default)
+    result_clip = calib.process(test_img)
+    assert result_clip.data.max() <= 1.0
+    assert result_clip.data.min() >= 0.0
+
+    # without clipping
+    result_noclip = calib.process(test_img, clip_result=False, distortion=False)
+    assert result_noclip.data.max() > 1.0
+    assert result_noclip.data.min() < 0.0

@@ -8,6 +8,7 @@
   it returns a copy of the original data
 * Shorten too long image titles
 * Do no override title for `CellImage` (fixes #2)
+* Allow to disable clipping result of flat-field compensation
 
 ## 0.1.6
 
