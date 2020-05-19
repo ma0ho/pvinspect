@@ -361,7 +361,7 @@ def save_image(
         image.show(**kwargs)
         plt.savefig(filename, **kwargs)
     else:
-        if image.dtype == np.float64:
+        if image.dtype == DType.FLOAT:
             io.imsave(filename, image.data.astype(np.float32), check_contrast=False)
         else:
             io.imsave(filename, image.data, check_contrast=False)

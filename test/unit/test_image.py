@@ -2,44 +2,8 @@ from pvinspect import data
 from pvinspect.data.image import *
 from pvinspect.data.image import _sequence
 from pathlib import Path
-from test.utilities import assert_equal
+from test.utilities import *
 import pandas as pd
-
-
-def _random_image(**kwargs) -> Image:
-    data = np.random.random((10, 10))
-
-    if "modality" not in kwargs.keys():
-        kwargs["modality"] = EL_IMAGE
-    if "path" not in kwargs.keys():
-        kwargs["path"] = Path() / "test.png"
-
-    return Image(data, **kwargs)
-
-
-def _random_uint_image() -> Image:
-    data = (np.random.random((10, 10)) * 100).astype(np.uint32)
-    return Image(data, EL_IMAGE, Path() / "test.png")
-
-
-def _random_module_image() -> ModuleImage:
-    data = np.random.random((10, 10))
-    return ModuleImage(data, EL_IMAGE, Path() / "test.png")
-
-
-def _random_image_sequence() -> ImageSequence:
-    imgs = [_random_image() for x in range(2)]
-    return ImageSequence(imgs, False)
-
-
-def _random_uint_image_sequence() -> ImageSequence:
-    imgs = [_random_uint_image() for x in range(2)]
-    return ImageSequence(imgs, False)
-
-
-def _random_module_image_sequence() -> ModuleImageSequence:
-    imgs = [_random_module_image() for x in range(2)]
-    return ModuleImageSequence(imgs, False)
 
 
 def test_sequence_element_access():
@@ -59,19 +23,19 @@ def test_sequence_wrapper():
         assert type(seq) == ImageSequence
         return seq
 
-    img = _random_module_image()
+    img = random_module_image()
     res = _some_fn_mis(img)
     assert isinstance(res, ModuleImage)
 
-    img = _random_image()
+    img = random_image()
     res = _some_fn_is(img)
     assert isinstance(res, Image)
 
-    img_seq = _random_module_image_sequence()
+    img_seq = random_module_image_sequence()
     res = _some_fn_mis(img_seq)
     assert isinstance(res, ModuleImageSequence)
 
-    img_seq = _random_image_sequence()
+    img_seq = random_image_sequence()
     res = _some_fn_is(img_seq)
     assert isinstance(res, ImageSequence)
 
@@ -82,7 +46,7 @@ def test_sequence_wrapper_noarg():
         assert type(seq) == ModuleImageSequence
         return seq
 
-    img = _random_module_image()
+    img = random_module_image()
     res = _some_fn(img)
     assert isinstance(res, ModuleImage)
 
@@ -93,14 +57,14 @@ def test_sequence_wrapper_nounwrap():
         assert type(seq) == ModuleImageSequence
         return seq
 
-    img = _random_module_image()
+    img = random_module_image()
     res = _some_fn(img)
     assert isinstance(res, ModuleImageSequence)
 
 
 def test_image_from_other():
     p = Path() / "other.png"
-    img = _random_image()
+    img = random_image()
     img2 = Image.from_other(img, path=p)
     assert img._data is img2._data
     assert img._modality is img2._modality
@@ -108,7 +72,7 @@ def test_image_from_other():
 
 
 def test_module_image_from_other():
-    img = _random_module_image()
+    img = random_module_image()
     img2 = ModuleImage.from_other(img, cols=10, rows=6)
     assert img._data is img2._data
     assert img._modality is img2._modality
@@ -127,7 +91,7 @@ def test_float_image_is_not_converted():
 
 
 def test_apply_image_data():
-    seq = _random_image_sequence()
+    seq = random_image_sequence()
     original_data = seq[0].data.copy()
 
     def fn(x):
@@ -141,29 +105,29 @@ def test_apply_image_data():
 
 
 def test_image_as_type():
-    img = _random_image()
+    img = random_image()
     assert img.dtype == DType.FLOAT
     img = img.as_type(DType.UNSIGNED_INT)
     assert img.dtype == DType.UNSIGNED_INT
 
 
 def test_sequence_as_type():
-    seq = _random_image_sequence()
+    seq = random_image_sequence()
     assert seq.dtype == DType.FLOAT
     seq = seq.as_type(DType.UNSIGNED_INT)
     assert seq.dtype == DType.UNSIGNED_INT
 
 
 def test_add_images():
-    img1 = _random_image()
-    img2 = _random_image()
+    img1 = random_image()
+    img2 = random_image()
     res = img1 + img2
     assert_equal(res.data, img1.data + img2.data)
 
 
 def test_add_images_differing_dtypes():
-    img1 = _random_image()
-    img2 = _random_uint_image()
+    img1 = random_image()
+    img2 = random_uint_image()
     try:
         res = img1 + img2
     except RuntimeError:
@@ -174,15 +138,15 @@ def test_add_images_differing_dtypes():
 
 
 def test_sub_images():
-    img1 = _random_image()
-    img2 = _random_image()
+    img1 = random_image()
+    img2 = random_image()
     res = img1 - img2
     assert_equal(res.data, img1.data - img2.data)
 
 
 def test_sub_uint_images():
-    img1 = _random_uint_image()
-    img2 = _random_uint_image()
+    img1 = random_uint_image()
+    img2 = random_uint_image()
     res = img1 - img2
     expected = np.clip(
         img1.data.astype(np.int32) - img2.data.astype(np.int32), 0, 2 ** 16
@@ -191,8 +155,8 @@ def test_sub_uint_images():
 
 
 def test_sub_images_differing_dtypes():
-    img1 = _random_image()
-    img2 = _random_uint_image()
+    img1 = random_image()
+    img2 = random_uint_image()
     try:
         res = img1 - img2
     except RuntimeError:
@@ -203,15 +167,15 @@ def test_sub_images_differing_dtypes():
 
 
 def test_mul_images():
-    img1 = _random_image()
-    img2 = _random_image()
+    img1 = random_image()
+    img2 = random_image()
     res = img1 * img2
     assert_equal(res.data, img1.data * img2.data)
 
 
 def test_mul_images_differing_dtypes():
-    img1 = _random_image()
-    img2 = _random_uint_image()
+    img1 = random_image()
+    img2 = random_uint_image()
     try:
         res = img1 * img2
     except RuntimeError:
@@ -222,15 +186,15 @@ def test_mul_images_differing_dtypes():
 
 
 def test_truediv_images():
-    img1 = _random_image()
-    img2 = _random_image()
+    img1 = random_image()
+    img2 = random_image()
     res = img1 / img2
     assert_equal(res.data, img1.data / img2.data)
 
 
 def test_truediv_images_nonfloat():
-    img1 = _random_image()
-    img2 = _random_uint_image()
+    img1 = random_image()
+    img2 = random_uint_image()
     try:
         res = img1 / img2
     except RuntimeError:
@@ -241,15 +205,15 @@ def test_truediv_images_nonfloat():
 
 
 def test_floordiv_images():
-    img1 = _random_uint_image()
-    img2 = _random_uint_image()
+    img1 = random_uint_image()
+    img2 = random_uint_image()
     res = img1 // img2
     assert_equal(res.data, img1.data // img2.data)
 
 
 def test_floordiv_images_differing_dtypes():
-    img1 = _random_image()
-    img2 = _random_uint_image()
+    img1 = random_image()
+    img2 = random_uint_image()
     try:
         res = img1 // img2
     except RuntimeError:
@@ -260,15 +224,15 @@ def test_floordiv_images_differing_dtypes():
 
 
 def test_mod_images():
-    img1 = _random_uint_image()
-    img2 = _random_uint_image()
+    img1 = random_uint_image()
+    img2 = random_uint_image()
     res = img1 % img2
     assert_equal(res.data, img1.data % img2.data)
 
 
 def test_mod_images_differing_dtypes():
-    img1 = _random_image()
-    img2 = _random_uint_image()
+    img1 = random_image()
+    img2 = random_uint_image()
     try:
         res = img1 % img2
     except RuntimeError:
@@ -279,15 +243,15 @@ def test_mod_images_differing_dtypes():
 
 
 def test_pow_images():
-    img1 = _random_image()
-    img2 = _random_image()
+    img1 = random_image()
+    img2 = random_image()
     res = img1 ** img2
     assert_equal(res.data, img1.data ** img2.data)
 
 
 def test_pow_images_differing_dtypes():
-    img1 = _random_image()
-    img2 = _random_uint_image()
+    img1 = random_image()
+    img2 = random_uint_image()
     try:
         res = img1 ** img2
     except RuntimeError:
@@ -298,8 +262,8 @@ def test_pow_images_differing_dtypes():
 
 
 def test_add_image_sequence():
-    imgs1 = _random_image_sequence()
-    imgs2 = _random_image_sequence()
+    imgs1 = random_image_sequence()
+    imgs2 = random_image_sequence()
     res = imgs1 + imgs2
 
     for img1, img2, r in zip(imgs1, imgs2, res):
@@ -307,8 +271,8 @@ def test_add_image_sequence():
 
 
 def test_sub_image_sequence():
-    imgs1 = _random_image_sequence()
-    imgs2 = _random_image_sequence()
+    imgs1 = random_image_sequence()
+    imgs2 = random_image_sequence()
     res = imgs1 - imgs2
 
     for img1, img2, r in zip(imgs1, imgs2, res):
@@ -316,8 +280,8 @@ def test_sub_image_sequence():
 
 
 def test_mul_image_sequence():
-    imgs1 = _random_image_sequence()
-    imgs2 = _random_image_sequence()
+    imgs1 = random_image_sequence()
+    imgs2 = random_image_sequence()
     res = imgs1 * imgs2
 
     for img1, img2, r in zip(imgs1, imgs2, res):
@@ -325,8 +289,8 @@ def test_mul_image_sequence():
 
 
 def test_truediv_image_sequence():
-    imgs1 = _random_image_sequence()
-    imgs2 = _random_image_sequence()
+    imgs1 = random_image_sequence()
+    imgs2 = random_image_sequence()
     res = imgs1 / imgs2
 
     for img1, img2, r in zip(imgs1, imgs2, res):
@@ -334,8 +298,8 @@ def test_truediv_image_sequence():
 
 
 def test_floordiv_image_sequence():
-    imgs1 = _random_image_sequence()
-    imgs2 = _random_image_sequence()
+    imgs1 = random_image_sequence()
+    imgs2 = random_image_sequence()
     res = imgs1 // imgs2
 
     for img1, img2, r in zip(imgs1, imgs2, res):
@@ -343,8 +307,8 @@ def test_floordiv_image_sequence():
 
 
 def test_mod_image_sequence():
-    imgs1 = _random_uint_image_sequence()
-    imgs2 = _random_uint_image_sequence()
+    imgs1 = random_uint_image_sequence()
+    imgs2 = random_uint_image_sequence()
     res = imgs1 % imgs2
 
     for img1, img2, r in zip(imgs1, imgs2, res):
@@ -352,8 +316,8 @@ def test_mod_image_sequence():
 
 
 def test_pow_image_sequence():
-    imgs1 = _random_image_sequence()
-    imgs2 = _random_image_sequence()
+    imgs1 = random_image_sequence()
+    imgs2 = random_image_sequence()
     res = imgs1 ** imgs2
 
     for img1, img2, r in zip(imgs1, imgs2, res):
@@ -361,8 +325,8 @@ def test_pow_image_sequence():
 
 
 def test_image_meta():
-    data = _random_image().data
-    path = _random_image().path
+    data = random_image().data
+    path = random_image().path
     img_test = Image(data=data, path=path, meta={"key": "value"})
 
     assert img_test.has_meta("key")
@@ -371,7 +335,7 @@ def test_image_meta():
     assert "key" in img_test.list_meta()
 
     # check from_other preserves meta
-    img_other = Image.from_other(img_test, data=_random_image().data)
+    img_other = Image.from_other(img_test, data=random_image().data)
     assert img_other.get_meta("key") == "value"
 
     # check from_other appends meta
@@ -386,12 +350,12 @@ def test_image_meta():
 
 
 def test_image_data_is_immutable():
-    data = _random_image().data
+    data = random_image().data
     assert data.flags["WRITEABLE"] == False
 
 
 def test_image_meta_is_immutable():
-    img = _random_image()
+    img = random_image()
     arraymeta = np.zeros(1)
     othermeta = [1, 2, 3]
     img_with_meta = Image.from_other(
@@ -406,7 +370,7 @@ def test_image_meta_is_immutable():
 
 
 def test_image_meta_to_pandas():
-    img = _random_image(meta={"k": 1})
+    img = random_image(meta={"k": 1})
     meta = img.meta_to_pandas()
 
     assert isinstance(meta, pd.Series)
@@ -414,7 +378,7 @@ def test_image_meta_to_pandas():
 
 
 def test_image_meta_from_path():
-    img = _random_image(path=Path("img_d12.png"))
+    img = random_image(path=Path("img_d12.png"))
     img = img.meta_from_path(pattern=r"img_d(\d+)", key="k", target_type=int, group_n=1)
     meta = img.meta_to_pandas()
 
@@ -423,8 +387,8 @@ def test_image_meta_from_path():
 
 
 def test_sequence_meta_to_pandas():
-    img1 = _random_image(meta={"k": 1})
-    img2 = _random_image(meta={"k": 2})
+    img1 = random_image(meta={"k": 1})
+    img2 = random_image(meta={"k": 2})
     seq = ImageSequence([img1, img2], same_camera=False)
     meta = seq.meta_to_pandas()
 
@@ -434,8 +398,8 @@ def test_sequence_meta_to_pandas():
 
 
 def test_sequence_meta_from_path():
-    img1 = _random_image(path=Path("img_d12.png"))
-    img2 = _random_image(path=Path("img_d13.png"))
+    img1 = random_image(path=Path("img_d12.png"))
+    img2 = random_image(path=Path("img_d13.png"))
     seq = ImageSequence([img1, img2], same_camera=False)
     seq = seq.meta_from_path(pattern=r"img_d(\d+)", key="k", target_type=int, group_n=1)
     meta = seq.meta_to_pandas()
@@ -446,8 +410,8 @@ def test_sequence_meta_from_path():
 
 
 def test_sequence_meta_query():
-    img1 = _random_image(meta={"k": 1})
-    img2 = _random_image(meta={"k": 2})
+    img1 = random_image(meta={"k": 1})
+    img2 = random_image(meta={"k": 2})
     seq = ImageSequence([img1, img2], same_camera=False)
     seq = seq.query("k == 1")
 

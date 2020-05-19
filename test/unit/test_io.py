@@ -13,7 +13,8 @@ from pvinspect.preproc.detection import locate_module_and_cells, segment_cells
 from pathlib import Path
 import numpy as np
 from pvinspect.data.image import *
-from skimage.io import imsave
+from skimage.io import imsave, imread
+from test.utilities import *
 
 EXAMPLES = (
     Path(__file__).absolute().parent.parent.parent
@@ -148,3 +149,12 @@ def test_force_dtype(tmp_path: Path):
 
     seq = read_image(tmp_path / "wrong_float.tif", force_dtype=DType.UNSIGNED_INT)
     assert seq.dtype == DType.UNSIGNED_INT
+
+
+def test_save_float_image_conversion(tmp_path: Path):
+    img = random_image()
+    img = Image.from_other(img, data=img.data.astype(np.float64))
+    save_image(tmp_path / "test.tif", img)
+
+    img = imread(tmp_path / "test.tif")
+    assert img.dtype == np.float32

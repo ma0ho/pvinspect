@@ -458,6 +458,21 @@ class ImageSequence(_Base):
 
     _T = TypeVar("T")
 
+    def apply(self, fn: Callable[[Image], Image], *argv, **kwargs) -> ImageSequence:
+        """Apply the given callable on every image. Returns a copy of the
+        original sequence
+
+        Args:
+            fn (Callable[[Image], Image]): Callable that receives and returns an Image
+        
+        Returns:
+            sequence (ImageSequence): The copy with modified images
+        """
+        result = []
+        for img in self._images:
+            result.append(fn(img, *argv, **kwargs))
+        return type(self).from_other(self, images=result)
+
     def apply_image_data(
         self: _T, fn: Callable[[np.ndarray], np.ndarray], *argv, **kwargs
     ) -> _T:
