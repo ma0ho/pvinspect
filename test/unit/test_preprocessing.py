@@ -85,7 +85,7 @@ def test_compensate_flatfield():
     coeff = np.random.random((4, 10, 10)) / 10
     target = coeff[0] + coeff[1] * img + coeff[2] * img ** 2 + coeff[3] * img ** 3
 
-    res = _compensate_flatfield(_make_image_seq([img]), coeff)[0].data
+    res = _compensate_flatfield(_make_image_seq([img]), coeff, clip_result=True)[0].data
     assert_equal(res, target, 0.1)
 
 
@@ -95,7 +95,9 @@ def test_calibrate_and_compensate_flatfield():
     img2 = (-np.random.random((10, 10)) / 10) + 1.0
 
     coeff = _calibrate_flatfield([img0, img1, img2], [0, 0.5, 1.0], order=2)
-    compensated = _compensate_flatfield(_make_image_seq([img0, img1, img2]), coeff)
+    compensated = _compensate_flatfield(
+        _make_image_seq([img0, img1, img2]), coeff, clip_result=True
+    )
     assert_equal(np.zeros_like(img0), compensated[0].data)
     assert_equal(np.full_like(img1, 0.5), compensated[1].data)
     assert_equal(np.full_like(img1, 1.0), compensated[2].data)
