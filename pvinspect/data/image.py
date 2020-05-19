@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 """Provides classes to store and visualize images with metadata"""
 
 import numpy as np
@@ -14,6 +17,8 @@ from pvinspect.common._ipy_exit import exit
 import inspect
 import sys
 from enum import Enum
+import re
+import pandas as pd
 
 # this is a pointer to the module object instance itself
 this = sys.modules[__name__]
@@ -348,6 +353,34 @@ class Image(_Base):
         """List avaliable meta keys"""
         return list(self._meta.keys())
 
+    def meta_from_path(
+        self, pattern: str, key: str, target_type: Type, group_n: int = 0
+    ) -> Image:
+        """Extract meta information from path. The group_n'th matching group
+        from pattern is used as meta value
+
+        Args:
+            pattern (str): Regular expression used to parse meta
+            key (str): Key of the meta attribute
+            target_type (Type): Result is converted to this datatype
+            group_n (int): Index of matching group
+
+        Returns:
+            image (Image): Resulting Image
+        """
+        s = str(self.path.absolute())
+        res = re.search(pattern, s)
+        v = target_type(res.group(group_n))
+        return type(self).from_other(self, meta={key: v})
+
+    def meta_to_pandas(self) -> pd.Series:
+        """Convert (compatible) meta data to pandas series"""
+        data = pd.Series(self._meta, copy=True)
+        data["path"] = self.path
+        data["shape"] = self.shape
+        data["dtype"] = self.dtype
+        return data
+
 
 class ImageSequence(_Base):
     """An immutable sequence of images, allowing for access to single images as well as analysis of the sequence"""
@@ -381,6 +414,7 @@ class ImageSequence(_Base):
         self._images = images
         self._same_camera = same_camera
         self._allow_different_dtypes = allow_different_dtypes
+        self._meta_df = None
         if len(self.images) == 0:
             logging.error("Creation of an empty sequence is not supported")
             exit()
@@ -442,6 +476,50 @@ class ImageSequence(_Base):
             data = img.data
             res = fn(data, *argv, **kwargs)
             result.append(type(img).from_other(img, data=res))
+        return type(self).from_other(self, images=result)
+
+    def meta_from_path(
+        self, pattern: str, key: str, target_type: Type, group_n: int = 1
+    ) -> ImageSequence:
+        """Extract meta information from path of individual aimges. The group_n'th matching group
+        from pattern is used as meta value
+
+        Args:
+            pattern (str): Regular expression used to parse meta
+            key (str): Key of the meta attribute
+            target_type (Type): Result is converted to this datatype
+            group_n (int): Index of matching group
+
+        Returns:
+            images (ImageSequence): Resulting ImageSequence
+        """
+        result = []
+        for img in self._images:
+            result.append(
+                img.meta_from_path(
+                    pattern=pattern, key=key, target_type=target_type, group_n=group_n
+                )
+            )
+        return type(self).from_other(self, images=result)
+
+    def meta_to_pandas(self) -> pd.DataFrame:
+        """Convert meta from images to pandas DataFrame"""
+        if self._meta_df is None:
+            series = [img.meta_to_pandas() for img in self._images]
+            self._meta_df = pd.DataFrame(data=series)
+        return self._meta_df.copy()  # pd.DataFrame has no writable flag :(
+
+    def query(self, query: str) -> ImageSequence:
+        """Query image sequence using image meta attributes
+
+        Args:
+            query (str): The query string using the query syntax of pandas library
+
+        Returns:
+            result (ImageSequence): The images, where query evaluated true
+        """
+        idx = self.meta_to_pandas().query(query).index.to_list()
+        result = [self._images[i] for i in idx]
         return type(self).from_other(self, images=result)
 
     def as_type(self: _T, dtype: DType) -> _T:
@@ -553,6 +631,12 @@ class CellImage(Image):
         """Show this image"""
         super().show(*argv, **kwargs)
 
+    def meta_to_pandas(self):
+        data = super().meta_to_pandas()
+        data["row"] = self.row
+        data["col"] = self.col
+        return data
+
 
 class CellImageSequence(ImageSequence):
     """An immutable sequence of cell images, allowing for access to single images as well as analysis of the sequence"""
@@ -619,6 +703,12 @@ class ModuleImage(Image):
         """Number of row-columns"""
         return self._rows
 
+    def meta_to_pandas(self):
+        data = super().meta_to_pandas()
+        data["cols"] = self.cols
+        data["rows"] = self.rows
+        return data
+
 
 class PartialModuleImage(ModuleImage):
     """An image of a solar module with additional meta data"""
@@ -650,6 +740,12 @@ class PartialModuleImage(ModuleImage):
 
         self._first_col = first_col
         self._first_row = first_row
+
+    def meta_to_pandas(self):
+        data = super().meta_to_pandas()
+        data["first_col"] = self._first_col
+        data["first_row"] = self._first_row
+        return data
 
 
 ModuleOrPartialModuleImage = Union[ModuleImage, PartialModuleImage]

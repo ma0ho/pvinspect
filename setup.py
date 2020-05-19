@@ -39,7 +39,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ma0ho/pvinspect",
     packages=setuptools.find_packages(),
-    python_requires=">=3.6, <3.9",
+    python_requires=">=3.7, <3.9",
     install_requires=[
         "numpy >= 1.16.0",
         "scikit-image",
@@ -58,6 +58,7 @@ setuptools.setup(
         "sklearn",
         "pre-commit",
         "pillow < 7.1.0",
+        "pandas >= 1.0.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

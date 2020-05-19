@@ -3,11 +3,18 @@ from pvinspect.data.image import *
 from pvinspect.data.image import _sequence
 from pathlib import Path
 from test.utilities import assert_equal
+import pandas as pd
 
 
-def _random_image() -> Image:
+def _random_image(**kwargs) -> Image:
     data = np.random.random((10, 10))
-    return Image(data, EL_IMAGE, Path() / "test.png")
+
+    if "modality" not in kwargs.keys():
+        kwargs["modality"] = EL_IMAGE
+    if "path" not in kwargs.keys():
+        kwargs["path"] = Path() / "test.png"
+
+    return Image(data, **kwargs)
 
 
 def _random_uint_image() -> Image:
@@ -396,3 +403,53 @@ def test_image_meta_is_immutable():
 
     # other should return a copy
     assert img_with_meta.get_meta("othermeta") is not othermeta
+
+
+def test_image_meta_to_pandas():
+    img = _random_image(meta={"k": 1})
+    meta = img.meta_to_pandas()
+
+    assert isinstance(meta, pd.Series)
+    assert meta["k"] == 1
+
+
+def test_image_meta_from_path():
+    img = _random_image(path=Path("img_d12.png"))
+    img = img.meta_from_path(pattern=r"img_d(\d+)", key="k", target_type=int, group_n=1)
+    meta = img.meta_to_pandas()
+
+    assert meta["k"] == 12
+    assert isinstance(meta["k"], int)
+
+
+def test_sequence_meta_to_pandas():
+    img1 = _random_image(meta={"k": 1})
+    img2 = _random_image(meta={"k": 2})
+    seq = ImageSequence([img1, img2], same_camera=False)
+    meta = seq.meta_to_pandas()
+
+    assert isinstance(meta, pd.DataFrame)
+    assert meta.iloc[0]["k"] == 1
+    assert meta.iloc[1]["k"] == 2
+
+
+def test_sequence_meta_from_path():
+    img1 = _random_image(path=Path("img_d12.png"))
+    img2 = _random_image(path=Path("img_d13.png"))
+    seq = ImageSequence([img1, img2], same_camera=False)
+    seq = seq.meta_from_path(pattern=r"img_d(\d+)", key="k", target_type=int, group_n=1)
+    meta = seq.meta_to_pandas()
+
+    assert isinstance(meta, pd.DataFrame)
+    assert meta.iloc[0]["k"] == 12
+    assert meta.iloc[1]["k"] == 13
+
+
+def test_sequence_meta_query():
+    img1 = _random_image(meta={"k": 1})
+    img2 = _random_image(meta={"k": 2})
+    seq = ImageSequence([img1, img2], same_camera=False)
+    seq = seq.query("k == 1")
+
+    assert len(seq) == 1
+    assert seq[0].get_meta("k") == 1

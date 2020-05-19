@@ -9,6 +9,7 @@
 * Shorten too long image titles
 * Do no override title for `CellImage` (fixes #2)
 * Allow to disable clipping result of flat-field compensation
+* Add pandas compability for Image meta
 
 ## 0.1.6
 
