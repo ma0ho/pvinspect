@@ -10,6 +10,7 @@
 * Do no override title for `CellImage` (fixes #2)
 * Allow to disable clipping result of flat-field compensation
 * Add pandas compability for Image meta
+* Automatic extraction of meta data from image path
 
 ## 0.1.6
 

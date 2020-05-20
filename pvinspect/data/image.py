@@ -354,7 +354,12 @@ class Image(_Base):
         return list(self._meta.keys())
 
     def meta_from_path(
-        self, pattern: str, key: str, target_type: Type, group_n: int = 0
+        self,
+        pattern: str,
+        key: str,
+        target_type: Type,
+        group_n: int = 0,
+        transform: Callable[[Any], Any] = None,
     ) -> Image:
         """Extract meta information from path. The group_n'th matching group
         from pattern is used as meta value
@@ -364,13 +369,18 @@ class Image(_Base):
             key (str): Key of the meta attribute
             target_type (Type): Result is converted to this datatype
             group_n (int): Index of matching group
+            transform (Callable[[Any], Any]): Optional function that is applied on the value
+                before datatype conversion
 
         Returns:
             image (Image): Resulting Image
         """
         s = str(self.path.absolute())
         res = re.search(pattern, s)
-        v = target_type(res.group(group_n))
+        v = res.group(group_n)
+        if transform is not None:
+            v = transform(v)
+        v = target_type(v)
         return type(self).from_other(self, meta={key: v})
 
     def meta_to_pandas(self) -> pd.Series:
@@ -494,7 +504,12 @@ class ImageSequence(_Base):
         return type(self).from_other(self, images=result)
 
     def meta_from_path(
-        self, pattern: str, key: str, target_type: Type, group_n: int = 1
+        self,
+        pattern: str,
+        key: str,
+        target_type: Type,
+        group_n: int = 1,
+        transform: Callable[[Any], Any] = None,
     ) -> ImageSequence:
         """Extract meta information from path of individual aimges. The group_n'th matching group
         from pattern is used as meta value
@@ -504,6 +519,8 @@ class ImageSequence(_Base):
             key (str): Key of the meta attribute
             target_type (Type): Result is converted to this datatype
             group_n (int): Index of matching group
+            transform (Callable[[Any], Any]): Optional function that is applied on the value
+                before datatype conversion
 
         Returns:
             images (ImageSequence): Resulting ImageSequence
@@ -512,7 +529,11 @@ class ImageSequence(_Base):
         for img in self._images:
             result.append(
                 img.meta_from_path(
-                    pattern=pattern, key=key, target_type=target_type, group_n=group_n
+                    pattern=pattern,
+                    key=key,
+                    target_type=target_type,
+                    group_n=group_n,
+                    transform=transform,
                 )
             )
         return type(self).from_other(self, images=result)

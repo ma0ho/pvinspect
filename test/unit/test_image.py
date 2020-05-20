@@ -386,6 +386,21 @@ def test_image_meta_from_path():
     assert isinstance(meta["k"], int)
 
 
+def test_image_meta_from_path_transform():
+    def t(x):
+        assert isinstance(x, str)
+        return int(x) * 2
+
+    img = random_image(path=Path("img_d12.png"))
+    img = img.meta_from_path(
+        pattern=r"img_d(\d+)", key="k", target_type=int, group_n=1, transform=t
+    )
+    meta = img.meta_to_pandas()
+
+    assert meta["k"] == 24
+    assert isinstance(meta["k"], int)
+
+
 def test_sequence_meta_to_pandas():
     img1 = random_image(meta={"k": 1})
     img2 = random_image(meta={"k": 2})
