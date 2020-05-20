@@ -36,7 +36,11 @@ def _calibrate_flatfield(
                 [img[i] for img in imgs], targets, order
             )
 
-    # coeff = np.nan_to_num(coeff)
+    # perserve mean of ff-image with highest intensity
+    maxi = np.argmax(targets)
+    mean = np.mean(images[maxi])
+    coeff *= mean
+
     return coeff.reshape((order + 1, images[0].shape[0], images[0].shape[1]))
 
 
@@ -51,9 +55,9 @@ def calibrate_flatfield(
 
     Args:
         images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots or list of sequences
-        targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+        targets (List[float]): Corresponding list of calibration targets. If images is an ImageSequence, specify
             one target per element of the sequence. If images is a list of ImageSequence, specify one target
-            per element of the list.
+            per element of the list. The targets specify normalized intensity of the flatfield calibration image.
         order (int): Order of compensation polynomial. The order is chosen automatically, if order == -1 (default)
         use_median (bool): Use the median of all images with the same target
 
@@ -159,22 +163,9 @@ def calibrate_distortion(
 
 @_sequence
 def _compensate_flatfield(
-    sequence: ModuleImageOrSequence, coeff: np.ndarray, clip_result: bool
+    sequence: ModuleImageOrSequence, coeff: np.ndarray
 ) -> ModuleImageOrSequence:
-    """Low level method to perform flat field correction
-
-    Args:
-        sequence (ModuleImageOrSequence): Sequence of images or single image (needs to be of type float)
-        coeff (np.ndarray): Compensation coefficients
-        clip_result (bool): Clip the result such that all pixels are in the range [0,1]
-
-    Returns:
-        sequence: The corrected images
-    """
-    if sequence.dtype != DType.FLOAT:
-        raise InvalidArgumentException(
-            "Images must be converted to DType.FLOAT, before applying flat-field-correction"
-        )
+    """Low level method to perform flat field correction"""
 
     def fn(data, coeff):
         res = coeff[0].copy()
@@ -183,9 +174,6 @@ def _compensate_flatfield(
             res += coeff[i] * data
             data *= data
 
-        if clip_result:
-            res = np.clip(res, 0.0, 1.0)
-
         return res
 
     return sequence.apply_image_data(fn, coeff)
@@ -193,20 +181,22 @@ def _compensate_flatfield(
 
 @_sequence
 def compensate_flatfield(
-    sequence: ModuleImageOrSequence, coeff: np.ndarray, clip_result: bool = True
+    sequence: ModuleImageOrSequence, coeff: np.ndarray
 ) -> ModuleImageOrSequence:
     """Perform flat field correction
 
     Args:
         sequence (ModuleImageOrSequence): Sequence of images or single image
         coeff (np.ndarray): Compensation coefficients
-        clip_result (bool): Clip the result such that all pixels are in the range [0,1]
 
     Returns:
         sequence: The corrected images
     """
+    otype = sequence.dtype
     sequence = sequence.as_type(DType.FLOAT)
-    sequence = _compensate_flatfield(sequence, coeff, clip_result)
+    sequence = _compensate_flatfield(sequence, coeff)
+    if otype is not None:
+        sequence = sequence.as_type(otype)
 
     return sequence
 
@@ -253,6 +243,7 @@ class Calibration:
         self._ff_poly_order = ff_poly_order
         self._ff_use_median = ff_use_median
         self._ff_calibration = None
+        self._ff_dtype = None
         self._dist_calibration = None
 
     def calibrate_flatfield(
@@ -263,10 +254,17 @@ class Calibration:
 
         Args:
             images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots
-            targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+            targets (List[float]): Corresponding list of calibration targets. If images is an ImageSequence, specify
                 one target per element of the sequence. If images is a list of ImageSequence, specify one target
-                per element of the list.
+                per element of the list. The targets specify normalized intensity of the flatfield calibration image.
         """
+        if np.max(targets) != 1.0:
+            raise RuntimeError("One of the calibration targets must equal 1.0")
+        if np.min(targets) != 0.0:
+            raise RuntimeError("One of the calibration targets must equal 0.0")
+
+        # store dtype for later checks
+        self._ff_dtype = images.dtype
 
         self._ff_calibration = calibrate_flatfield(
             images=images,
@@ -290,11 +288,7 @@ class Calibration:
         )
 
     def process(
-        self,
-        images: ImageOrSequence,
-        clip_result: bool = True,
-        flatfield: bool = True,
-        distortion: bool = True,
+        self, images: ImageOrSequence, flatfield: bool = True, distortion: bool = True,
     ):
         """Process images and compensate camera artifacts
 
@@ -306,9 +300,13 @@ class Calibration:
         """
 
         if self._ff_calibration is not None and flatfield:
-            images = compensate_flatfield(
-                images, self._ff_calibration, clip_result=clip_result
-            )
+            if images.dtype != self._ff_dtype:
+                logging.warn(
+                    "Datatype of images ({}) differs from calibration images {}. This might lead to incorrect results.".format(
+                        images.dtype, self._ff_dtype
+                    )
+                )
+            images = compensate_flatfield(images, self._ff_calibration)
         elif flatfield:
             logging.warn(
                 "No flat-field calibration data available. Use calibrate_flatfield to perform calibration. Skipping flat-field compensation.."

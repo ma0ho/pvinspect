@@ -49,6 +49,7 @@ def test_calibrate_flatfield_linear():
     img0 = np.random.random((10, 10)) / 10
     img1 = (-np.random.random((10, 10)) / 10) + 1.0
     coeff = 1 / (img1 - img0)
+    coeff *= np.mean(img1)
 
     coeff_result = _calibrate_flatfield([img0, img1], [0, 1.0], order=1)
     assert_equal(coeff_result[1], coeff)
@@ -59,14 +60,15 @@ def test_calibrate_flatfield_quadratic():
     img0 = np.random.random((10, 10)) / 10
     img1 = np.random.random((10, 10)) / 10 + 0.5 - 0.05
     img2 = (-np.random.random((10, 10)) / 10) + 1.0
+    mean = np.mean(img2)
 
     def compensate(img, coeff):
         return coeff[2] * img ** 2 + coeff[1] * img + coeff[0]
 
     coeff = _calibrate_flatfield([img0, img1, img2], [0, 0.5, 1.0], order=2)
     assert_equal(np.zeros_like(img0), compensate(img0, coeff))
-    assert_equal(np.full_like(img1, 0.5), compensate(img1, coeff))
-    assert_equal(np.full_like(img1, 1.0), compensate(img2, coeff))
+    assert_equal(np.full_like(img1, 0.5 * mean), compensate(img1, coeff))
+    assert_equal(np.full_like(img1, 1.0 * mean), compensate(img2, coeff))
 
 
 def test_calibrate_flatfield_least_squares_linear():
@@ -74,6 +76,7 @@ def test_calibrate_flatfield_least_squares_linear():
     img2 = (-np.random.random((10, 10)) / 10) + 1.0
     coeff = 1 / (img2 - img0)
     img1 = (np.full_like(img0, 0.5) + img0) / coeff
+    coeff *= np.mean(img2)
     coeff_result = _calibrate_flatfield([img0, img1, img2], [0, 0.5, 1.0], order=1)
 
     assert_equal(coeff_result[1], coeff, 0.1)
@@ -85,7 +88,7 @@ def test_compensate_flatfield():
     coeff = np.random.random((4, 10, 10)) / 10
     target = coeff[0] + coeff[1] * img + coeff[2] * img ** 2 + coeff[3] * img ** 3
 
-    res = _compensate_flatfield(_make_image_seq([img]), coeff, clip_result=True)[0].data
+    res = _compensate_flatfield(_make_image_seq([img]), coeff)[0].data
     assert_equal(res, target, 0.1)
 
 
@@ -93,24 +96,43 @@ def test_calibrate_and_compensate_flatfield():
     img0 = np.random.random((10, 10)) / 10
     img1 = np.random.random((10, 10)) / 10 + 0.5 - 0.05
     img2 = (-np.random.random((10, 10)) / 10) + 1.0
+    mean = np.mean(img2)
 
     coeff = _calibrate_flatfield([img0, img1, img2], [0, 0.5, 1.0], order=2)
-    compensated = _compensate_flatfield(
-        _make_image_seq([img0, img1, img2]), coeff, clip_result=True
-    )
+    compensated = _compensate_flatfield(_make_image_seq([img0, img1, img2]), coeff)
     assert_equal(np.zeros_like(img0), compensated[0].data)
-    assert_equal(np.full_like(img1, 0.5), compensated[1].data)
-    assert_equal(np.full_like(img1, 1.0), compensated[2].data)
+    assert_equal(np.full_like(img1, 0.5 * mean), compensated[1].data)
+    assert_equal(np.full_like(img1, 1.0 * mean), compensated[2].data)
 
 
-def test_calibrate_and_compensate_preserves_range():
-    img0 = np.array([[0]], dtype=np.uint32)
-    img1 = np.array([[10000]], dtype=np.uint32)
-    img_test = np.array([[8000]], dtype=np.uint32)
+def test_calibrate_and_compensate_uint_preserves_range():
+    img0 = np.array([[0]], dtype=DTYPE_UNSIGNED_INT)
+    img1 = np.array([[10000]], dtype=DTYPE_UNSIGNED_INT)
+    img_test = np.array([[8000]], dtype=DTYPE_UNSIGNED_INT)
+
+    coeff = calibrate_flatfield(_make_image_seq([img0, img1]), [0, 1.0])
+    compensated = compensate_flatfield(_make_image_seq([img_test]), coeff)
+    assert_equal(compensated[0].data, 8000)
+
+
+def test_calibrate_and_compensate_float_preserves_range():
+    img0 = np.array([[0.0]], dtype=DTYPE_FLOAT)
+    img1 = np.array([[1.0]], dtype=DTYPE_FLOAT)
+    img_test = np.array([[0.8]], dtype=DTYPE_FLOAT)
 
     coeff = calibrate_flatfield(_make_image_seq([img0, img1]), [0, 1.0])
     compensated = compensate_flatfield(_make_image_seq([img_test]), coeff)
     assert_equal(compensated[0].data, 0.8)
+
+
+def test_calibrate_and_compensate_int_preserves_range():
+    img0 = np.array([[-10]], dtype=DTYPE_INT)
+    img1 = np.array([[10]], dtype=DTYPE_INT)
+    img_test = np.array([[0]], dtype=DTYPE_INT)
+
+    coeff = calibrate_flatfield(_make_image_seq([img0, img1]), [0, 1.0])
+    compensated = compensate_flatfield(_make_image_seq([img_test]), coeff)
+    assert_equal(compensated[0].data, 0)
 
 
 def test_calibrate_and_compensate_flatfield_realdata():
@@ -119,9 +141,7 @@ def test_calibrate_and_compensate_flatfield_realdata():
     coeff = calibrate_flatfield(imgs_list, ex_list)
     compensated = compensate_flatfield(test_img, coeff)
     data = compensated.data
-    assert data.min() >= 0.0
-    assert data.max() <= 1.0
-    assert data.std() <= 0.01
+    assert data.std() <= 0.01 * np.mean(test_img.data)
 
 
 def test_calibrate_distortion():
@@ -188,31 +208,4 @@ def test_flatfield_sequences_input():
     comp = compensate_flatfield(test_img, coeff)
 
     data = comp.data
-    assert data.min() >= 0.0
-    assert data.max() <= 1.0
-    assert data.std() <= 0.01
-
-
-def test_flatfield_clipping():
-    ff_imgs, ex_list = _prepare_ff_data()
-    test_img = _prepare_ff_test_img()
-
-    # perform calibration
-    calib = Calibration()
-    calib.calibrate_flatfield(images=ff_imgs, targets=ex_list)
-
-    # set very high/low intensity
-    data = test_img.data.copy()
-    data[:200] = np.iinfo(data.dtype).max
-    data[200:] = np.iinfo(data.dtype).min
-    test_img = Image.from_other(test_img, data=data)
-
-    # with clipping (default)
-    result_clip = calib.process(test_img)
-    assert result_clip.data.max() <= 1.0
-    assert result_clip.data.min() >= 0.0
-
-    # without clipping
-    result_noclip = calib.process(test_img, clip_result=False, distortion=False)
-    assert result_noclip.data.max() > 1.0
-    assert result_noclip.data.min() < 0.0
+    assert data.std() <= 0.01 * np.mean(seqs[1][0].data)

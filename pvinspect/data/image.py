@@ -32,14 +32,14 @@ PL_IMAGE = 1
 
 
 # datatypes
-DTYPE_INT = np.int64
-DTYPE_UNSIGNED_INT = np.uint32
+DTYPE_INT = np.int32
+DTYPE_UNSIGNED_INT = np.uint16
 DTYPE_FLOAT = np.float64
 img_as_float = img_as_float64
 
 
 class DType(Enum):
-    INT = (0,)
+    INT = 0
     UNSIGNED_INT = 1
     FLOAT = 2
 
@@ -238,6 +238,32 @@ class Image(_Base):
         self._path = path
         self._modality = modality
         self._meta = meta
+
+        # unify datatypes
+        if self.dtype == DType.UNSIGNED_INT and self._data.dtype != DTYPE_UNSIGNED_INT:
+            if (
+                self._data.max() > np.iinfo(DTYPE_UNSIGNED_INT).max
+                or self._data.min() < np.iinfo(DTYPE_UNSIGNED_INT).min
+            ):
+                raise RuntimeError(
+                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
+                        DTYPE_UNSIGNED_INT
+                    )
+                )
+            self._data = self._data.astype(DTYPE_UNSIGNED_INT)
+        if self.dtype == DType.INT and self._data.dtype != DTYPE_INT:
+            if (
+                self._data.max() > np.iinfo(DTYPE_INT).max
+                or self._data.min() < np.iinfo(DTYPE_INT).min
+            ):
+                raise RuntimeError(
+                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
+                        DTYPE_INT
+                    )
+                )
+            self._data = self._data.astype(DTYPE_INT)
+        if self.dtype == DType.FLOAT and self._data.dtype != DTYPE_FLOAT:
+            self._data = self._data.astype(DTYPE_FLOAT)
 
     def show(self, **kwargs):
         """Show this image"""

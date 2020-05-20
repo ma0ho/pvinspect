@@ -10,7 +10,9 @@ from pvinspect.data import (
 
 
 def assert_equal(value, target, precision=1e-3):
-    assert np.all(value > target - precision) and np.all(value < target + precision)
+    assert np.all(value > target - precision) and np.all(
+        value < target + precision
+    ), "got value={}, target={}".format(value, target)
 
 
 def random_image(**kwargs) -> Image:
