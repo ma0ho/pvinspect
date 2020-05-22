@@ -372,6 +372,8 @@ def save_images(
     sequence: ImageSequence,
     mkdir: bool = True,
     with_visualization: bool = False,
+    hierarchical: List[str] = None,
+    include_meta_keys: bool = True,
     **kwargs
 ):
     """Write a sequence of images to disk
@@ -381,6 +383,8 @@ def save_images(
         sequence (ImageSequence): The sequence of images
         mkdir (bool): Automatically create missing directories
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
+        hierarchical (List[str]): Create a directory hierarchy using given meta keys
+        include_meta_keys (bool): Indicate, if meta keys should be included in the folder names
     """
 
     path = __assurePath(path)
@@ -389,13 +393,27 @@ def save_images(
         path.mkdir(parents=True, exist_ok=True)
 
     for image in tqdm(sequence.images):
+
         if isinstance(image, CellImage):
             name = "{}_row{:02d}_col{:02d}{}".format(
                 image.path.stem, image.row, image.col, image.path.suffix
             )
         else:
             name = image.path.name
-        save_image(path / name, image, with_visusalization=with_visualization, **kwargs)
+
+        fpath = path
+        if hierarchical is not None:
+            for mk in hierarchical:
+                if not include_meta_keys:
+                    fpath /= str(image.get_meta(mk))
+                else:
+                    fpath /= "{}_{}".format(mk, str(image.get_meta(mk)))
+
+        if mkdir:
+            fpath.mkdir(parents=True, exist_ok=True)
+
+        fpath /= name
+        save_image(fpath, image, with_visusalization=with_visualization, **kwargs)
 
 
 def load_json_object_masks(path: PathOrStr) -> ObjectAnnotations:

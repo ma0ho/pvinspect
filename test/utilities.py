@@ -21,7 +21,7 @@ def random_image(**kwargs) -> Image:
     if "modality" not in kwargs.keys():
         kwargs["modality"] = EL_IMAGE
     if "path" not in kwargs.keys():
-        kwargs["path"] = Path() / "test.png"
+        kwargs["path"] = Path() / "test.tif"
 
     return Image(data, **kwargs)
 
@@ -33,7 +33,7 @@ def random_uint_image() -> Image:
 
 def random_module_image() -> ModuleImage:
     data = np.random.random((10, 10))
-    return ModuleImage(data, EL_IMAGE, Path() / "test.png")
+    return ModuleImage(data, EL_IMAGE, Path() / "test.tif")
 
 
 def random_image_sequence() -> ImageSequence:

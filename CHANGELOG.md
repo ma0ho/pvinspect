@@ -12,6 +12,7 @@
 * Add pandas compability for Image meta
 * Automatic extraction of meta data from image path
 * Automatic scaling of image intensities using reference cell
+* Hierarchical save based on image meta
 
 ## 0.1.6
 

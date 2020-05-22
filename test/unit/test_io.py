@@ -158,3 +158,36 @@ def test_save_float_image_conversion(tmp_path: Path):
 
     img = imread(tmp_path / "test.tif")
     assert img.dtype == np.float32
+
+
+def test_hierachical_with_keys_save(tmp_path: Path):
+    img1 = random_image(meta={"m1": 1, "m2": 1})
+    img2 = random_image(meta={"m1": 1, "m2": 2})
+    img3 = random_image(meta={"m1": 2, "m2": 1})
+    seq = ImageSequence([img1, img2, img3], same_camera=True)
+
+    save_images(tmp_path, seq, hierarchical=["m1", "m2"])
+
+    for img in seq:
+        p = (
+            tmp_path
+            / ("m1_" + str(img.get_meta("m1")))
+            / ("m2_" + str(img.get_meta("m2")))
+            / img.path.name
+        )
+        ref = read_image(p)
+        assert_equal(img.data, ref.data)
+
+
+def test_hierachical_without_keys_save(tmp_path: Path):
+    img1 = random_image(meta={"m1": 1, "m2": 1})
+    img2 = random_image(meta={"m1": 1, "m2": 2})
+    img3 = random_image(meta={"m1": 2, "m2": 1})
+    seq = ImageSequence([img1, img2, img3], same_camera=True)
+
+    save_images(tmp_path, seq, hierarchical=["m1", "m2"], include_meta_keys=False)
+
+    for img in seq:
+        p = tmp_path / str(img.get_meta("m1")) / str(img.get_meta("m2")) / img.path.name
+        ref = read_image(p)
+        assert_equal(img.data, ref.data)
