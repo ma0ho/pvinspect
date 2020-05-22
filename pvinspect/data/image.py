@@ -102,7 +102,7 @@ def _register_default_plugins():
                 plt.plot(
                     *box[1].exterior.xy,
                     linewidth=multimodule_boxes_linewidth,
-                    color=color
+                    color=color,
                 )
 
     register_show_plugin(multimodule_show_boxes)
@@ -144,6 +144,25 @@ def _register_default_plugins():
                 )
 
     register_show_plugin(multimodule_show_numbers)
+
+    def calibration_show_reference_box(
+        image: Image,
+        calibration_show_reference_box: bool = True,
+        calibration_reference_box_color="red",
+        **kwargs
+    ):
+        if (
+            calibration_show_reference_box
+            and isinstance(image, Image)
+            and image.has_meta("calibration_reference_box")
+        ):
+            plt.plot(
+                *image.get_meta("calibration_reference_box").exterior.xy,
+                # linewidth=multimodule_boxes_linewidth,
+                color=calibration_reference_box_color,
+            )
+
+    register_show_plugin(calibration_show_reference_box)
 
     def show_image(
         image: Image,
