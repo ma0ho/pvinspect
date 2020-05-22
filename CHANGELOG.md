@@ -1,6 +1,6 @@
 # Changelog
 
-## In development
+## 0.2.0
 
 * Remove unnecessary copy operations: `Image.data` now always returns an immutable view of the original data. The
   same holds for accessing meta attributes that are `np.ndarray`
