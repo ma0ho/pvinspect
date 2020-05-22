@@ -16,6 +16,10 @@ from skimage.exposure import rescale_intensity
 import os
 import logging
 import pickle
+from shapely.geometry import Polygon
+from shapely.affinity import scale
+from skimage import transform, morphology, measure, filters
+from typing import Union
 
 
 def _calibrate_flatfield(
@@ -179,6 +183,60 @@ def _compensate_flatfield(
     return sequence.apply_image_data(fn, coeff)
 
 
+def _do_locate_reference_cell(
+    image: Image, reference_area: int, scale: float = 0.1,
+) -> Polygon:
+    """Perform localization of reference cell"""
+
+    # approximate reference area
+    reference_area = reference_area * scale ** 2
+
+    # filter + binarize
+    image_f = transform.rescale(image.data, scale)
+    image_f = image_f > filters.threshold_multiotsu(image_f, classes=5)[0]
+
+    # find regions
+    labeled = morphology.label(image_f)
+    regions = measure.regionprops(labeled)
+
+    # drop areas that are not approximately square
+    regions = [
+        r
+        for r in regions
+        if np.abs(r.bbox[2] - r.bbox[0]) / np.abs(r.bbox[3] - r.bbox[1]) > 0.8
+        and np.abs(r.bbox[2] - r.bbox[0]) / np.abs(r.bbox[3] - r.bbox[1]) < 1.8
+    ]
+
+    # process regions
+    area_dev = [np.abs((r.area - reference_area) / reference_area) for r in regions]
+
+    min_dev_idx = np.argmin(area_dev)
+
+    if area_dev[min_dev_idx] < 1.0:
+        # detected
+        bbox = [int(regions[min_dev_idx].bbox[i] * 1 / scale) for i in range(4)]
+        y0, x0 = max(0, bbox[0]), max(0, bbox[1])
+        y1, x1 = (
+            min(image.shape[0], bbox[2]),
+            min(image.shape[1], bbox[3]),
+        )
+        return Polygon.from_bounds(x0, y0, x1, y1)
+    else:
+        return None
+
+
+def _do_reference_scaling(
+    image: Image, area: Polygon, ref: Union[float, int],
+) -> Image:
+    """Compute mean intensity over area area and rescale image"""
+    x, y = list(zip(*area.exterior.coords))
+    xmin, xmax = np.min(x), np.max(x)
+    ymin, ymax = np.min(y), np.max(y)
+    median = np.median(image.data[int(ymin) : int(ymax), int(xmin) : int(xmax)])
+    data = (image.data * (ref / median)).astype(image.data.dtype)
+    return image.from_other(image, data=data, meta={"calibration_reference_box": area})
+
+
 @_sequence
 def compensate_flatfield(
     sequence: ModuleImageOrSequence, coeff: np.ndarray
@@ -264,7 +322,7 @@ class Calibration:
             raise RuntimeError("One of the calibration targets must equal 0.0")
 
         # store dtype for later checks
-        self._ff_dtype = images.dtype
+        self._ff_dtype = images[0].dtype
 
         self._ff_calibration = calibrate_flatfield(
             images=images,
@@ -288,15 +346,24 @@ class Calibration:
         )
 
     def process(
-        self, images: ImageOrSequence, flatfield: bool = True, distortion: bool = True,
+        self,
+        images: ImageOrSequence,
+        flatfield: bool = True,
+        distortion: bool = True,
+        reference_cell_area: int = None,
+        reference_intensity_key: str = None,
     ):
-        """Process images and compensate camera artifacts
+        """Process images and compensate camera artifacts, optionally normalize using reference cell
 
         Args:
             images (ImageOrSequence): Sequence of images or single image
             clip_result (bool): Clip the result such that all pixels are in the range [0,1]
             flatfield (bool): Perform flat-field compensation
             distortion (bool): Perform distortion compensation
+            reference_cell_area (int): Approximate area of the reference cell in pixels. If set
+                images are automatically normalizes such that the reference cell intensity
+                matches values given by meta attribute reference_intensity_key
+            reference_intensity_key (str): Meta key that holds the reference intensity
         """
 
         if self._ff_calibration is not None and flatfield:
@@ -318,6 +385,17 @@ class Calibration:
             logging.warn(
                 "No distortion calibration data available. Use calibrate_distortion to perform calibration. Skipping distortion compensation.."
             )
+
+        if reference_cell_area is not None and reference_intensity_key is not None:
+
+            def fn(x: Image):
+                box = _do_locate_reference_cell(x, reference_cell_area)
+                box = scale(box, xfact=0.5, yfact=0.5)
+                return _do_reference_scaling(
+                    x, box, x.get_meta(reference_intensity_key)
+                )
+
+            images = images.apply(fn)
 
         return images
 
