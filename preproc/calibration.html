@@ -43,6 +43,10 @@ from skimage.exposure import rescale_intensity
 import os
 import logging
 import pickle
+from shapely.geometry import Polygon
+from shapely.affinity import scale
+from skimage import transform, morphology, measure, filters
+from typing import Union
 
 
 def _calibrate_flatfield(
@@ -63,7 +67,11 @@ def _calibrate_flatfield(
                 [img[i] for img in imgs], targets, order
             )
 
-    # coeff = np.nan_to_num(coeff)
+    # perserve mean of ff-image with highest intensity
+    maxi = np.argmax(targets)
+    mean = np.mean(images[maxi])
+    coeff *= mean
+
     return coeff.reshape((order + 1, images[0].shape[0], images[0].shape[1]))
 
 
@@ -78,9 +86,9 @@ def calibrate_flatfield(
 
     Args:
         images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots or list of sequences
-        targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+        targets (List[float]): Corresponding list of calibration targets. If images is an ImageSequence, specify
             one target per element of the sequence. If images is a list of ImageSequence, specify one target
-            per element of the list.
+            per element of the list. The targets specify normalized intensity of the flatfield calibration image.
         order (int): Order of compensation polynomial. The order is chosen automatically, if order == -1 (default)
         use_median (bool): Use the median of all images with the same target
 
@@ -188,19 +196,7 @@ def calibrate_distortion(
 def _compensate_flatfield(
     sequence: ModuleImageOrSequence, coeff: np.ndarray
 ) -&gt; ModuleImageOrSequence:
-    &#34;&#34;&#34;Low level method to perform flat field correction
-
-    Args:
-        sequence (ModuleImageOrSequence): Sequence of images or single image (needs to be of type float)
-        coeff (np.ndarray): Compensation coefficients
-
-    Returns:
-        sequence: The corrected images
-    &#34;&#34;&#34;
-    if sequence.dtype != DType.FLOAT:
-        raise InvalidArgumentException(
-            &#34;Images must be converted to DType.FLOAT, before applying flat-field-correction&#34;
-        )
+    &#34;&#34;&#34;Low level method to perform flat field correction&#34;&#34;&#34;
 
     def fn(data, coeff):
         res = coeff[0].copy()
@@ -208,9 +204,64 @@ def _compensate_flatfield(
         for i in range(1, coeff.shape[0]):
             res += coeff[i] * data
             data *= data
-        return np.clip(res, 0.0, 1.0)
+
+        return res
 
     return sequence.apply_image_data(fn, coeff)
+
+
+def _do_locate_reference_cell(
+    image: Image, reference_area: int, scale: float = 0.1,
+) -&gt; Polygon:
+    &#34;&#34;&#34;Perform localization of reference cell&#34;&#34;&#34;
+
+    # approximate reference area
+    reference_area = reference_area * scale ** 2
+
+    # filter + binarize
+    image_f = transform.rescale(image.data, scale)
+    image_f = image_f &gt; filters.threshold_multiotsu(image_f, classes=5)[0]
+
+    # find regions
+    labeled = morphology.label(image_f)
+    regions = measure.regionprops(labeled)
+
+    # drop areas that are not approximately square
+    regions = [
+        r
+        for r in regions
+        if np.abs(r.bbox[2] - r.bbox[0]) / np.abs(r.bbox[3] - r.bbox[1]) &gt; 0.8
+        and np.abs(r.bbox[2] - r.bbox[0]) / np.abs(r.bbox[3] - r.bbox[1]) &lt; 1.8
+    ]
+
+    # process regions
+    area_dev = [np.abs((r.area - reference_area) / reference_area) for r in regions]
+
+    min_dev_idx = np.argmin(area_dev)
+
+    if area_dev[min_dev_idx] &lt; 1.0:
+        # detected
+        bbox = [int(regions[min_dev_idx].bbox[i] * 1 / scale) for i in range(4)]
+        y0, x0 = max(0, bbox[0]), max(0, bbox[1])
+        y1, x1 = (
+            min(image.shape[0], bbox[2]),
+            min(image.shape[1], bbox[3]),
+        )
+        return Polygon.from_bounds(x0, y0, x1, y1)
+    else:
+        return None
+
+
+def _do_reference_scaling(
+    image: Image, area: Polygon, ref: Union[float, int],
+) -&gt; Image:
+    &#34;&#34;&#34;Compute mean intensity over area area and rescale image&#34;&#34;&#34;
+    x, y = list(zip(*area.exterior.coords))
+    xmin, xmax = np.min(x), np.max(x)
+    ymin, ymax = np.min(y), np.max(y)
+    median = np.median(image.data[int(ymin) : int(ymax), int(xmin) : int(xmax)])
+    data = (image.data * (ref / median)).astype(image.data.dtype)
+    return image.from_other(image, data=data, meta={&#34;calibration_reference_box&#34;: area})
 
 
 @_sequence
@@ -226,8 +277,11 @@ def compensate_flatfield(
     Returns:
         sequence: The corrected images
     &#34;&#34;&#34;
+    otype = sequence.dtype
     sequence = sequence.as_type(DType.FLOAT)
     sequence = _compensate_flatfield(sequence, coeff)
+    if otype is not None:
+        sequence = sequence.as_type(otype)
 
     return sequence
 
@@ -274,6 +328,7 @@ class Calibration:
         self._ff_poly_order = ff_poly_order
         self._ff_use_median = ff_use_median
         self._ff_calibration = None
+        self._ff_dtype = None
         self._dist_calibration = None
 
     def calibrate_flatfield(
@@ -284,10 +339,17 @@ class Calibration:
 
         Args:
             images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots
-            targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+            targets (List[float]): Corresponding list of calibration targets. If images is an ImageSequence, specify
                 one target per element of the sequence. If images is a list of ImageSequence, specify one target
-                per element of the list.
+                per element of the list. The targets specify normalized intensity of the flatfield calibration image.
         &#34;&#34;&#34;
+        if np.max(targets) != 1.0:
+            raise RuntimeError(&#34;One of the calibration targets must equal 1.0&#34;)
+        if np.min(targets) != 0.0:
+            raise RuntimeError(&#34;One of the calibration targets must equal 0.0&#34;)
+
+        # store dtype for later checks
+        self._ff_dtype = images[0].dtype
 
         self._ff_calibration = calibrate_flatfield(
             images=images,
@@ -310,26 +372,57 @@ class Calibration:
             images=images, checkerboard_size=checkerboard_size
         )
 
-    def process(self, images: ImageOrSequence):
-        &#34;&#34;&#34;Process images and compensate camera artifacts
+    def process(
+        self,
+        images: ImageOrSequence,
+        flatfield: bool = True,
+        distortion: bool = True,
+        reference_cell_area: int = None,
+        reference_intensity_key: str = None,
+    ):
+        &#34;&#34;&#34;Process images and compensate camera artifacts, optionally normalize using reference cell
 
         Args:
             images (ImageOrSequence): Sequence of images or single image
+            clip_result (bool): Clip the result such that all pixels are in the range [0,1]
+            flatfield (bool): Perform flat-field compensation
+            distortion (bool): Perform distortion compensation
+            reference_cell_area (int): Approximate area of the reference cell in pixels. If set
+                images are automatically normalizes such that the reference cell intensity
+                matches values given by meta attribute reference_intensity_key
+            reference_intensity_key (str): Meta key that holds the reference intensity
         &#34;&#34;&#34;
 
-        if self._ff_calibration is not None:
+        if self._ff_calibration is not None and flatfield:
+            if images.dtype != self._ff_dtype:
+                logging.warn(
+                    &#34;Datatype of images ({}) differs from calibration images {}. This might lead to incorrect results.&#34;.format(
+                        images.dtype, self._ff_dtype
+                    )
+                )
             images = compensate_flatfield(images, self._ff_calibration)
-        else:
+        elif flatfield:
             logging.warn(
                 &#34;No flat-field calibration data available. Use calibrate_flatfield to perform calibration. Skipping flat-field compensation..&#34;
             )
 
-        if self._dist_calibration is not None:
+        if self._dist_calibration is not None and distortion:
             images = compensate_distortion(images, *self._dist_calibration)
-        else:
+        elif distortion:
             logging.warn(
                 &#34;No distortion calibration data available. Use calibrate_distortion to perform calibration. Skipping distortion compensation..&#34;
             )
+
+        if reference_cell_area is not None and reference_intensity_key is not None:
+
+            def fn(x: Image):
+                box = _do_locate_reference_cell(x, reference_cell_area)
+                box = scale(box, xfact=0.5, yfact=0.5)
+                return _do_reference_scaling(
+                    x, box, x.get_meta(reference_intensity_key)
+                )
+
+            images = images.apply(fn)
 
         return images
 
@@ -460,9 +553,9 @@ with the same normalization target. In that case, a least-squares estimate is co
 <dt><strong><code>images</code></strong> :&ensp;<code>Union[ImageSequence, List[ImageSequence]]</code></dt>
 <dd>Sequence of calibration shots or list of sequences</dd>
 <dt><strong><code>targets</code></strong> :&ensp;<code>List[float]</code></dt>
-<dd>Corresponding list of normalization targets. If images is an ImageSequence, specify
+<dd>Corresponding list of calibration targets. If images is an ImageSequence, specify
 one target per element of the sequence. If images is a list of ImageSequence, specify one target
-per element of the list.</dd>
+per element of the list. The targets specify normalized intensity of the flatfield calibration image.</dd>
 <dt><strong><code>order</code></strong> :&ensp;<code>int</code></dt>
 <dd>Order of compensation polynomial. The order is chosen automatically, if order == -1 (default)</dd>
 <dt><strong><code>use_median</code></strong> :&ensp;<code>bool</code></dt>
@@ -488,9 +581,9 @@ per element of the list.</dd>
 
     Args:
         images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots or list of sequences
-        targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+        targets (List[float]): Corresponding list of calibration targets. If images is an ImageSequence, specify
             one target per element of the sequence. If images is a list of ImageSequence, specify one target
-            per element of the list.
+            per element of the list. The targets specify normalized intensity of the flatfield calibration image.
         order (int): Order of compensation polynomial. The order is chosen automatically, if order == -1 (default)
         use_median (bool): Use the median of all images with the same target
 
@@ -626,8 +719,11 @@ def compensate_flatfield(
     Returns:
         sequence: The corrected images
     &#34;&#34;&#34;
+    otype = sequence.dtype
     sequence = sequence.as_type(DType.FLOAT)
     sequence = _compensate_flatfield(sequence, coeff)
+    if otype is not None:
+        sequence = sequence.as_type(otype)
 
     return sequence</code></pre>
 </details>
@@ -702,6 +798,7 @@ def compensate_flatfield(
         self._ff_poly_order = ff_poly_order
         self._ff_use_median = ff_use_median
         self._ff_calibration = None
+        self._ff_dtype = None
         self._dist_calibration = None
 
     def calibrate_flatfield(
@@ -712,10 +809,17 @@ def compensate_flatfield(
 
         Args:
             images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots
-            targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+            targets (List[float]): Corresponding list of calibration targets. If images is an ImageSequence, specify
                 one target per element of the sequence. If images is a list of ImageSequence, specify one target
-                per element of the list.
+                per element of the list. The targets specify normalized intensity of the flatfield calibration image.
         &#34;&#34;&#34;
+        if np.max(targets) != 1.0:
+            raise RuntimeError(&#34;One of the calibration targets must equal 1.0&#34;)
+        if np.min(targets) != 0.0:
+            raise RuntimeError(&#34;One of the calibration targets must equal 0.0&#34;)
+
+        # store dtype for later checks
+        self._ff_dtype = images[0].dtype
 
         self._ff_calibration = calibrate_flatfield(
             images=images,
@@ -738,26 +842,57 @@ def compensate_flatfield(
             images=images, checkerboard_size=checkerboard_size
         )
 
-    def process(self, images: ImageOrSequence):
-        &#34;&#34;&#34;Process images and compensate camera artifacts
+    def process(
+        self,
+        images: ImageOrSequence,
+        flatfield: bool = True,
+        distortion: bool = True,
+        reference_cell_area: int = None,
+        reference_intensity_key: str = None,
+    ):
+        &#34;&#34;&#34;Process images and compensate camera artifacts, optionally normalize using reference cell
 
         Args:
             images (ImageOrSequence): Sequence of images or single image
+            clip_result (bool): Clip the result such that all pixels are in the range [0,1]
+            flatfield (bool): Perform flat-field compensation
+            distortion (bool): Perform distortion compensation
+            reference_cell_area (int): Approximate area of the reference cell in pixels. If set
+                images are automatically normalizes such that the reference cell intensity
+                matches values given by meta attribute reference_intensity_key
+            reference_intensity_key (str): Meta key that holds the reference intensity
         &#34;&#34;&#34;
 
-        if self._ff_calibration is not None:
+        if self._ff_calibration is not None and flatfield:
+            if images.dtype != self._ff_dtype:
+                logging.warn(
+                    &#34;Datatype of images ({}) differs from calibration images {}. This might lead to incorrect results.&#34;.format(
+                        images.dtype, self._ff_dtype
+                    )
+                )
             images = compensate_flatfield(images, self._ff_calibration)
-        else:
+        elif flatfield:
             logging.warn(
                 &#34;No flat-field calibration data available. Use calibrate_flatfield to perform calibration. Skipping flat-field compensation..&#34;
             )
 
-        if self._dist_calibration is not None:
+        if self._dist_calibration is not None and distortion:
             images = compensate_distortion(images, *self._dist_calibration)
-        else:
+        elif distortion:
             logging.warn(
                 &#34;No distortion calibration data available. Use calibrate_distortion to perform calibration. Skipping distortion compensation..&#34;
             )
+
+        if reference_cell_area is not None and reference_intensity_key is not None:
+
+            def fn(x: Image):
+                box = _do_locate_reference_cell(x, reference_cell_area)
+                box = scale(box, xfact=0.5, yfact=0.5)
+                return _do_reference_scaling(
+                    x, box, x.get_meta(reference_intensity_key)
+                )
+
+            images = images.apply(fn)
 
         return images
 
@@ -815,9 +950,9 @@ with the same normalization target. In that case, a least-squares estimate is co
 <dt><strong><code>images</code></strong> :&ensp;<code>Union[ImageSequence, List[ImageSequence]]</code></dt>
 <dd>Sequence of calibration shots</dd>
 <dt><strong><code>targets</code></strong> :&ensp;<code>List[float]</code></dt>
-<dd>Corresponding list of normalization targets. If images is an ImageSequence, specify
+<dd>Corresponding list of calibration targets. If images is an ImageSequence, specify
 one target per element of the sequence. If images is a list of ImageSequence, specify one target
-per element of the list.</dd>
+per element of the list. The targets specify normalized intensity of the flatfield calibration image.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -831,10 +966,17 @@ per element of the list.</dd>
 
     Args:
         images (Union[ImageSequence, List[ImageSequence]]): Sequence of calibration shots
-        targets (List[float]): Corresponding list of normalization targets. If images is an ImageSequence, specify
+        targets (List[float]): Corresponding list of calibration targets. If images is an ImageSequence, specify
             one target per element of the sequence. If images is a list of ImageSequence, specify one target
-            per element of the list.
+            per element of the list. The targets specify normalized intensity of the flatfield calibration image.
     &#34;&#34;&#34;
+    if np.max(targets) != 1.0:
+        raise RuntimeError(&#34;One of the calibration targets must equal 1.0&#34;)
+    if np.min(targets) != 0.0:
+        raise RuntimeError(&#34;One of the calibration targets must equal 0.0&#34;)
+
+    # store dtype for later checks
+    self._ff_dtype = images[0].dtype
 
     self._ff_calibration = calibrate_flatfield(
         images=images,
@@ -845,39 +987,82 @@ per element of the list.</dd>
 </details>
 </dd>
 <dt id="pvinspect.preproc.calibration.Calibration.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>self, images: Union[pvinspect.data.image.Image, pvinspect.data.image.ImageSequence])</span>
+<span>def <span class="ident">process</span></span>(<span>self, images: Union[pvinspect.data.image.Image, pvinspect.data.image.ImageSequence], flatfield: bool = True, distortion: bool = True, reference_cell_area: int = None, reference_intensity_key: str = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Process images and compensate camera artifacts</p>
+<div class="desc"><p>Process images and compensate camera artifacts, optionally normalize using reference cell</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>images</code></strong> :&ensp;<code>ImageOrSequence</code></dt>
 <dd>Sequence of images or single image</dd>
+<dt><strong><code>clip_result</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Clip the result such that all pixels are in the range [0,1]</dd>
+<dt><strong><code>flatfield</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Perform flat-field compensation</dd>
+<dt><strong><code>distortion</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Perform distortion compensation</dd>
+<dt><strong><code>reference_cell_area</code></strong> :&ensp;<code>int</code></dt>
+<dd>Approximate area of the reference cell in pixels. If set
+images are automatically normalizes such that the reference cell intensity
+matches values given by meta attribute reference_intensity_key</dd>
+<dt><strong><code>reference_intensity_key</code></strong> :&ensp;<code>str</code></dt>
+<dd>Meta key that holds the reference intensity</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process(self, images: ImageOrSequence):
-    &#34;&#34;&#34;Process images and compensate camera artifacts
+<pre><code class="python">def process(
+    self,
+    images: ImageOrSequence,
+    flatfield: bool = True,
+    distortion: bool = True,
+    reference_cell_area: int = None,
+    reference_intensity_key: str = None,
+):
+    &#34;&#34;&#34;Process images and compensate camera artifacts, optionally normalize using reference cell
 
     Args:
         images (ImageOrSequence): Sequence of images or single image
+        clip_result (bool): Clip the result such that all pixels are in the range [0,1]
+        flatfield (bool): Perform flat-field compensation
+        distortion (bool): Perform distortion compensation
+        reference_cell_area (int): Approximate area of the reference cell in pixels. If set
+            images are automatically normalizes such that the reference cell intensity
+            matches values given by meta attribute reference_intensity_key
+        reference_intensity_key (str): Meta key that holds the reference intensity
     &#34;&#34;&#34;
 
-    if self._ff_calibration is not None:
+    if self._ff_calibration is not None and flatfield:
+        if images.dtype != self._ff_dtype:
+            logging.warn(
+                &#34;Datatype of images ({}) differs from calibration images {}. This might lead to incorrect results.&#34;.format(
+                    images.dtype, self._ff_dtype
+                )
+            )
         images = compensate_flatfield(images, self._ff_calibration)
-    else:
+    elif flatfield:
         logging.warn(
             &#34;No flat-field calibration data available. Use calibrate_flatfield to perform calibration. Skipping flat-field compensation..&#34;
         )
 
-    if self._dist_calibration is not None:
+    if self._dist_calibration is not None and distortion:
         images = compensate_distortion(images, *self._dist_calibration)
-    else:
+    elif distortion:
         logging.warn(
             &#34;No distortion calibration data available. Use calibrate_distortion to perform calibration. Skipping distortion compensation..&#34;
         )
+
+    if reference_cell_area is not None and reference_intensity_key is not None:
+
+        def fn(x: Image):
+            box = _do_locate_reference_cell(x, reference_cell_area)
+            box = scale(box, xfact=0.5, yfact=0.5)
+            return _do_reference_scaling(
+                x, box, x.get_meta(reference_intensity_key)
+            )
+
+        images = images.apply(fn)
 
     return images</code></pre>
 </details>
