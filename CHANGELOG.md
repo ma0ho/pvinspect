@@ -11,6 +11,7 @@
 * Allow to disable clipping result of flat-field compensation
 * Add pandas compability for Image meta
 * Automatic extraction of meta data from image path
+* Automatic scaling of image intensities using reference cell
 
 ## 0.1.6
 
