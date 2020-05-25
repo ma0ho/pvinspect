@@ -1,5 +1,9 @@
 # Changelog
 
+## In development
+
+* Fix broken Windows installation
+
 ## 0.2.0
 
 * Remove unnecessary copy operations: `Image.data` now always returns an immutable view of the original data. The

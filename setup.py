@@ -6,26 +6,6 @@ import os
 from subprocess import check_call
 
 
-class PostDevelopCommand(develop):
-    """Post-installation for development mode."""
-
-    def run(self):
-        develop.run(self)
-        # we need to explicitly install shapely using conda in a conda environment on windows
-        if sys.platform == "win32" and os.getenv("CONDA_PREFIX", ""):
-            check_call("conda install -y shapely".split())
-
-
-class PostInstallCommand(install):
-    """Post-installation for installation mode."""
-
-    def run(self):
-        install.run(self)
-        # we need to explicitly install shapely using conda in a conda environment on windows
-        if sys.platform == "win32" and os.getenv("CONDA_PREFIX", ""):
-            check_call("conda install -y shapely".split())
-
-
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
