@@ -1,6 +1,6 @@
 # Changelog
 
-## In development
+## 0.2.1
 
 * Fix broken Windows installation
 
