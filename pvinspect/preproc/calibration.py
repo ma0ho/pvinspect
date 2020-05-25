@@ -17,9 +17,10 @@ import os
 import logging
 import pickle
 from shapely.geometry import Polygon
-from shapely.affinity import scale
+from shapely import affinity
 from skimage import transform, morphology, measure, filters
 from typing import Union
+import logging
 
 
 def _calibrate_flatfield(
@@ -188,15 +189,14 @@ def _do_locate_reference_cell(
 ) -> Polygon:
     """Perform localization of reference cell"""
 
-    # approximate reference area
-    reference_area = reference_area * scale ** 2
-
     # filter + binarize
     image_f = transform.rescale(image.data, scale)
-    image_f = image_f > filters.threshold_multiotsu(image_f, classes=5)[0]
+
+    thresh = filters.threshold_multiotsu(image_f, classes=5)[0]
+    image_t = image_f > thresh
 
     # find regions
-    labeled = morphology.label(image_f)
+    labeled = morphology.label(image_t)
     regions = measure.regionprops(labeled)
 
     # drop areas that are not approximately square
@@ -207,20 +207,29 @@ def _do_locate_reference_cell(
         and np.abs(r.bbox[2] - r.bbox[0]) / np.abs(r.bbox[3] - r.bbox[1]) < 1.8
     ]
 
-    # process regions
-    area_dev = [np.abs((r.area - reference_area) / reference_area) for r in regions]
-
-    min_dev_idx = np.argmin(area_dev)
-
-    if area_dev[min_dev_idx] < 1.0:
-        # detected
-        bbox = [int(regions[min_dev_idx].bbox[i] * 1 / scale) for i in range(4)]
+    # convert to Polygon
+    tmp: List[Polygon] = []
+    for r in regions:
+        bbox = [int(r.bbox[i] * 1 / scale) for i in range(4)]
         y0, x0 = max(0, bbox[0]), max(0, bbox[1])
         y1, x1 = (
             min(image.shape[0], bbox[2]),
             min(image.shape[1], bbox[3]),
         )
-        return Polygon.from_bounds(x0, y0, x1, y1)
+        box = Polygon.from_bounds(x0, y0, x1, y1)
+        tmp.append(box)
+
+    # drop boxes that intersect with others
+    regions = [
+        r for r in tmp if not np.any([x.intersects(r) and x is not r for x in tmp])
+    ]
+
+    # process regions
+    area_dev = [np.abs((r.area - reference_area) / reference_area) for r in regions]
+    min_dev_idx = np.argmin(area_dev)
+
+    if area_dev[min_dev_idx] < 2.0:
+        return affinity.scale(regions[min_dev_idx], xfact=0.5, yfact=0.5)
     else:
         return None
 
@@ -233,7 +242,7 @@ def _do_reference_scaling(
     xmin, xmax = np.min(x), np.max(x)
     ymin, ymax = np.min(y), np.max(y)
     median = np.median(image.data[int(ymin) : int(ymax), int(xmin) : int(xmax)])
-    data = (image.data * (ref / median)).astype(image.data.dtype)
+    data = (image.data * (ref / median)).astype(DTYPE_FLOAT)
     return image.from_other(image, data=data, meta={"calibration_reference_box": area})
 
 
@@ -373,6 +382,7 @@ class Calibration:
                         images.dtype, self._ff_dtype
                     )
                 )
+            logging.info("Processing flatfield compensation..")
             images = compensate_flatfield(images, self._ff_calibration)
         elif flatfield:
             logging.warn(
@@ -380,6 +390,7 @@ class Calibration:
             )
 
         if self._dist_calibration is not None and distortion:
+            logging.info("Processing distortion compensation..")
             images = compensate_distortion(images, *self._dist_calibration)
         elif distortion:
             logging.warn(
@@ -390,11 +401,11 @@ class Calibration:
 
             def fn(x: Image):
                 box = _do_locate_reference_cell(x, reference_cell_area)
-                box = scale(box, xfact=0.5, yfact=0.5)
                 return _do_reference_scaling(
                     x, box, x.get_meta(reference_intensity_key)
                 )
 
+            logging.info("Processing reference scaling..")
             images = images.apply(fn)
 
         return images

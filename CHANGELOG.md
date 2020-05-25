@@ -1,5 +1,10 @@
 # Changelog
 
+## In development
+
+* Improve robustness of reference detection
+* Fix plot with visualization for more than one image
+
 ## 0.2.1
 
 * Fix broken Windows installation

@@ -358,6 +358,7 @@ def save_image(
     """
 
     if with_visusalization:
+        plt.clf()
         image.show(**kwargs)
         plt.savefig(filename, **kwargs)
     else:
