@@ -4,6 +4,10 @@
 
 * Improve robustness of reference detection
 * Fix plot with visualization for more than one image
+* Add `ImageSequence.drop_duplicates`
+* Remove unused `copy` argument to `CellImageSequence`
+* Store reference to original for `CellImage` with the correct cell marked
+* Avoid passing geometric entities to segmented modules
 
 ## 0.2.1
 

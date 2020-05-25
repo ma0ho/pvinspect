@@ -57,6 +57,12 @@ def test_segment_cells():
     assert cells[0].col == 0
     assert cells[1].col == 1
     assert cells[11].row == 1
+    assert cells[0].has_meta("segment_module_original")
+    assert (
+        cells[0]
+        .get_meta("segment_module_original")
+        .has_meta("segment_module_original_box")
+    )
 
 
 def test_segment_cells_single_image():

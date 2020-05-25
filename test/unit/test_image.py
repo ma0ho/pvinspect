@@ -432,3 +432,11 @@ def test_sequence_meta_query():
 
     assert len(seq) == 1
     assert seq[0].get_meta("k") == 1
+
+
+def test_from_other_drop_types():
+    img1 = random_image(meta={"k1": 1, "k2": 0.2})
+    img2 = img1.from_other(img1, drop_meta_types=[int])
+
+    assert img2.has_meta("k2")
+    assert not img2.has_meta("k1")

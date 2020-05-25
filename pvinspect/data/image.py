@@ -19,6 +19,7 @@ import sys
 from enum import Enum
 import re
 import pandas as pd
+from tqdm.autonotebook import tqdm
 
 # this is a pointer to the module object instance itself
 this = sys.modules[__name__]
@@ -164,6 +165,24 @@ def _register_default_plugins():
 
     register_show_plugin(calibration_show_reference_box)
 
+    def segment_module_show_box(
+        image: Image,
+        segment_module_show_box: bool = True,
+        segment_module_show_box_color="red",
+        **kwargs
+    ):
+        if (
+            segment_module_show_box
+            and isinstance(image, Image)
+            and image.has_meta("segment_module_original_box")
+        ):
+            plt.plot(
+                *image.get_meta("segment_module_original_box").exterior.xy,
+                color=segment_module_show_box_color,
+            )
+
+    register_show_plugin(segment_module_show_box)
+
     def show_image(
         image: Image,
         clip_low: float = 0.001,
@@ -213,11 +232,14 @@ class _Base:
     T = TypeVar("T")
 
     @classmethod
-    def from_other(cls: Type[T], other: T, **kwargs) -> T:
+    def from_other(
+        cls: Type[T], other: T, drop_meta_types: List[Type] = None, **kwargs
+    ) -> T:
         """Create a new image by partially overwriting the properties of another
 
         Args:
             other (Image): The other image
+            drop_meta_types (List[Type]): Drop any meta attributes that are insteanceof these types
             **kwargs: Arguments that should be overwritten
         """
         required = inspect.getfullargspec(cls.__init__)[0]
@@ -227,10 +249,22 @@ class _Base:
             if name == "meta" and "meta" in kwargs.keys():
                 # joint meta dictionaries
                 tmp = deepcopy(other._meta)
+                if drop_meta_types is not None:
+                    tmp = {
+                        k: v
+                        for k, v in tmp.items()
+                        if not np.any([isinstance(v, x) for x in drop_meta_types])
+                    }
                 tmp.update(kwargs["meta"])
                 kwargs["meta"] = tmp
             if name not in kwargs.keys() and name != "self":
                 other_args[name] = getattr(other, "_" + name)
+                if name == "meta" and drop_meta_types is not None:
+                    other_args[name] = {
+                        k: v
+                        for k, v in other_args[name].items()
+                        if not np.any([isinstance(v, x) for x in drop_meta_types])
+                    }
 
         return cls(**kwargs, **other_args)
 
@@ -513,23 +547,31 @@ class ImageSequence(_Base):
 
     _T = TypeVar("T")
 
-    def apply(self, fn: Callable[[Image], Image], *argv, **kwargs) -> ImageSequence:
+    def apply(
+        self, fn: Callable[[Image], Image], *argv, progress_bar: bool = True, **kwargs
+    ) -> ImageSequence:
         """Apply the given callable on every image. Returns a copy of the
         original sequence
 
         Args:
             fn (Callable[[Image], Image]): Callable that receives and returns an Image
+            progress_bar (bool): Show progress bar?
         
         Returns:
             sequence (ImageSequence): The copy with modified images
         """
         result = []
-        for img in self._images:
+        p = tqdm if progress_bar else lambda x: x
+        for img in p(self._images):
             result.append(fn(img, *argv, **kwargs))
         return type(self).from_other(self, images=result)
 
     def apply_image_data(
-        self: _T, fn: Callable[[np.ndarray], np.ndarray], *argv, **kwargs
+        self: _T,
+        fn: Callable[[np.ndarray], np.ndarray],
+        *argv,
+        progress_bar: bool = True,
+        **kwargs
     ) -> _T:
         """Apply the given callable on every image data. Returns a copy of the
         original sequence with modified data
@@ -537,12 +579,14 @@ class ImageSequence(_Base):
         Args:
             fn (Callable[[np.ndarray], np.ndarray]): Callable that receives a np.ndarray
                 and returns a np.ndarray. Note that the argument is immutable.
+            progress_bar (bool): Show progress bar?
         
         Returns:
             sequence (ImageSequence): The copy with modified data
         """
         result = []
-        for img in self._images:
+        p = tqdm if progress_bar else lambda x: x
+        for img in p(self._images):
             data = img.data
             res = fn(data, *argv, **kwargs)
             result.append(type(img).from_other(img, data=res))
@@ -589,6 +633,27 @@ class ImageSequence(_Base):
             series = [img.meta_to_pandas() for img in self._images]
             self._meta_df = pd.DataFrame(data=series)
         return self._meta_df.copy()  # pd.DataFrame has no writable flag :(
+
+    def drop_duplicates(
+        self, subset: List[str] = None, keep: str = "first"
+    ) -> ImageSequence:
+        """Drop duplicates based on meta attributes. For further reference, please
+            refer to the corresponding pandas method
+
+        Args:
+            subset (List[str]): Meta keys
+            keep (str): Same as pandas method
+
+        Returns:
+            result (ImageSequence): The images with duplicates dropped
+        """
+        idx = (
+            self.meta_to_pandas()
+            .drop_duplicates(subset=subset, keep=keep)
+            .index.to_list()
+        )
+        result = [self._images[i] for i in idx]
+        return type(self).from_other(self, images=result)
 
     def query(self, query: str) -> ImageSequence:
         """Query image sequence using image meta attributes
@@ -722,15 +787,14 @@ class CellImage(Image):
 class CellImageSequence(ImageSequence):
     """An immutable sequence of cell images, allowing for access to single images as well as analysis of the sequence"""
 
-    def __init__(self, images: List[CellImage], copy=True):
+    def __init__(self, images: List[CellImage]):
         """Initialize a module image sequence
         
         Args:
             images (List[CellImage]): The list of images
-            copy (bool): Copy the images?
         """
 
-        super().__init__(images, False, copy)
+        super().__init__(images, False)
 
 
 class ModuleImage(Image):

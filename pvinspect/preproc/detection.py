@@ -202,14 +202,25 @@ def segment_module_part(
             ]
         ),
     )
+
+    # bounding box in original image coords
+    bb = [
+        [first_col - padding, first_row - padding],
+        [first_col + cols + padding, first_row + rows + padding],
+    ]
+    bb = t(np.array(bb))
+    bb = Polygon.from_bounds(bb[0][0], bb[0][1], bb[1][0], bb[1][1])
+    original = image.from_other(image, meta={"segment_module_original_box": bb})
+
     return PartialModuleImage.from_other(
         image,
+        drop_meta_types=[Polygon],  # geometric attributes are invalid now..
         data=result,
         cols=cols,
         rows=rows,
         first_col=first_col,
         first_row=first_row,
-        meta={"transform": transform},
+        meta={"transform": transform, "segment_module_original": original},
     )
 
 
