@@ -45,5 +45,4 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    cmdclass={"develop": PostDevelopCommand, "install": PostInstallCommand,},
 )
