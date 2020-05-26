@@ -112,7 +112,7 @@ def _read_image(
         with open(meta_path, "r") as f:
             meta = json.load(f, object_hook=_load_json_meta_hook)
     else:
-        meta = None
+        meta = dict()
 
     if is_partial_module:
         return PartialModuleImage(img, modality, path, cols, rows, meta=meta)
