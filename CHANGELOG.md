@@ -1,6 +1,6 @@
 # Changelog
 
-## In development
+## 0.2.2
 
 * Improve robustness of reference detection
 * Fix plot with visualization for more than one image
