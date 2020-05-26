@@ -10,6 +10,8 @@
 * Avoid passing geometric entities to segmented modules
 * Save image meta in separate JSON file
 * Clip image after FF calibration if it exceeds datatype limits and issue a warning
+* Refactor modality such that it is an Enum
+* All Image attributes (except data) are meta data now
 
 ## 0.2.1
 

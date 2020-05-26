@@ -66,19 +66,19 @@ def test_image_from_other():
     p = Path() / "other.png"
     img = random_image()
     img2 = Image.from_other(img, path=p)
-    assert img._data is img2._data
-    assert img._modality is img2._modality
-    assert img2._path is p
+    assert_equal(img._data, img2._data)
+    assert img.modality == img2.modality
+    assert img2.path == p
 
 
 def test_module_image_from_other():
     img = random_module_image()
     img2 = ModuleImage.from_other(img, cols=10, rows=6)
-    assert img._data is img2._data
-    assert img._modality is img2._modality
-    assert img._path is img2._path
-    assert img2._cols == 10
-    assert img2._rows == 6
+    assert_equal(img._data, img2._data)
+    assert img.modality == img2.modality
+    assert img.path == img2.path
+    assert img2.cols == 10
+    assert img2.rows == 6
 
 
 def test_float_image_is_not_converted():
@@ -440,3 +440,13 @@ def test_from_other_drop_types():
 
     assert img2.has_meta("k2")
     assert not img2.has_meta("k1")
+
+
+def test_image_data_is_view():
+    img = random_image()
+    assert img.data.base is img._data
+
+
+def test_image_data_is_readonly():
+    img = random_image()
+    assert img.data.flags["WRITEABLE"] == False

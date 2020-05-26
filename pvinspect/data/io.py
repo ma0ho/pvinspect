@@ -16,6 +16,7 @@ from shapely.errors import WKTReadingError
 import json
 from pvinspect.common.types import PathOrStr, ObjectAnnotations
 from datetime import date, datetime
+from pvinspect.data.image import Modality
 
 
 def _prepare_json_meta(meta):
@@ -27,6 +28,8 @@ def _prepare_json_meta(meta):
         return shapely_dumps(meta)
     elif isinstance(meta, (date, datetime)):
         return meta.isoformat()
+    elif isinstance(meta, Modality):
+        return str(meta)
     elif isinstance(meta, (str, float, int)):
         return meta
     else:
@@ -37,13 +40,23 @@ def _load_json_meta_hook(pairs):
     result = dict()
     for k, v in pairs.items():
         if isinstance(v, str):
+            if v == "Modality.EL_IMAGE":
+                result[k] = Modality.EL_IMAGE
+                continue
+            if v == "Modality.PL_IMAGE":
+                result[k] = Modality.PL_IMAGE
+                continue
+
             try:
                 result[k] = datetime.fromisoformat(v)
+                continue
             except ValueError:
-                try:
-                    result[k] = shapely_loads(v)
-                except WKTReadingError:
-                    result[k] = v
+                result[k] = v
+            try:
+                result[k] = shapely_loads(v)
+                continue
+            except WKTReadingError:
+                result[k] = v
         else:
             result[k] = v
     return result
@@ -112,7 +125,15 @@ def _read_image(
         with open(meta_path, "r") as f:
             meta = json.load(f, object_hook=_load_json_meta_hook)
     else:
-        meta = dict()
+        meta = None
+
+    # merge modality, rows and cols
+    if meta is not None and "modality" in meta.keys() and modality is None:
+        modality = meta["modality"]
+    if meta is not None and "rows" in meta.keys() and rows is None:
+        rows = meta["rows"]
+    if meta is not None and "cols" in meta.keys() and cols is None:
+        cols = meta["cols"]
 
     if is_partial_module:
         return PartialModuleImage(img, modality, path, cols, rows, meta=meta)

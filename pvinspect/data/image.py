@@ -26,9 +26,14 @@ this = sys.modules[__name__]
 
 
 # modality
-EL_IMAGE = 0
+class Modality(Enum):
+    EL_IMAGE = (0,)
+    PL_IMAGE = 1
+
+
+EL_IMAGE = Modality.EL_IMAGE
 """Indicate an electroluminescense (EL) image"""
-PL_IMAGE = 1
+PL_IMAGE = Modality.PL_IMAGE
 """Indicate a photoluminescense (PL) image"""
 
 
@@ -258,7 +263,15 @@ class _Base:
                 tmp.update(kwargs["meta"])
                 kwargs["meta"] = tmp
             if name not in kwargs.keys() and name != "self":
-                other_args[name] = getattr(other, "_" + name)
+
+                # first, try public property, then private property, then meta attribute
+                if hasattr(other, name):
+                    other_args[name] = getattr(other, name)
+                elif hasattr(other, "_" + name):
+                    other_args[name] = getattr(other, "_" + name)
+                elif isinstance(other, Image) and other.has_meta(name):
+                    other_args[name] = other.get_meta(name)
+
                 if name == "meta" and drop_meta_types is not None:
                     other_args[name] = {
                         k: v
@@ -276,21 +289,21 @@ class Image(_Base):
         self,
         data: np.ndarray,
         path: Path,
-        modality: int = None,
-        meta: Dict[str, Any] = {},
+        modality: Modality = None,
+        meta: Dict[str, Any] = None,
     ):
         """Create a new image. All non-float images as automatically converted to uint.
 
         Args:
             data (np.ndarray): The image data
             path (Path): Path to the image
-            modality (int): The imaging modality (EL_IMAGE or PL_IMAGE) or None
+            modality (Modality): The imaging modality
             meta (Dict[str, Any]): Meta attributes of this image
         """
         self._data = data
-        self._path = path
-        self._modality = modality
-        self._meta = meta
+        self._meta = meta if meta is not None else dict()
+        self._meta["modality"] = modality
+        self._meta["path"] = path
 
         # unify datatypes
         if self.dtype == DType.UNSIGNED_INT and self._data.dtype != DTYPE_UNSIGNED_INT:
@@ -383,7 +396,7 @@ class Image(_Base):
     @property
     def path(self) -> Path:
         """Path to the original image"""
-        return deepcopy(self._path)
+        return self.get_meta("path")
 
     @property
     def dtype(self) -> DType:
@@ -411,9 +424,9 @@ class Image(_Base):
         return deepcopy(self.data.shape)
 
     @property
-    def modality(self) -> int:
+    def modality(self) -> Modality:
         """The imaging modality"""
-        return self._modality
+        return self.get_meta("modality")
 
     def get_meta(self, key: str) -> Any:
         """Access a meta attribute"""
@@ -462,10 +475,20 @@ class Image(_Base):
         v = target_type(v)
         return type(self).from_other(self, meta={key: v})
 
+    def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -> Image:
+        """Extract meta data using given callable
+
+        Args:
+            fn (Callable[[Image], Dict[str, Any]]): Function used to extract meta data
+        
+        Returns
+            image (Image): Resulting Image
+        """
+        return self.from_other(self, meta=fn(self))
+
     def meta_to_pandas(self) -> pd.Series:
         """Convert (compatible) meta data to pandas series"""
         data = pd.Series(self._meta, copy=True)
-        data["path"] = self.path
         data["shape"] = self.shape
         data["dtype"] = self.dtype
         return data
@@ -627,6 +650,16 @@ class ImageSequence(_Base):
             )
         return type(self).from_other(self, images=result)
 
+    def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -> ImageSequence:
+        """Extract meta information using given function
+
+        Args:
+            fn (Callable[[Image], Dict[str, Any]]): Function that is applied on every element of the sequence
+        """
+        return self.from_other(
+            self, images=[img.meta_from_fn(fn) for img in self._images]
+        )
+
     def meta_to_pandas(self) -> pd.DataFrame:
         """Convert meta from images to pandas DataFrame"""
         if self._meta_df is None:
@@ -717,7 +750,7 @@ class ImageSequence(_Base):
         return self.images[0].shape if self._same_camera else None
 
     @property
-    def modality(self) -> int:
+    def modality(self) -> Modality:
         """Access the imaging modaility"""
         return self.images[0].modality
 
@@ -742,17 +775,17 @@ class CellImage(Image):
     def __init__(
         self,
         data: np.ndarray,
-        modality: int,
+        modality: Modality,
         path: Path,
         row: int,
         col: int,
-        meta: Dict[str, Any] = {},
+        meta: Dict[str, Any] = None,
     ):
         """Initialize a cell image
 
         Args:
             data (np.ndarray): The image data
-            modality (int): The imaging modality
+            modality (Modality): The imaging modality
             path (Path): Path to the image
             row (int): Row index (zero-based)
             col (int): Cell index (zero-based)
@@ -760,28 +793,22 @@ class CellImage(Image):
         """
 
         super().__init__(data, path=path, modality=modality, meta=meta)
-        self._row = row
-        self._col = col
+        self._meta["row"] = row
+        self._meta["col"] = col
 
     @property
     def row(self) -> int:
         """0-based row index of the cell in the original module"""
-        return self._row
+        return self.get_meta("row")
 
     @property
     def col(self) -> int:
         """0-based column index of the cell in the original module"""
-        return self._col
+        return self.get_meta("col")
 
     def show(self, *argv, **kwargs):
         """Show this image"""
         super().show(*argv, **kwargs)
-
-    def meta_to_pandas(self):
-        data = super().meta_to_pandas()
-        data["row"] = self.row
-        data["col"] = self.col
-        return data
 
 
 class CellImageSequence(ImageSequence):
@@ -803,25 +830,25 @@ class ModuleImage(Image):
     def __init__(
         self,
         data: np.ndarray,
-        modality: int,
+        modality: Modality,
         path: Path,
         cols: int = None,
         rows: int = None,
-        meta: dict = {},
+        meta: dict = None,
     ):
         """Initialize a module image
 
         Args:
             data (np.ndarray): The image data
-            modality (int): The imaging modality
+            modality (Modality): The imaging modality
             path (Path): Path to the image
             cols (int): Number of cells in a column
             rows (int): Number of cells in a row
         """
 
         super().__init__(data, path, modality, meta)
-        self._cols = cols
-        self._rows = rows
+        self._meta["cols"] = cols
+        self._meta["rows"] = rows
 
     def grid(self) -> np.ndarray:
         """Create a grid of corners according to the module geometry
@@ -830,7 +857,7 @@ class ModuleImage(Image):
             grid: (cols*rows, 2)-array of coordinates on a regular grid
         """
 
-        if self._cols is not None and self._rows is not None:
+        if self.cols is not None and self.rows is not None:
             x, y = np.mgrid[0 : self.cols + 1 : 1, 0 : self.rows + 1 : 1]
             grid = np.stack([x.flatten(), y.flatten()], axis=1)
             return grid
@@ -841,18 +868,12 @@ class ModuleImage(Image):
     @property
     def cols(self):
         """Number of cell-columns"""
-        return self._cols
+        return self.get_meta("cols")
 
     @property
     def rows(self):
         """Number of row-columns"""
-        return self._rows
-
-    def meta_to_pandas(self):
-        data = super().meta_to_pandas()
-        data["cols"] = self.cols
-        data["rows"] = self.rows
-        return data
+        return self.get_meta("rows")
 
 
 class PartialModuleImage(ModuleImage):
@@ -861,19 +882,19 @@ class PartialModuleImage(ModuleImage):
     def __init__(
         self,
         data: np.ndarray,
-        modality: int,
+        modality: Modality,
         path: Path,
         cols: int = None,
         rows: int = None,
         first_col: int = None,
         first_row: int = None,
-        meta: dict = {},
+        meta: dict = None,
     ):
         """Initialize a module image
 
         Args:
             data (np.ndarray): The image data
-            modality (int): The imaging modality
+            modality (Modality): The imaging modality
             path (Path): Path to the image
             cols (int): Number of completely visible cells in a column
             rows (int): Number of completely visible cells in a row
@@ -883,14 +904,8 @@ class PartialModuleImage(ModuleImage):
 
         super().__init__(data, modality, path, cols, rows, meta)
 
-        self._first_col = first_col
-        self._first_row = first_row
-
-    def meta_to_pandas(self):
-        data = super().meta_to_pandas()
-        data["first_col"] = self._first_col
-        data["first_row"] = self._first_row
-        return data
+        self._meta["first_col"] = first_col
+        self._meta["first_row"] = first_row
 
 
 ModuleOrPartialModuleImage = Union[ModuleImage, PartialModuleImage]

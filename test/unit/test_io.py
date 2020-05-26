@@ -32,6 +32,7 @@ def _test_dict():
         "c": Polygon.from_bounds(0, 0, 10, 5),
         "d": Point(10, 20),
         "e": np.zeros([10]),
+        "f": Modality.EL_IMAGE,
     }
 
 
@@ -200,16 +201,6 @@ def test_hierachical_without_keys_save(tmp_path: Path):
 
 
 def test_prepare_json():
-    # data = {
-    #    'a': 1,
-    #    'b': {
-    #        'a': 'a',
-    #        'b': datetime.datetime.now()
-    #    },
-    #    'c': Polygon.from_bounds(0, 0, 10, 5),
-    #    'd': Point(10, 20),
-    #    'e': np.zeros([10])
-    # }
     data = _test_dict()
     data = _prepare_json_meta(data)
 
@@ -238,4 +229,6 @@ def test_save_and_load_image_with_meta(tmp_path: Path):
 
     meta2 = {k: img2.get_meta(k) for k in img2.list_meta()}
     meta["e"] = None
+    meta["path"] = None  # they must differ
+    meta2["path"] = None
     assert meta == meta2
