@@ -3,15 +3,50 @@
 from .image import *
 from pathlib import Path
 import numpy as np
-from typing import Union, Tuple, List, Dict
+from typing import Union, Tuple, List, Dict, Any
 from skimage import io, color, img_as_uint, img_as_float
 from .exceptions import UnsupportedModalityException
 from functools import reduce
 from tqdm.auto import tqdm
 import logging
 from shapely.geometry import Polygon, Point
+from shapely.wkt import loads as shapely_loads
+from shapely.wkt import dumps as shapely_dumps
+from shapely.errors import WKTReadingError
 import json
 from pvinspect.common.types import PathOrStr, ObjectAnnotations
+from datetime import date, datetime
+
+
+def _prepare_json_meta(meta):
+    if isinstance(meta, dict):
+        return {k: _prepare_json_meta(v) for k, v in meta.items()}
+    elif isinstance(meta, list):
+        return [_prepare_json_meta(v) for v in meta]
+    elif isinstance(meta, (Polygon, Point)):
+        return shapely_dumps(meta)
+    elif isinstance(meta, (date, datetime)):
+        return meta.isoformat()
+    elif isinstance(meta, (str, float, int)):
+        return meta
+    else:
+        return None
+
+
+def _load_json_meta_hook(pairs):
+    result = dict()
+    for k, v in pairs.items():
+        if isinstance(v, str):
+            try:
+                result[k] = datetime.fromisoformat(v)
+            except ValueError:
+                try:
+                    result[k] = shapely_loads(v)
+                except WKTReadingError:
+                    result[k] = v
+        else:
+            result[k] = v
+    return result
 
 
 def __assurePath(p: PathOrStr) -> Path:
@@ -19,6 +54,10 @@ def __assurePath(p: PathOrStr) -> Path:
         return Path(p)
     else:
         return p
+
+
+def _get_meta_path(img_path: Path) -> Path:
+    return img_path.parent / "{}.json".format(img_path.name)
 
 
 def _read_image(
@@ -67,12 +106,20 @@ def _read_image(
             )
         )
 
-    if is_partial_module:
-        return PartialModuleImage(img, modality, path, cols, rows)
-    elif is_module_image:
-        return ModuleImage(img, modality, path, cols, rows)
+    # try to read meta file
+    meta_path = _get_meta_path(path)
+    if meta_path.is_file():
+        with open(meta_path, "r") as f:
+            meta = json.load(f, object_hook=_load_json_meta_hook)
     else:
-        return Image(img, path, modality)
+        meta = None
+
+    if is_partial_module:
+        return PartialModuleImage(img, modality, path, cols, rows, meta=meta)
+    elif is_module_image:
+        return ModuleImage(img, modality, path, cols, rows, meta=meta)
+    else:
+        return Image(img, path, modality, meta=meta)
 
 
 def _read_images(
@@ -347,7 +394,11 @@ def read_partial_module_images(
 
 
 def save_image(
-    filename: PathOrStr, image: Image, with_visusalization: bool = False, **kwargs
+    filename: PathOrStr,
+    image: Image,
+    with_visusalization: bool = False,
+    save_meta: bool = False,
+    **kwargs
 ):
     """Write an image to disk. Float64 is automatically converted to float32 in order to be compatible to ImageJ.
 
@@ -355,7 +406,11 @@ def save_image(
         filename (PathOrStr): Filename of the resulting image
         image (Image): The image
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
+        save_meta (bool): Save meta data to separate json file (cannot be used with visualization)
     """
+    if with_visusalization and save_meta:
+        logging.error("Cannot save meta data for image with visualization")
+        return
 
     if with_visusalization:
         plt.clf()
@@ -366,6 +421,12 @@ def save_image(
             io.imsave(filename, image.data.astype(np.float32), check_contrast=False)
         else:
             io.imsave(filename, image.data, check_contrast=False)
+        if save_meta and len(image.list_meta()) > 0:
+            meta = {k: image.get_meta(k) for k in image.list_meta()}
+            meta = _prepare_json_meta(meta)
+            meta_path = _get_meta_path(filename)
+            with open(meta_path, "w") as f:
+                json.dump(meta, f)
 
 
 def save_images(
@@ -375,6 +436,7 @@ def save_images(
     with_visualization: bool = False,
     hierarchical: List[str] = None,
     include_meta_keys: bool = True,
+    save_meta: bool = True,
     **kwargs
 ):
     """Write a sequence of images to disk
@@ -386,6 +448,7 @@ def save_images(
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
         hierarchical (List[str]): Create a directory hierarchy using given meta keys
         include_meta_keys (bool): Indicate, if meta keys should be included in the folder names
+        save_meta (bool): Save image meta in json file
     """
 
     path = __assurePath(path)
@@ -414,7 +477,13 @@ def save_images(
             fpath.mkdir(parents=True, exist_ok=True)
 
         fpath /= name
-        save_image(fpath, image, with_visusalization=with_visualization, **kwargs)
+        save_image(
+            fpath,
+            image,
+            with_visusalization=with_visualization,
+            save_meta=save_meta,
+            **kwargs
+        )
 
 
 def load_json_object_masks(path: PathOrStr) -> ObjectAnnotations:

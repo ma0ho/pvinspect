@@ -1,12 +1,5 @@
-from pvinspect.data.io import (
-    read_module_images,
-    save_image,
-    save_images,
-    read_module_image,
-    read_partial_module_images,
-    read_images,
-    read_image,
-)
+from pvinspect.data.io import *
+from pvinspect.data.io import _prepare_json_meta, _load_json_meta_hook
 from pvinspect.data import datasets
 import pvinspect.data as data
 from pvinspect.preproc.detection import locate_module_and_cells, segment_cells
@@ -15,6 +8,9 @@ import numpy as np
 from pvinspect.data.image import *
 from skimage.io import imsave, imread
 from test.utilities import *
+import json
+import datetime
+from shapely.geometry import Polygon, Point
 
 EXAMPLES = (
     Path(__file__).absolute().parent.parent.parent
@@ -27,6 +23,16 @@ EXAMPLES = (
 
 def _check_download_demo():
     data.datasets.poly10x6(1)
+
+
+def _test_dict():
+    return {
+        "a": 1,
+        "b": {"a": "a", "b": datetime.datetime.now()},
+        "c": Polygon.from_bounds(0, 0, 10, 5),
+        "d": Point(10, 20),
+        "e": np.zeros([10]),
+    }
 
 
 def test_read_sequence():
@@ -191,3 +197,45 @@ def test_hierachical_without_keys_save(tmp_path: Path):
         p = tmp_path / str(img.get_meta("m1")) / str(img.get_meta("m2")) / img.path.name
         ref = read_image(p)
         assert_equal(img.data, ref.data)
+
+
+def test_prepare_json():
+    # data = {
+    #    'a': 1,
+    #    'b': {
+    #        'a': 'a',
+    #        'b': datetime.datetime.now()
+    #    },
+    #    'c': Polygon.from_bounds(0, 0, 10, 5),
+    #    'd': Point(10, 20),
+    #    'e': np.zeros([10])
+    # }
+    data = _test_dict()
+    data = _prepare_json_meta(data)
+
+    assert data["e"] is None
+    assert isinstance(data["d"], str)
+    assert isinstance(data["c"], str)
+    assert isinstance(data["b"], dict)
+    assert isinstance(data["a"], int)
+    assert isinstance(data["b"]["b"], str)
+
+
+def test_dump_load_json():
+    data = _test_dict()
+    s = json.dumps(_prepare_json_meta(data))
+    result = json.loads(s, object_hook=_load_json_meta_hook)
+
+    data["e"] = None
+    assert result == data
+
+
+def test_save_and_load_image_with_meta(tmp_path: Path):
+    meta = _test_dict()
+    img = random_image(meta=meta)
+    save_image(tmp_path / "test.tif", img, save_meta=True)
+    img2 = read_image(tmp_path / "test.tif")
+
+    meta2 = {k: img2.get_meta(k) for k in img2.list_meta()}
+    meta["e"] = None
+    assert meta == meta2
