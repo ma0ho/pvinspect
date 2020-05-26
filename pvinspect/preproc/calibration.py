@@ -179,6 +179,12 @@ def _compensate_flatfield(
             res += coeff[i] * data
             data *= data
 
+        if res.min() < 0.0 or res.max() > 1.0:
+            logging.warn(
+                "Image exceeds datatype limits after FF-compensation. Clipping to limits.."
+            )
+            res = np.clip(res, 0.0, 1.0)
+
         return res
 
     return sequence.apply_image_data(fn, coeff)
@@ -223,6 +229,9 @@ def _do_locate_reference_cell(
     regions = [
         r for r in tmp if not np.any([x.intersects(r) and x is not r for x in tmp])
     ]
+
+    if len(regions) == 0:
+        return None
 
     # process regions
     area_dev = [np.abs((r.area - reference_area) / reference_area) for r in regions]
@@ -401,9 +410,17 @@ class Calibration:
 
             def fn(x: Image):
                 box = _do_locate_reference_cell(x, reference_cell_area)
-                return _do_reference_scaling(
-                    x, box, x.get_meta(reference_intensity_key)
-                )
+                if box is not None:
+                    return _do_reference_scaling(
+                        x, box, x.get_meta(reference_intensity_key)
+                    )
+                else:
+                    logging.warn(
+                        "Reference cell could not be detected for {}. Image is left unscaled!".format(
+                            x.path.name
+                        )
+                    )
+                    return x.as_type(DType.FLOAT)
 
             logging.info("Processing reference scaling..")
             images = images.apply(fn)

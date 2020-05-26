@@ -9,6 +9,7 @@
 * Store reference to original for `CellImage` with the correct cell marked
 * Avoid passing geometric entities to segmented modules
 * Save image meta in separate JSON file
+* Clip image after FF calibration if it exceeds datatype limits and issue a warning
 
 ## 0.2.1
 
