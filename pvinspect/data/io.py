@@ -436,7 +436,7 @@ def save_images(
     with_visualization: bool = False,
     hierarchical: List[str] = None,
     include_meta_keys: bool = True,
-    save_meta: bool = True,
+    save_meta: bool = False,
     **kwargs
 ):
     """Write a sequence of images to disk
