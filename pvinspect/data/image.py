@@ -665,6 +665,9 @@ class ImageSequence(_Base):
         if self._meta_df is None:
             series = [img.meta_to_pandas() for img in self._images]
             self._meta_df = pd.DataFrame(data=series)
+            self._meta_df = self._meta_df.astype(
+                {"modality": str}
+            )  # allow for easy comparison
         return self._meta_df.copy()  # pd.DataFrame has no writable flag :(
 
     def drop_duplicates(
