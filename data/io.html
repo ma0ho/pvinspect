@@ -30,15 +30,63 @@
 from .image import *
 from pathlib import Path
 import numpy as np
-from typing import Union, Tuple, List, Dict
+from typing import Union, Tuple, List, Dict, Any
 from skimage import io, color, img_as_uint, img_as_float
 from .exceptions import UnsupportedModalityException
 from functools import reduce
 from tqdm.auto import tqdm
 import logging
 from shapely.geometry import Polygon, Point
+from shapely.wkt import loads as shapely_loads
+from shapely.wkt import dumps as shapely_dumps
+from shapely.errors import WKTReadingError
 import json
 from pvinspect.common.types import PathOrStr, ObjectAnnotations
+from datetime import date, datetime
+from pvinspect.data.image import Modality
+
+
+def _prepare_json_meta(meta):
+    if isinstance(meta, dict):
+        return {k: _prepare_json_meta(v) for k, v in meta.items()}
+    elif isinstance(meta, list):
+        return [_prepare_json_meta(v) for v in meta]
+    elif isinstance(meta, (Polygon, Point)):
+        return shapely_dumps(meta)
+    elif isinstance(meta, (date, datetime)):
+        return meta.isoformat()
+    elif isinstance(meta, Modality):
+        return str(meta)
+    elif isinstance(meta, (str, float, int)):
+        return meta
+    else:
+        return None
+
+
+def _load_json_meta_hook(pairs):
+    result = dict()
+    for k, v in pairs.items():
+        if isinstance(v, str):
+            if v == &#34;Modality.EL_IMAGE&#34;:
+                result[k] = Modality.EL_IMAGE
+                continue
+            if v == &#34;Modality.PL_IMAGE&#34;:
+                result[k] = Modality.PL_IMAGE
+                continue
+
+            try:
+                result[k] = datetime.fromisoformat(v)
+                continue
+            except ValueError:
+                result[k] = v
+            try:
+                result[k] = shapely_loads(v)
+                continue
+            except WKTReadingError:
+                result[k] = v
+        else:
+            result[k] = v
+    return result
 
 
 def __assurePath(p: PathOrStr) -&gt; Path:
@@ -46,6 +94,10 @@ def __assurePath(p: PathOrStr) -&gt; Path:
         return Path(p)
     else:
         return p
+
+
+def _get_meta_path(img_path: Path) -&gt; Path:
+    return img_path.parent / &#34;{}.json&#34;.format(img_path.name)
 
 
 def _read_image(
@@ -94,12 +146,28 @@ def _read_image(
             )
         )
 
-    if is_partial_module:
-        return PartialModuleImage(img, modality, path, cols, rows)
-    elif is_module_image:
-        return ModuleImage(img, modality, path, cols, rows)
+    # try to read meta file
+    meta_path = _get_meta_path(path)
+    if meta_path.is_file():
+        with open(meta_path, &#34;r&#34;) as f:
+            meta = json.load(f, object_hook=_load_json_meta_hook)
     else:
-        return Image(img, path, modality)
+        meta = None
+
+    # merge modality, rows and cols
+    if meta is not None and &#34;modality&#34; in meta.keys() and modality is None:
+        modality = meta[&#34;modality&#34;]
+    if meta is not None and &#34;rows&#34; in meta.keys() and rows is None:
+        rows = meta[&#34;rows&#34;]
+    if meta is not None and &#34;cols&#34; in meta.keys() and cols is None:
+        cols = meta[&#34;cols&#34;]
+
+    if is_partial_module:
+        return PartialModuleImage(img, modality, path, cols, rows, meta=meta)
+    elif is_module_image:
+        return ModuleImage(img, modality, path, cols, rows, meta=meta)
+    else:
+        return Image(img, path, modality, meta=meta)
 
 
 def _read_images(
@@ -374,7 +442,11 @@ def read_partial_module_images(
 
 
 def save_image(
-    filename: PathOrStr, image: Image, with_visusalization: bool = False, **kwargs
+    filename: PathOrStr,
+    image: Image,
+    with_visusalization: bool = False,
+    save_meta: bool = False,
+    **kwargs
 ):
     &#34;&#34;&#34;Write an image to disk. Float64 is automatically converted to float32 in order to be compatible to ImageJ.
 
@@ -382,9 +454,14 @@ def save_image(
         filename (PathOrStr): Filename of the resulting image
         image (Image): The image
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
+        save_meta (bool): Save meta data to separate json file (cannot be used with visualization)
     &#34;&#34;&#34;
+    if with_visusalization and save_meta:
+        logging.error(&#34;Cannot save meta data for image with visualization&#34;)
+        return
 
     if with_visusalization:
+        plt.clf()
         image.show(**kwargs)
         plt.savefig(filename, **kwargs)
     else:
@@ -392,6 +469,12 @@ def save_image(
             io.imsave(filename, image.data.astype(np.float32), check_contrast=False)
         else:
             io.imsave(filename, image.data, check_contrast=False)
+        if save_meta and len(image.list_meta()) &gt; 0:
+            meta = {k: image.get_meta(k) for k in image.list_meta()}
+            meta = _prepare_json_meta(meta)
+            meta_path = _get_meta_path(filename)
+            with open(meta_path, &#34;w&#34;) as f:
+                json.dump(meta, f)
 
 
 def save_images(
@@ -401,6 +484,9 @@ def save_images(
     with_visualization: bool = False,
     hierarchical: List[str] = None,
     include_meta_keys: bool = True,
+    save_meta: bool = False,
+    filename_prefix: str = &#34;&#34;,
+    filename_suffix: str = &#34;&#34;,
     **kwargs
 ):
     &#34;&#34;&#34;Write a sequence of images to disk
@@ -412,6 +498,9 @@ def save_images(
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
         hierarchical (List[str]): Create a directory hierarchy using given meta keys
         include_meta_keys (bool): Indicate, if meta keys should be included in the folder names
+        save_meta (bool): Save image meta in json file
+        filename_prefix (str): Prepend every filename with this
+        filename_suffix (str): Add this suffix to every filename
     &#34;&#34;&#34;
 
     path = __assurePath(path)
@@ -422,11 +511,15 @@ def save_images(
     for image in tqdm(sequence.images):
 
         if isinstance(image, CellImage):
-            name = &#34;{}_row{:02d}_col{:02d}{}&#34;.format(
-                image.path.stem, image.row, image.col, image.path.suffix
+            fn = Path(
+                &#34;{}_row{:02d}_col{:02d}{}&#34;.format(
+                    image.path.stem, image.row, image.col, image.path.suffix
+                )
             )
         else:
-            name = image.path.name
+            fn = Path(image.path.name)
+
+        fn = Path(filename_prefix + fn.stem + filename_suffix + fn.suffix)
 
         fpath = path
         if hierarchical is not None:
@@ -439,8 +532,14 @@ def save_images(
         if mkdir:
             fpath.mkdir(parents=True, exist_ok=True)
 
-        fpath /= name
-        save_image(fpath, image, with_visusalization=with_visualization, **kwargs)
+        fpath /= fn
+        save_image(
+            fpath,
+            image,
+            with_visusalization=with_visualization,
+            save_meta=save_meta,
+            **kwargs
+        )
 
 
 def load_json_object_masks(path: PathOrStr) -&gt; ObjectAnnotations:
@@ -895,7 +994,7 @@ annotation is a tuple of "classname" and a Polygon</dd>
 </details>
 </dd>
 <dt id="pvinspect.data.io.save_image"><code class="name flex">
-<span>def <span class="ident">save_image</span></span>(<span>filename: Union[pathlib.Path, str], image: <a title="pvinspect.data.image.Image" href="image.html#pvinspect.data.image.Image">Image</a>, with_visusalization: bool = False, **kwargs)</span>
+<span>def <span class="ident">save_image</span></span>(<span>filename: Union[pathlib.Path, str], image: <a title="pvinspect.data.image.Image" href="image.html#pvinspect.data.image.Image">Image</a>, with_visusalization: bool = False, save_meta: bool = False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write an image to disk. Float64 is automatically converted to float32 in order to be compatible to ImageJ.</p>
@@ -907,13 +1006,19 @@ annotation is a tuple of "classname" and a Polygon</dd>
 <dd>The image</dd>
 <dt><strong><code>with_visualization</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Include the same visualizations as with image.show() or sequence.head()</dd>
+<dt><strong><code>save_meta</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Save meta data to separate json file (cannot be used with visualization)</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save_image(
-    filename: PathOrStr, image: Image, with_visusalization: bool = False, **kwargs
+    filename: PathOrStr,
+    image: Image,
+    with_visusalization: bool = False,
+    save_meta: bool = False,
+    **kwargs
 ):
     &#34;&#34;&#34;Write an image to disk. Float64 is automatically converted to float32 in order to be compatible to ImageJ.
 
@@ -921,20 +1026,31 @@ annotation is a tuple of "classname" and a Polygon</dd>
         filename (PathOrStr): Filename of the resulting image
         image (Image): The image
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
+        save_meta (bool): Save meta data to separate json file (cannot be used with visualization)
     &#34;&#34;&#34;
+    if with_visusalization and save_meta:
+        logging.error(&#34;Cannot save meta data for image with visualization&#34;)
+        return
 
     if with_visusalization:
+        plt.clf()
         image.show(**kwargs)
         plt.savefig(filename, **kwargs)
     else:
         if image.dtype == DType.FLOAT:
             io.imsave(filename, image.data.astype(np.float32), check_contrast=False)
         else:
-            io.imsave(filename, image.data, check_contrast=False)</code></pre>
+            io.imsave(filename, image.data, check_contrast=False)
+        if save_meta and len(image.list_meta()) &gt; 0:
+            meta = {k: image.get_meta(k) for k in image.list_meta()}
+            meta = _prepare_json_meta(meta)
+            meta_path = _get_meta_path(filename)
+            with open(meta_path, &#34;w&#34;) as f:
+                json.dump(meta, f)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.io.save_images"><code class="name flex">
-<span>def <span class="ident">save_images</span></span>(<span>path: Union[pathlib.Path, str], sequence: <a title="pvinspect.data.image.ImageSequence" href="image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, mkdir: bool = True, with_visualization: bool = False, hierarchical: List[str] = None, include_meta_keys: bool = True, **kwargs)</span>
+<span>def <span class="ident">save_images</span></span>(<span>path: Union[pathlib.Path, str], sequence: <a title="pvinspect.data.image.ImageSequence" href="image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, mkdir: bool = True, with_visualization: bool = False, hierarchical: List[str] = None, include_meta_keys: bool = True, save_meta: bool = False, filename_prefix: str = '', filename_suffix: str = '', **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write a sequence of images to disk</p>
@@ -952,6 +1068,12 @@ annotation is a tuple of "classname" and a Polygon</dd>
 <dd>Create a directory hierarchy using given meta keys</dd>
 <dt><strong><code>include_meta_keys</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Indicate, if meta keys should be included in the folder names</dd>
+<dt><strong><code>save_meta</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Save image meta in json file</dd>
+<dt><strong><code>filename_prefix</code></strong> :&ensp;<code>str</code></dt>
+<dd>Prepend every filename with this</dd>
+<dt><strong><code>filename_suffix</code></strong> :&ensp;<code>str</code></dt>
+<dd>Add this suffix to every filename</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -964,6 +1086,9 @@ annotation is a tuple of "classname" and a Polygon</dd>
     with_visualization: bool = False,
     hierarchical: List[str] = None,
     include_meta_keys: bool = True,
+    save_meta: bool = False,
+    filename_prefix: str = &#34;&#34;,
+    filename_suffix: str = &#34;&#34;,
     **kwargs
 ):
     &#34;&#34;&#34;Write a sequence of images to disk
@@ -975,6 +1100,9 @@ annotation is a tuple of "classname" and a Polygon</dd>
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
         hierarchical (List[str]): Create a directory hierarchy using given meta keys
         include_meta_keys (bool): Indicate, if meta keys should be included in the folder names
+        save_meta (bool): Save image meta in json file
+        filename_prefix (str): Prepend every filename with this
+        filename_suffix (str): Add this suffix to every filename
     &#34;&#34;&#34;
 
     path = __assurePath(path)
@@ -985,11 +1113,15 @@ annotation is a tuple of "classname" and a Polygon</dd>
     for image in tqdm(sequence.images):
 
         if isinstance(image, CellImage):
-            name = &#34;{}_row{:02d}_col{:02d}{}&#34;.format(
-                image.path.stem, image.row, image.col, image.path.suffix
+            fn = Path(
+                &#34;{}_row{:02d}_col{:02d}{}&#34;.format(
+                    image.path.stem, image.row, image.col, image.path.suffix
+                )
             )
         else:
-            name = image.path.name
+            fn = Path(image.path.name)
+
+        fn = Path(filename_prefix + fn.stem + filename_suffix + fn.suffix)
 
         fpath = path
         if hierarchical is not None:
@@ -1002,8 +1134,14 @@ annotation is a tuple of "classname" and a Polygon</dd>
         if mkdir:
             fpath.mkdir(parents=True, exist_ok=True)
 
-        fpath /= name
-        save_image(fpath, image, with_visusalization=with_visualization, **kwargs)</code></pre>
+        fpath /= fn
+        save_image(
+            fpath,
+            image,
+            with_visusalization=with_visualization,
+            save_meta=save_meta,
+            **kwargs
+        )</code></pre>
 </details>
 </dd>
 </dl>

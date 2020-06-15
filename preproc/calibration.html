@@ -44,9 +44,10 @@ import os
 import logging
 import pickle
 from shapely.geometry import Polygon
-from shapely.affinity import scale
+from shapely import affinity
 from skimage import transform, morphology, measure, filters
 from typing import Union
+import logging
 
 
 def _calibrate_flatfield(
@@ -205,6 +206,12 @@ def _compensate_flatfield(
             res += coeff[i] * data
             data *= data
 
+        if res.min() &lt; 0.0 or res.max() &gt; 1.0:
+            logging.warn(
+                &#34;Image exceeds datatype limits after FF-compensation. Clipping to limits..&#34;
+            )
+            res = np.clip(res, 0.0, 1.0)
+
         return res
 
     return sequence.apply_image_data(fn, coeff)
@@ -215,15 +222,14 @@ def _do_locate_reference_cell(
 ) -&gt; Polygon:
     &#34;&#34;&#34;Perform localization of reference cell&#34;&#34;&#34;
 
-    # approximate reference area
-    reference_area = reference_area * scale ** 2
-
     # filter + binarize
     image_f = transform.rescale(image.data, scale)
-    image_f = image_f &gt; filters.threshold_multiotsu(image_f, classes=5)[0]
+
+    thresh = filters.threshold_multiotsu(image_f, classes=5)[0]
+    image_t = image_f &gt; thresh
 
     # find regions
-    labeled = morphology.label(image_f)
+    labeled = morphology.label(image_t)
     regions = measure.regionprops(labeled)
 
     # drop areas that are not approximately square
@@ -234,20 +240,32 @@ def _do_locate_reference_cell(
         and np.abs(r.bbox[2] - r.bbox[0]) / np.abs(r.bbox[3] - r.bbox[1]) &lt; 1.8
     ]
 
-    # process regions
-    area_dev = [np.abs((r.area - reference_area) / reference_area) for r in regions]
-
-    min_dev_idx = np.argmin(area_dev)
-
-    if area_dev[min_dev_idx] &lt; 1.0:
-        # detected
-        bbox = [int(regions[min_dev_idx].bbox[i] * 1 / scale) for i in range(4)]
+    # convert to Polygon
+    tmp: List[Polygon] = []
+    for r in regions:
+        bbox = [int(r.bbox[i] * 1 / scale) for i in range(4)]
         y0, x0 = max(0, bbox[0]), max(0, bbox[1])
         y1, x1 = (
             min(image.shape[0], bbox[2]),
             min(image.shape[1], bbox[3]),
         )
-        return Polygon.from_bounds(x0, y0, x1, y1)
+        box = Polygon.from_bounds(x0, y0, x1, y1)
+        tmp.append(box)
+
+    # drop boxes that intersect with others
+    regions = [
+        r for r in tmp if not np.any([x.intersects(r) and x is not r for x in tmp])
+    ]
+
+    if len(regions) == 0:
+        return None
+
+    # process regions
+    area_dev = [np.abs((r.area - reference_area) / reference_area) for r in regions]
+    min_dev_idx = np.argmin(area_dev)
+
+    if area_dev[min_dev_idx] &lt; 2.0:
+        return affinity.scale(regions[min_dev_idx], xfact=0.5, yfact=0.5)
     else:
         return None
 
@@ -260,7 +278,7 @@ def _do_reference_scaling(
     xmin, xmax = np.min(x), np.max(x)
     ymin, ymax = np.min(y), np.max(y)
     median = np.median(image.data[int(ymin) : int(ymax), int(xmin) : int(xmax)])
-    data = (image.data * (ref / median)).astype(image.data.dtype)
+    data = (image.data * (ref / median)).astype(DTYPE_FLOAT)
     return image.from_other(image, data=data, meta={&#34;calibration_reference_box&#34;: area})
 
 
@@ -400,6 +418,7 @@ class Calibration:
                         images.dtype, self._ff_dtype
                     )
                 )
+            logging.info(&#34;Processing flatfield compensation..&#34;)
             images = compensate_flatfield(images, self._ff_calibration)
         elif flatfield:
             logging.warn(
@@ -407,6 +426,7 @@ class Calibration:
             )
 
         if self._dist_calibration is not None and distortion:
+            logging.info(&#34;Processing distortion compensation..&#34;)
             images = compensate_distortion(images, *self._dist_calibration)
         elif distortion:
             logging.warn(
@@ -417,11 +437,19 @@ class Calibration:
 
             def fn(x: Image):
                 box = _do_locate_reference_cell(x, reference_cell_area)
-                box = scale(box, xfact=0.5, yfact=0.5)
-                return _do_reference_scaling(
-                    x, box, x.get_meta(reference_intensity_key)
-                )
+                if box is not None:
+                    return _do_reference_scaling(
+                        x, box, x.get_meta(reference_intensity_key)
+                    )
+                else:
+                    logging.warn(
+                        &#34;Reference cell could not be detected for {}. Image is left unscaled!&#34;.format(
+                            x.path.name
+                        )
+                    )
+                    return x.as_type(DType.FLOAT)
 
+            logging.info(&#34;Processing reference scaling..&#34;)
             images = images.apply(fn)
 
         return images
@@ -870,6 +898,7 @@ def compensate_flatfield(
                         images.dtype, self._ff_dtype
                     )
                 )
+            logging.info(&#34;Processing flatfield compensation..&#34;)
             images = compensate_flatfield(images, self._ff_calibration)
         elif flatfield:
             logging.warn(
@@ -877,6 +906,7 @@ def compensate_flatfield(
             )
 
         if self._dist_calibration is not None and distortion:
+            logging.info(&#34;Processing distortion compensation..&#34;)
             images = compensate_distortion(images, *self._dist_calibration)
         elif distortion:
             logging.warn(
@@ -887,11 +917,19 @@ def compensate_flatfield(
 
             def fn(x: Image):
                 box = _do_locate_reference_cell(x, reference_cell_area)
-                box = scale(box, xfact=0.5, yfact=0.5)
-                return _do_reference_scaling(
-                    x, box, x.get_meta(reference_intensity_key)
-                )
+                if box is not None:
+                    return _do_reference_scaling(
+                        x, box, x.get_meta(reference_intensity_key)
+                    )
+                else:
+                    logging.warn(
+                        &#34;Reference cell could not be detected for {}. Image is left unscaled!&#34;.format(
+                            x.path.name
+                        )
+                    )
+                    return x.as_type(DType.FLOAT)
 
+            logging.info(&#34;Processing reference scaling..&#34;)
             images = images.apply(fn)
 
         return images
@@ -1040,6 +1078,7 @@ matches values given by meta attribute reference_intensity_key</dd>
                     images.dtype, self._ff_dtype
                 )
             )
+        logging.info(&#34;Processing flatfield compensation..&#34;)
         images = compensate_flatfield(images, self._ff_calibration)
     elif flatfield:
         logging.warn(
@@ -1047,6 +1086,7 @@ matches values given by meta attribute reference_intensity_key</dd>
         )
 
     if self._dist_calibration is not None and distortion:
+        logging.info(&#34;Processing distortion compensation..&#34;)
         images = compensate_distortion(images, *self._dist_calibration)
     elif distortion:
         logging.warn(
@@ -1057,11 +1097,19 @@ matches values given by meta attribute reference_intensity_key</dd>
 
         def fn(x: Image):
             box = _do_locate_reference_cell(x, reference_cell_area)
-            box = scale(box, xfact=0.5, yfact=0.5)
-            return _do_reference_scaling(
-                x, box, x.get_meta(reference_intensity_key)
-            )
+            if box is not None:
+                return _do_reference_scaling(
+                    x, box, x.get_meta(reference_intensity_key)
+                )
+            else:
+                logging.warn(
+                    &#34;Reference cell could not be detected for {}. Image is left unscaled!&#34;.format(
+                        x.path.name
+                    )
+                )
+                return x.as_type(DType.FLOAT)
 
+        logging.info(&#34;Processing reference scaling..&#34;)
         images = images.apply(fn)
 
     return images</code></pre>
