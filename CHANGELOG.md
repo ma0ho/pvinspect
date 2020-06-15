@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+* Prefix/suffix for filenames in `save_images`
+
 ## 0.2.2
 
 * Improve robustness of reference detection

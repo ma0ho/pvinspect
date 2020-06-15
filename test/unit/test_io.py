@@ -232,3 +232,21 @@ def test_save_and_load_image_with_meta(tmp_path: Path):
     meta["path"] = None  # they must differ
     meta2["path"] = None
     assert meta == meta2
+
+
+def test_save_with_prefix(tmp_path: Path):
+    imgs = random_image_sequence()
+    save_images(tmp_path, imgs, filename_prefix="XY_")
+
+    for img in imgs:
+        fn = "XY_" + img.path.name
+        assert (tmp_path / fn).is_file()
+
+
+def test_save_with_suffix(tmp_path: Path):
+    imgs = random_image_sequence()
+    save_images(tmp_path, imgs, filename_suffix="_XY")
+
+    for img in imgs:
+        fn = img.path.stem + "_XY" + img.path.suffix
+        assert (tmp_path / fn).is_file()

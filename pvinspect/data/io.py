@@ -458,6 +458,8 @@ def save_images(
     hierarchical: List[str] = None,
     include_meta_keys: bool = True,
     save_meta: bool = False,
+    filename_prefix: str = "",
+    filename_suffix: str = "",
     **kwargs
 ):
     """Write a sequence of images to disk
@@ -470,6 +472,8 @@ def save_images(
         hierarchical (List[str]): Create a directory hierarchy using given meta keys
         include_meta_keys (bool): Indicate, if meta keys should be included in the folder names
         save_meta (bool): Save image meta in json file
+        filename_prefix (str): Prepend every filename with this
+        filename_suffix (str): Add this suffix to every filename
     """
 
     path = __assurePath(path)
@@ -480,11 +484,15 @@ def save_images(
     for image in tqdm(sequence.images):
 
         if isinstance(image, CellImage):
-            name = "{}_row{:02d}_col{:02d}{}".format(
-                image.path.stem, image.row, image.col, image.path.suffix
+            fn = Path(
+                "{}_row{:02d}_col{:02d}{}".format(
+                    image.path.stem, image.row, image.col, image.path.suffix
+                )
             )
         else:
-            name = image.path.name
+            fn = Path(image.path.name)
+
+        fn = Path(filename_prefix + fn.stem + filename_suffix + fn.suffix)
 
         fpath = path
         if hierarchical is not None:
@@ -497,7 +505,7 @@ def save_images(
         if mkdir:
             fpath.mkdir(parents=True, exist_ok=True)
 
-        fpath /= name
+        fpath /= fn
         save_image(
             fpath,
             image,
