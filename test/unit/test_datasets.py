@@ -12,27 +12,30 @@ def test_poly10x6():
 
 
 def test_caip_dataB():
-    seq1, seq2 = data.datasets.caip_dataB()
+    seq1, seq2, anns = data.datasets.caip_dataB()
     assert len(seq1) == 5
     assert seq1.modality == data.EL_IMAGE
     assert seq1.same_camera == False
     assert len(seq2) == 3
     assert seq2.modality == data.EL_IMAGE
     assert seq2.same_camera == False
+    assert len(anns) == len(seq1) + len(seq2)
 
 
 def test_caip_dataC():
-    seq = data.datasets.caip_dataC()
+    seq, anns = data.datasets.caip_dataC()
     assert len(seq) == 10
     assert seq.modality == data.EL_IMAGE
     assert seq.same_camera == True
+    assert len(anns) == len(seq)
 
 
 def test_caip_dataD():
-    seq = data.datasets.caip_dataD()
+    seq, anns = data.datasets.caip_dataD()
     assert len(seq) == 9
     assert seq.modality == data.EL_IMAGE
     assert seq.same_camera == True
+    assert len(anns) == len(seq)
 
 
 def test_calibration_ipv40CCD_FF():

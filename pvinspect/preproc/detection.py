@@ -11,7 +11,7 @@ from pvinspect.data.image import *
 from pvinspect.data.image import _sequence
 from pvinspect.data.exceptions import UnsupportedModalityException
 from pvinspect.data.io import ObjectAnnotations
-from typing import Union, List, Optional, Dict
+from typing import Union, List, Optional, Dict, Tuple
 from tqdm.auto import tqdm
 from copy import deepcopy
 import logging
@@ -26,7 +26,8 @@ def locate_module_and_cells(
     sequence: ModuleImageOrSequence,
     estimate_distortion: bool = True,
     orientation: str = None,
-) -> ModuleImageOrSequence:
+    return_bounding_boxes: bool = False,
+) -> Union[Tuple[ModuleImageOrSequence, ObjectAnnotations], ModuleImageSequence]:
     """Locate a single module and its cells
 
     Note:
@@ -39,6 +40,7 @@ def locate_module_and_cells(
         estimate_distortion (bool): Set True to estimate lens distortion, else False 
         orientation (str): Orientation of the module ('horizontal' or 'vertical' or None).
             If set to None (default), orientation is automatically determined
+        return_bounding_boxes (bool): Indicates, if bounding boxes of returned modules are returned
 
     Returns:
         images: The same image/sequence with location information added
@@ -126,7 +128,34 @@ def locate_module_and_cells(
     if failures > 0:
         logging.warning("Module localization falied for {:d} images".format(failures))
 
-    return ModuleImageSequence.from_other(sequence, images=result)
+    result = ModuleImageSequence.from_other(sequence, images=result)
+
+    if not return_bounding_boxes:
+        return result
+    else:
+        boxes = dict()
+
+        # compute polygon for every module and accumulate results
+        for img in result:
+            if img.has_meta("transform"):
+                c = img.cols
+                r = img.rows
+                coords = np.array([[0.0, 0.0], [c, 0.0], [c, r], [0.0, r]])
+                coords_transformed = img.get_meta("transform")(coords)
+                poly = Polygon(
+                    [
+                        (x, y)
+                        for x, y in zip(
+                            coords_transformed[:, 0].tolist(),
+                            coords_transformed[:, 1].tolist(),
+                        )
+                    ]
+                )
+                boxes[img.path.name] = [("Module", poly)]
+            else:
+                boxes[img.path.name] = []
+
+        return result, boxes
 
 
 def segment_module_part(

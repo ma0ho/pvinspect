@@ -44,7 +44,7 @@ def poly10x6(N: int = 0) -> ModuleImageSequence:
     return read_module_images(p, EL_IMAGE, True, 10, 6, N=N)
 
 
-def caip_dataB() -> Tuple[ModuleImageSequence, ModuleImageSequence]:
+def caip_dataB() -> Tuple[ModuleImageSequence, ModuleImageSequence, ObjectAnnotations]:
     """Read DataB from CAIP paper (private dataset)
     
     Note:
@@ -55,8 +55,9 @@ def caip_dataB() -> Tuple[ModuleImageSequence, ModuleImageSequence]:
     Returns:
         images1: All modules with shape 10x6
         images2: All modules with shape 9x4
+        annot: Annotations specifying the position of modules
     """
-    p = _check_and_download_ds("20200114_caip")
+    p = _check_and_download_ds("20200616_caip_v2")
     images1 = read_module_images(
         p / "deitsch_testset" / "10x6",
         EL_IMAGE,
@@ -73,10 +74,11 @@ def caip_dataB() -> Tuple[ModuleImageSequence, ModuleImageSequence]:
         4,
         allow_different_dtypes=True,
     )
-    return images1, images2
+    annot = load_json_object_masks(p / "deitsch_testset" / "module_locations.json")
+    return images1, images2, annot
 
 
-def caip_dataC() -> ModuleImageSequence:
+def caip_dataC() -> Tuple[ModuleImageSequence, ObjectAnnotations]:
     """Read DataC from CAIP paper (private dataset)
     
     Note:
@@ -86,12 +88,14 @@ def caip_dataC() -> ModuleImageSequence:
 
     Returns:
         images: All modules images
+        annot: Annotations specifying the position of modules
     """
-    p = _check_and_download_ds("20200114_caip")
-    return read_module_images(p / "multiple", EL_IMAGE, True, 10, 6)
+    p = _check_and_download_ds("20200616_caip_v2")
+    annot = load_json_object_masks(p / "multiple" / "module_locations.json")
+    return read_module_images(p / "multiple", EL_IMAGE, True, 10, 6), annot
 
 
-def caip_dataD() -> ModuleImageSequence:
+def caip_dataD() -> Tuple[ModuleImageSequence, ObjectAnnotations]:
     """Read DataC from CAIP paper (private dataset)
     
     Note:
@@ -101,9 +105,11 @@ def caip_dataD() -> ModuleImageSequence:
 
     Returns:
         images: All modules images
+        annot: Annotations specifying the position of modules
     """
-    p = _check_and_download_ds("20200114_caip")
-    return read_module_images(p / "rotated", EL_IMAGE, True, 10, 6)
+    p = _check_and_download_ds("20200616_caip_v2")
+    annot = load_json_object_masks(p / "rotated" / "module_locations.json")
+    return read_module_images(p / "rotated", EL_IMAGE, True, 10, 6), annot
 
 
 def calibration_ipv40CCD_FF(N: int = 0) -> Dict[str, ImageSequence]:

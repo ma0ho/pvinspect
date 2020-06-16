@@ -1,5 +1,9 @@
 # Changelog
 
+## In development
+
+* Add performance test for single module detection
+
 ## 0.2.3
 
 * Prefix/suffix for filenames in `save_images`

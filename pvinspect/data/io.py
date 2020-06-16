@@ -17,6 +17,7 @@ import json
 from pvinspect.common.types import PathOrStr, ObjectAnnotations
 from datetime import date, datetime
 from pvinspect.data.image import Modality
+import urllib.parse
 
 
 def _prepare_json_meta(meta):
@@ -531,12 +532,34 @@ def load_json_object_masks(path: PathOrStr) -> ObjectAnnotations:
     with open(path, "r") as f:
         js = json.load(f)
 
-    result = dict()
-    for item in js:
-        anns = list()
-        for k, v in item["Label"].items():
-            for ann in v:
-                poly = Polygon([(x["x"], x["y"]) for x in ann["geometry"]])
-                anns.append((k, poly))
-        result[item["External ID"]] = anns
-    return result
+    if isinstance(js, list):
+        result = dict()
+        for item in js:
+            anns = list()
+            for k, v in item["Label"].items():
+                for ann in v:
+                    poly = Polygon([(x["x"], x["y"]) for x in ann["geometry"]])
+                    anns.append((k, poly))
+            result[item["External ID"]] = anns
+        return result
+    elif isinstance(js, dict):
+        result = dict()
+        prefix_len = 124
+
+        # id -> category name
+        catbyid = dict()
+        for item in js["categories"]:
+            catbyid[item["id"]] = item["name"]
+
+        for img in js["images"]:
+            fn = urllib.parse.unquote(img["file_name"][prefix_len:])
+            result[fn] = list()
+            for item in js["annotations"]:
+                if item["image_id"] == img["id"]:
+                    x = item["segmentation"][0]
+                    poly = Polygon(
+                        [(x[2 * i + 0], x[2 * i + 1]) for i in range(len(x) // 2)]
+                    )
+                    result[fn].append((catbyid[item["category_id"]], poly))
+
+        return result

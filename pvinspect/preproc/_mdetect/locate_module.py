@@ -34,6 +34,9 @@ def _find_stops(img, dim, n_cells):
     peaks_max, _ = signal.find_peaks(grad_smooth, height=thresh)
     peaks_min, _ = signal.find_peaks(-grad_smooth, height=thresh)
 
+    if len(peaks_max) == 0 or len(peaks_min) == 0:
+        return None
+
     extremals = [peaks_max[0], peaks_min[-1]]
 
     thresh = np.std(grad_smooth) * OUTER_CORNER_THRESH_FACTOR
