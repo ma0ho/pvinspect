@@ -39,6 +39,7 @@ setuptools.setup(
         "pre-commit",
         "pillow < 7.1.0",
         "pandas >= 1.0.0",
+        "onnxruntime",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
