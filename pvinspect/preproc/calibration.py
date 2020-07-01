@@ -247,11 +247,21 @@ def _do_reference_scaling(
     image: Image, area: Polygon, ref: Union[float, int],
 ) -> Image:
     """Compute mean intensity over area area and rescale image"""
+    original_type = image.dtype
+
+    # compute statistics and scale
     x, y = list(zip(*area.exterior.coords))
     xmin, xmax = np.min(x), np.max(x)
     ymin, ymax = np.min(y), np.max(y)
     median = np.median(image.data[int(ymin) : int(ymax), int(xmin) : int(xmax)])
     data = (image.data * (ref / median)).astype(DTYPE_FLOAT)
+
+    # convert to original datatype
+    if original_type == DType.INT:
+        data = data.astype(DTYPE_INT)
+    elif original_type == DType.UNSIGNED_INT:
+        data = data.astype(DTYPE_UNSIGNED_INT)
+
     return image.from_other(image, data=data, meta={"calibration_reference_box": area})
 
 
@@ -420,7 +430,7 @@ class Calibration:
                             x.path.name
                         )
                     )
-                    return x.as_type(DType.FLOAT)
+                    return x
 
             logging.info("Processing reference scaling..")
             images = images.apply(fn)
