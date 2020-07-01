@@ -124,7 +124,9 @@ def _read_image(
     meta_path = _get_meta_path(path)
     if meta_path.is_file():
         with open(meta_path, "r") as f:
-            meta = json.load(f, object_hook=_load_json_meta_hook)
+            # TODO: Fix!
+            # meta = json.load(f, object_hook=_load_json_meta_hook)
+            meta = None
     else:
         meta = None
 
