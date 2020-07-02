@@ -40,8 +40,6 @@ class ONNXModel:
             norm_mean = np.mean(imgs)
             norm_std = np.std(imgs)
 
-        print(norm_mean / 2 ** 16 * 2 ** 8)
-
         def apply(x: Image):
             data = x.data.astype(np.float)
 
