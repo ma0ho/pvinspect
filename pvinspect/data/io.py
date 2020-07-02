@@ -23,6 +23,11 @@ from pvinspect.common import util
 
 
 def _prepare_json_meta(meta):
+
+    # numpy scalar -> builtin
+    if type(meta).__module__ == np.__name__ and meta.ndim == 1 and len(meta) == 1:
+        meta = np.asscalar(meta)
+
     if isinstance(meta, dict):
         return {k: _prepare_json_meta(v) for k, v in meta.items()}
     elif isinstance(meta, list):
