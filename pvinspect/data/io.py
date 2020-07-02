@@ -33,7 +33,7 @@ def _prepare_json_meta(meta):
         return meta.isoformat()
     elif isinstance(meta, Modality):
         return str(meta)
-    elif isinstance(meta, (str, float, int)):
+    elif isinstance(meta, (str, float, int, bool)):
         return meta
     else:
         return None
