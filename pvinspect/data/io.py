@@ -13,11 +13,13 @@ from shapely.geometry import Polygon, Point
 from shapely.wkt import loads as shapely_loads
 from shapely.wkt import dumps as shapely_dumps
 from shapely.errors import WKTReadingError
+from pyparsing import ParseException
 import json
 from pvinspect.common.types import PathOrStr, ObjectAnnotations
 from datetime import date, datetime
 from pvinspect.data.image import Modality
 import urllib.parse
+from pvinspect.common import util
 
 
 def _prepare_json_meta(meta):
@@ -54,7 +56,8 @@ def _load_json_meta_hook(pairs):
             except ValueError:
                 result[k] = v
             try:
-                result[k] = shapely_loads(v)
+                with util.suppress_stderr():
+                    result[k] = shapely_loads(v)
                 continue
             except WKTReadingError:
                 result[k] = v
