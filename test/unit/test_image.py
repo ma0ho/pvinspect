@@ -424,14 +424,28 @@ def test_sequence_meta_from_path():
     assert meta.iloc[1]["k"] == 13
 
 
-def test_sequence_meta_query():
+def test_sequence_pandas_method():
     img1 = random_image(meta={"k": 1})
     img2 = random_image(meta={"k": 2})
     seq = ImageSequence([img1, img2], same_camera=False)
-    seq = seq.query("k == 1")
+    seq = seq.pandas.query("k == 1")
 
     assert len(seq) == 1
     assert seq[0].get_meta("k") == 1
+
+
+def test_sequence_pandas_array_access_multiple():
+    seq = random_image_sequence()
+    sub = seq.pandas.iloc[[0, 1]]
+
+    assert len(sub) == 2
+
+
+def test_sequence_pandas_array_access_single():
+    seq = random_image_sequence()
+    img = seq.pandas.iloc[0]
+
+    assert img == seq._images[0]
 
 
 def test_from_other_drop_types():

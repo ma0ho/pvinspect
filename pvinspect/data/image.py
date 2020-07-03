@@ -20,6 +20,7 @@ from enum import Enum
 import re
 import pandas as pd
 from tqdm.autonotebook import tqdm
+from functools import partial
 
 # this is a pointer to the module object instance itself
 this = sys.modules[__name__]
@@ -512,6 +513,37 @@ class ImageSequence(_Base):
             plt.subplot(rows, cols, i + 1)
             img.show(*args, **kwargs)
 
+    class _PandasHandler:
+        def __init__(self, parent: ImageSequence):
+            self._parent = parent
+            pass
+
+        class _Sub:
+            def _result(self, pandas_result):
+                if isinstance(pandas_result, pd.DataFrame):
+                    idx = pandas_result.index.to_list()
+                    result = [self._parent._images[i] for i in idx]
+                    return type(self._parent).from_other(self._parent, images=result)
+                elif isinstance(pandas_result, pd.Series):
+                    idx = pandas_result.name
+                    return self._parent[idx]
+
+            def __init__(self, parent: ImageSequence, attr):
+                self._parent = parent
+                self._attr = attr
+
+            def __call__(self, *argv, **kwargs):
+                pandas_result = self._attr(*argv, **kwargs)
+                return self._result(pandas_result)
+
+            def __getitem__(self, arg):
+                pandas_result = self._attr[arg]
+                return self._result(pandas_result)
+
+        def __getattr__(self, name):
+            attr = getattr(self._parent.meta_to_pandas(), name)
+            return self._Sub(self._parent, attr)
+
     def __init__(
         self, images: List[Image], same_camera: bool, allow_different_dtypes=False
     ):
@@ -549,6 +581,9 @@ class ImageSequence(_Base):
             if img.modality != modality:
                 logging.error("Cannot create a sequence from mixed modalities.")
                 exit()
+
+        # namespace for accessing pandas methods
+        self.pandas = self._PandasHandler(self)
 
     def head(self, N: int = 4, cols: int = 2, *args, **kwargs):
         """Show the first N images
@@ -650,15 +685,15 @@ class ImageSequence(_Base):
             )
         return type(self).from_other(self, images=result)
 
-    def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -> ImageSequence:
+    def meta_from_fn(
+        self, fn: Callable[[Image], Dict[str, Any]], **kwargs
+    ) -> ImageSequence:
         """Extract meta information using given function
 
         Args:
             fn (Callable[[Image], Dict[str, Any]]): Function that is applied on every element of the sequence
         """
-        return self.from_other(
-            self, images=[img.meta_from_fn(fn) for img in self._images]
-        )
+        return self.apply(fn=lambda x: x.meta_from_fn(fn), **kwargs)
 
     def meta_to_pandas(self) -> pd.DataFrame:
         """Convert meta from images to pandas DataFrame"""
@@ -669,40 +704,6 @@ class ImageSequence(_Base):
                 {"modality": str}
             )  # allow for easy comparison
         return self._meta_df.copy()  # pd.DataFrame has no writable flag :(
-
-    def drop_duplicates(
-        self, subset: List[str] = None, keep: str = "first"
-    ) -> ImageSequence:
-        """Drop duplicates based on meta attributes. For further reference, please
-            refer to the corresponding pandas method
-
-        Args:
-            subset (List[str]): Meta keys
-            keep (str): Same as pandas method
-
-        Returns:
-            result (ImageSequence): The images with duplicates dropped
-        """
-        idx = (
-            self.meta_to_pandas()
-            .drop_duplicates(subset=subset, keep=keep)
-            .index.to_list()
-        )
-        result = [self._images[i] for i in idx]
-        return type(self).from_other(self, images=result)
-
-    def query(self, query: str) -> ImageSequence:
-        """Query image sequence using image meta attributes
-
-        Args:
-            query (str): The query string using the query syntax of pandas library
-
-        Returns:
-            result (ImageSequence): The images, where query evaluated true
-        """
-        idx = self.meta_to_pandas().query(query).index.to_list()
-        result = [self._images[i] for i in idx]
-        return type(self).from_other(self, images=result)
 
     def as_type(self: _T, dtype: DType) -> _T:
         """Convert sequence to specified dtype"""

@@ -37,15 +37,15 @@ def random_module_image() -> ModuleImage:
 
 
 def random_image_sequence() -> ImageSequence:
-    imgs = [random_image() for x in range(2)]
+    imgs = [random_image() for x in range(3)]
     return ImageSequence(imgs, False)
 
 
 def random_uint_image_sequence() -> ImageSequence:
-    imgs = [random_uint_image() for x in range(2)]
+    imgs = [random_uint_image() for x in range(3)]
     return ImageSequence(imgs, False)
 
 
 def random_module_image_sequence() -> ModuleImageSequence:
-    imgs = [random_module_image() for x in range(2)]
+    imgs = [random_module_image() for x in range(3)]
     return ModuleImageSequence(imgs, False)
