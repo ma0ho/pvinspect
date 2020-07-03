@@ -3,6 +3,7 @@
 ## In development
 
 * Add performance test for single module detection
+* Pandas methods are now (all) available from `ImageSequence.pandas`
 
 ## 0.2.3
 
