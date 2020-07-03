@@ -286,6 +286,91 @@ class _Base:
 class Image(_Base):
     """A general image"""
 
+    @staticmethod
+    def _map_numpy_dtype(dtype):
+        print(dtype)
+        if dtype == np.float32 or dtype == np.float64:
+            return DType.FLOAT
+        elif (
+            dtype == np.uint8
+            or dtype == np.uint16
+            or dtype == np.uint32
+            or dtype == np.uint64
+        ):
+            return DType.UNSIGNED_INT
+        elif (
+            dtype == np.int8
+            or dtype == np.int16
+            or dtype == np.int32
+            or dtype == np.int64
+        ):
+            return DType.INT
+
+    @staticmethod
+    def _unify_dtypes(array):
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.UNSIGNED_INT
+            and array.dtype != DTYPE_UNSIGNED_INT
+        ):
+            if (
+                array.max() > np.iinfo(DTYPE_UNSIGNED_INT).max
+                or array.min() < np.iinfo(DTYPE_UNSIGNED_INT).min
+            ):
+                raise RuntimeError(
+                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
+                        DTYPE_UNSIGNED_INT
+                    )
+                )
+            return array.astype(DTYPE_UNSIGNED_INT)
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.INT
+            and array.dtype != DTYPE_INT
+        ):
+            if (
+                array.max() > np.iinfo(DTYPE_INT).max
+                or array.min() < np.iinfo(DTYPE_INT).min
+            ):
+                raise RuntimeError(
+                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
+                        DTYPE_INT
+                    )
+                )
+            return array.astype(DTYPE_INT)
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.FLOAT
+            and array.dtype != DTYPE_FLOAT
+        ):
+            return array.astype(DTYPE_FLOAT)
+
+        # default
+        return array
+
+    class LazyData:
+        def _load(self):
+            if self._data is None:
+                self._data = self._load_fn()
+                self._load_fn = None
+
+                # perform data checks/conversions
+                for check in self._checks:
+                    self._data = check(self._data)
+
+        def __init__(self, load_fn: Callable[None, np.ndarray]):
+            self._data = None
+            self._load_fn = load_fn
+            self._checks = list()
+
+        def __getattr__(self, name: str):
+            self._load()
+            return getattr(self._data, name)
+
+        def __getitem__(self, s):
+            self._load()
+            return self._data[s]
+
+        def push_check(self, fn: Callable[np.ndarray, np.ndarray]):
+            self._checks.append(fn)
+
     def __init__(
         self,
         data: np.ndarray,
@@ -306,31 +391,10 @@ class Image(_Base):
         self._meta["modality"] = modality
         self._meta["path"] = path
 
-        # unify datatypes
-        if self.dtype == DType.UNSIGNED_INT and self._data.dtype != DTYPE_UNSIGNED_INT:
-            if (
-                self._data.max() > np.iinfo(DTYPE_UNSIGNED_INT).max
-                or self._data.min() < np.iinfo(DTYPE_UNSIGNED_INT).min
-            ):
-                raise RuntimeError(
-                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
-                        DTYPE_UNSIGNED_INT
-                    )
-                )
-            self._data = self._data.astype(DTYPE_UNSIGNED_INT)
-        if self.dtype == DType.INT and self._data.dtype != DTYPE_INT:
-            if (
-                self._data.max() > np.iinfo(DTYPE_INT).max
-                or self._data.min() < np.iinfo(DTYPE_INT).min
-            ):
-                raise RuntimeError(
-                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
-                        DTYPE_INT
-                    )
-                )
-            self._data = self._data.astype(DTYPE_INT)
-        if self.dtype == DType.FLOAT and self._data.dtype != DTYPE_FLOAT:
-            self._data = self._data.astype(DTYPE_FLOAT)
+        if isinstance(data, np.ndarray):
+            self._data = Image._unify_dtypes(self._data)
+        else:
+            self._data.push_check(Image._unify_dtypes)
 
     def show(self, **kwargs):
         """Show this image"""
@@ -402,22 +466,7 @@ class Image(_Base):
     @property
     def dtype(self) -> DType:
         """Datatype of the image"""
-        if self.data.dtype == np.float32 or self.data.dtype == np.float64:
-            return DType.FLOAT
-        elif (
-            self.data.dtype == np.uint8
-            or self.data.dtype == np.uint16
-            or self.data.dtype == np.uint32
-            or self.data.dtype == np.uint64
-        ):
-            return DType.UNSIGNED_INT
-        elif (
-            self.data.dtype == np.int8
-            or self.data.dtype == np.int16
-            or self.data.dtype == np.int32
-            or self.data.dtype == np.int64
-        ):
-            return DType.INT
+        return Image._map_numpy_dtype(self._data.dtype)
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -567,20 +616,20 @@ class ImageSequence(_Base):
         shape = self.images[0].shape
         dtype = self.images[0].dtype
         modality = self.images[0].modality
-        for img in self.images:
-            if img.dtype != dtype and not allow_different_dtypes:
-                logging.error(
-                    'Cannot create sequence from mixed dtypes. Consider using the "allow_different_dtypes" argument, when reading images.'
-                )
-                exit()
-            if img.shape != shape and same_camera:
-                logging.error(
-                    'Cannot create sequence from mixed shapes. Consider using the "same_camera" argument, when reading images.'
-                )
-                exit()
-            if img.modality != modality:
-                logging.error("Cannot create a sequence from mixed modalities.")
-                exit()
+        # for img in self.images:
+        #    if img.dtype != dtype and not allow_different_dtypes:
+        #        logging.error(
+        #            'Cannot create sequence from mixed dtypes. Consider using the "allow_different_dtypes" argument, when reading images.'
+        #        )
+        #        exit()
+        #    if img.shape != shape and same_camera:
+        #        logging.error(
+        #            'Cannot create sequence from mixed shapes. Consider using the "same_camera" argument, when reading images.'
+        #        )
+        #        exit()
+        #    if img.modality != modality:
+        #        logging.error("Cannot create a sequence from mixed modalities.")
+        #        exit()
 
         # namespace for accessing pandas methods
         self.pandas = self._PandasHandler(self)

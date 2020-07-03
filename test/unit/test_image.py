@@ -464,3 +464,28 @@ def test_image_data_is_view():
 def test_image_data_is_readonly():
     img = random_image()
     assert img.data.flags["WRITEABLE"] == False
+
+
+def test_lazy_load():
+    class Loader:
+        def __init__(self):
+            self.loaded = False
+
+        def __call__(self):
+            self.loaded = True
+            return np.ones((2), dtype=DTYPE_INT)
+
+    loader = Loader()
+    data = Image.LazyData(loader)
+    img = Image(data=data, path=Path())
+
+    assert loader.loaded == False
+    assert np.sum(img.data) == 2
+    assert loader.loaded == True
+
+
+def test_lazy_load_checks():
+    data = Image.LazyData(lambda: np.ones((2), dtype=np.uint8))
+    img = Image(data=data, path=Path())
+
+    assert img.data.dtype == DTYPE_UNSIGNED_INT
