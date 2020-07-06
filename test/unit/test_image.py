@@ -489,3 +489,22 @@ def test_lazy_load_checks():
     img = Image(data=data, path=Path())
 
     assert img.data.dtype == DTYPE_UNSIGNED_INT
+
+
+def test_load_cached():
+    class Loader:
+        def __init__(self):
+            self.n_calls = 0
+
+        def __call__(self):
+            self.n_calls += 1
+            return np.ones((2, 2))
+
+    loader = Loader()
+    data = Image.LazyData(loader)
+    img = Image(data=data, path=Path("test.png"))
+
+    data = img.data
+    assert loader.n_calls == 1
+    adata = img.data
+    assert loader.n_calls == 1

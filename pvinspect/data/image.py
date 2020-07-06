@@ -20,7 +20,7 @@ from enum import Enum
 import re
 import pandas as pd
 from tqdm.autonotebook import tqdm
-from functools import partial
+from functools import partial, lru_cache
 
 # this is a pointer to the module object instance itself
 this = sys.modules[__name__]
@@ -43,6 +43,9 @@ DTYPE_INT = np.int32
 DTYPE_UNSIGNED_INT = np.uint16
 DTYPE_FLOAT = np.float64
 img_as_float = img_as_float64
+
+# caching
+SEQUENCE_MAX_CACHE_SIZE = 5000
 
 
 class DType(Enum):
@@ -346,27 +349,31 @@ class Image(_Base):
         return array
 
     class LazyData:
-        def _load(self):
-            if self._data is None:
-                self._data = self._load_fn()
-                self._load_fn = None
+        @staticmethod
+        @lru_cache(maxsize=SEQUENCE_MAX_CACHE_SIZE, typed=True)
+        def _load(
+            load_fn: Callable[None, np.ndarray],
+            checks: Tuple[Callable[np.ndarray, np.ndarray]],
+        ) -> np.ndarray:
+            data = load_fn()
 
-                # perform data checks/conversions
-                for check in self._checks:
-                    self._data = check(self._data)
+            # perform data checks/conversions
+            for check in checks:
+                data = check(data)
+
+            return data
 
         def __init__(self, load_fn: Callable[None, np.ndarray]):
-            self._data = None
             self._load_fn = load_fn
-            self._checks = list()
+            self._checks: List[Callable[np.ndarray, np.ndarray]] = list()
 
         def __getattr__(self, name: str):
-            self._load()
-            return getattr(self._data, name)
+            data = self._load(self._load_fn, tuple(self._checks))
+            return getattr(data, name)
 
         def __getitem__(self, s):
-            self._load()
-            return self._data[s]
+            data = self._load(self._load_fn, tuple(self._checks))
+            return data[s]
 
         def push_check(self, fn: Callable[np.ndarray, np.ndarray]):
             self._checks.append(fn)
