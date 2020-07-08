@@ -86,6 +86,7 @@ def _read_image(
     path: PathOrStr,
     is_module_image: bool,
     is_partial_module: bool,
+    lazy: bool,
     modality: int = None,
     cols: int = None,
     rows: int = None,
@@ -101,32 +102,38 @@ def _read_image(
     )
 
     path = __assurePath(path)
-    img = io.imread(path)
 
-    if img.dtype == ">u2":
-        # big endian -> little endian
-        img = img.astype(np.uint16)
+    def _read(path):
+        img = io.imread(path)
 
-    if img.ndim == 3 and (img.dtype == np.float32 or img.dtype == np.float64):
-        img = color.rgb2gray(img)
-    elif img.ndim == 3:
-        img = img_as_uint(color.rgb2gray(img))
+        if img.dtype == ">u2":
+            # big endian -> little endian
+            img = img.astype(np.uint16)
 
-    if force_dtype == DType.FLOAT:
-        img = img.astype(DTYPE_FLOAT)
-    elif force_dtype == DType.UNSIGNED_INT:
-        img = img.astype(DTYPE_UNSIGNED_INT)
-    elif force_dtype == DType.INT:
-        img = img.astype(DTYPE_INT)
+        if img.ndim == 3 and (img.dtype == np.float32 or img.dtype == np.float64):
+            img = color.rgb2gray(img)
+        elif img.ndim == 3:
+            img = img_as_uint(color.rgb2gray(img))
 
-    if (img.dtype == np.float32 or img.dtype == np.float64) and (
-        img.min() < 0.0 or img.max() > 1.0
-    ):
-        raise RuntimeWarning(
-            'Image "{}" is of type float but not scaled between 0 and 1. This might cause trouble later. You might want to force conversion to another datatype using force_dtype=DType.UNSIGNED_INT (for example).'.format(
-                path
+        if force_dtype == DType.FLOAT:
+            img = img.astype(DTYPE_FLOAT)
+        elif force_dtype == DType.UNSIGNED_INT:
+            img = img.astype(DTYPE_UNSIGNED_INT)
+        elif force_dtype == DType.INT:
+            img = img.astype(DTYPE_INT)
+
+        if (img.dtype == np.float32 or img.dtype == np.float64) and (
+            img.min() < 0.0 or img.max() > 1.0
+        ):
+            raise RuntimeWarning(
+                'Image "{}" is of type float but not scaled between 0 and 1. This might cause trouble later. You might want to force conversion to another datatype using force_dtype=DType.UNSIGNED_INT (for example).'.format(
+                    path
+                )
             )
-        )
+        return img
+
+    # conditionally enable lazy loading
+    img = _read(path) if not lazy else Image.LazyData(partial(_read, path))
 
     # try to read meta file
     meta_path = _get_meta_path(path)
@@ -157,6 +164,7 @@ def _read_images(
     is_module_image: bool,
     same_camera: bool,
     is_partial_module: bool,
+    lazy: bool,
     modality: int = None,
     cols: int = None,
     rows: int = None,
@@ -185,6 +193,7 @@ def _read_images(
                 fn,
                 is_module_image,
                 is_partial_module,
+                lazy,
                 modality,
                 cols,
                 rows,
@@ -228,7 +237,10 @@ def _read_images(
 
 
 def read_image(
-    path: PathOrStr, modality: int = None, force_dtype: DType = None
+    path: PathOrStr,
+    modality: int = None,
+    force_dtype: DType = None,
+    lazy: bool = False,
 ) -> Image:
     """Read a single image of a solar module and return it
 
@@ -236,6 +248,7 @@ def read_image(
         path (PathOrStr): Path to the file to be read
         modality (int): The imaging modality
         force_dtype (DType): Force images to have this datatype
+        lazy (bool): Enable lazy loading for this image
 
     Returns:
         image: The module image
@@ -245,6 +258,7 @@ def read_image(
         path=path,
         is_module_image=False,
         is_partial_module=False,
+        lazy=lazy,
         modality=modality,
         force_dtype=force_dtype,
     )
@@ -258,6 +272,7 @@ def read_images(
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
     force_dtype: DType = None,
+    lazy: bool = False,
 ) -> ImageSequence:
     """Read a sequence of images and return it
 
@@ -269,6 +284,7 @@ def read_images(
         pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
         allow_different_dtypes (bool): Allow images to have different datatypes?
         force_dtype (DType): Force images to have this datatype
+        lazy (bool): Enable lazy loading for these images
 
     Returns:
         image: The image sequence
@@ -279,6 +295,7 @@ def read_images(
         is_module_image=False,
         same_camera=same_camera,
         is_partial_module=False,
+        lazy=lazy,
         modality=modality,
         pattern=pattern,
         allow_different_dtypes=allow_different_dtypes,
@@ -288,7 +305,11 @@ def read_images(
 
 
 def read_module_image(
-    path: PathOrStr, modality: int, cols: int = None, rows: int = None
+    path: PathOrStr,
+    modality: int,
+    cols: int = None,
+    rows: int = None,
+    lazy: bool = False,
 ) -> ModuleImage:
     """Read a single image of a solar module and return it
 
@@ -297,6 +318,7 @@ def read_module_image(
         modality (int): The imaging modality
         cols (int): Number of columns of cells
         rows (int): Number of rows of cells
+        lazy (bool): Enable lazy loading for this image
 
     Returns:
         image: The module image
@@ -306,6 +328,7 @@ def read_module_image(
         path=path,
         is_module_image=True,
         is_partial_module=False,
+        lazy=lazy,
         modality=modality,
         cols=cols,
         rows=rows,
@@ -322,6 +345,7 @@ def read_module_images(
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
     force_dtype: DType = None,
+    lazy: bool = False,
 ) -> ModuleImageSequence:
     """Read a sequence of module images and return it
 
@@ -335,6 +359,7 @@ def read_module_images(
         pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
         allow_different_dtypes (bool): Allow images to have different datatypes?
         force_dtype (DType): Force images to have this datatype
+        lazy (bool): Enable lazy loading for these images
 
     Returns:
         image: The module image sequence
@@ -346,6 +371,7 @@ def read_module_images(
         same_camera=same_camera,
         is_partial_module=False,
         is_module_image=True,
+        lazy=lazy,
         cols=cols,
         rows=rows,
         N=N,
@@ -356,7 +382,11 @@ def read_module_images(
 
 
 def read_partial_module_image(
-    path: PathOrStr, modality: int, cols: int = None, rows: int = None
+    path: PathOrStr,
+    modality: int,
+    cols: int = None,
+    rows: int = None,
+    lazy: bool = False,
 ) -> ModuleImage:
     """Read a single partial view of a solar module and return it
 
@@ -365,6 +395,7 @@ def read_partial_module_image(
         modality (int): The imaging modality
         cols (int): Number of completely visible columns of cells
         rows (int): Number of completely visible rows of cells
+        lazy (bool): Enable lazy loading for this image
 
     Returns:
         image: The module image
@@ -374,6 +405,7 @@ def read_partial_module_image(
         path=path,
         is_module_image=False,
         is_partial_module=True,
+        lazy=lazy,
         modality=modality,
         cols=cols,
         rows=rows,
@@ -390,6 +422,7 @@ def read_partial_module_images(
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
     force_dtype: DType = None,
+    lazy: bool = False,
 ) -> ModuleImageSequence:
     """Read a sequence of partial views of solar modules and return it
 
@@ -403,6 +436,7 @@ def read_partial_module_images(
         pattern (Union[str, Tuple[str]]): Files must match any of the given pattern
         allow_different_dtypes (bool): Allow images to have different datatypes?
         force_dtype (DType): Force images to have this datatype
+        lazy (bool): Enable lazy loading for these images
 
     Returns:
         image: The module image sequence
@@ -413,6 +447,7 @@ def read_partial_module_images(
         is_module_image=False,
         is_partial_module=True,
         same_camera=same_camera,
+        lazy=lazy,
         modality=modality,
         cols=cols,
         rows=rows,

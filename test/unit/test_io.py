@@ -126,6 +126,12 @@ def test_read_images():
         assert isinstance(img, Image)
 
 
+def test_lazy_read_images():
+    _check_download_demo()
+    seq = read_images(EXAMPLES, True, N=2, lazy=True)
+    assert isinstance(seq[0]._data, Image.LazyData)
+
+
 def test_read_module_images():
     _check_download_demo()
     seq = read_module_images(EXAMPLES, EL_IMAGE, True, N=2)
