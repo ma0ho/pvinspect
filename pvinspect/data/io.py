@@ -201,32 +201,33 @@ def _read_images(
             )
         )
 
-    if not same_camera:
-        homogeneous_types = np.all(
-            np.array([img.dtype == imgs[0].dtype for img in imgs])
-        )
-        shapes = [img.shape for img in imgs]
-        homogeneous_shapes = np.all(np.array([s == shapes[0] for s in shapes]))
-        target_shape = np.max(shapes, axis=0)
+    # TODO: How to handle this with lazy loading?
+    # if not same_camera:
+    #    homogeneous_types = np.all(
+    #        np.array([img.dtype == imgs[0].dtype for img in imgs])
+    #    )
+    #    shapes = [img.shape for img in imgs]
+    #    homogeneous_shapes = np.all(np.array([s == shapes[0] for s in shapes]))
+    #    target_shape = np.max(shapes, axis=0)
 
-        if not homogeneous_shapes:
-            logging.warning(
-                "The original images are of different shape. They might not be suited for all applications (for example superresolution)."
-            )
+    #    if not homogeneous_shapes:
+    #        logging.warning(
+    #            "The original images are of different shape. They might not be suited for all applications (for example superresolution)."
+    #        )
 
-        if not homogeneous_types:
-            # target type is determined by the first image
-            logging.warning(
-                "The original images are of different type. They are converted to the type of the first image ({})".format(
-                    imgs[0].dtype
-                )
-            )
-            conv = (
-                img_as_float
-                if imgs[0].dtype == np.float32 or imgs[0].dtype == np.float64
-                else img_as_uint
-            )
-            imgs = [conv(img) for img in imgs]
+    #    if not homogeneous_types:
+    #        # target type is determined by the first image
+    #        logging.warning(
+    #            "The original images are of different type. They are converted to the type of the first image ({})".format(
+    #                imgs[0].dtype
+    #            )
+    #        )
+    #        conv = (
+    #            img_as_float
+    #            if imgs[0].dtype == np.float32 or imgs[0].dtype == np.float64
+    #            else img_as_uint
+    #        )
+    #        imgs = [conv(img) for img in imgs]
 
     if is_module_image or is_partial_module:
         return ModuleImageSequence(
