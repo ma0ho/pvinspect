@@ -349,6 +349,14 @@ def test_image_meta():
     assert not img_other.has_meta("key2")
 
 
+def test_image_meta_override():
+    data = random_image().data
+    path = random_image().path
+    img_test = Image(data=data, path=path, meta={"key": "value"})
+    img_other = Image.from_other(img_test, meta={"key": "othervalue"})
+    assert img_other.get_meta("key") == "othervalue"
+
+
 def test_image_data_is_immutable():
     data = random_image().data
     assert data.flags["WRITEABLE"] == False
