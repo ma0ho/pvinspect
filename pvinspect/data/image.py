@@ -9,7 +9,7 @@ from pvinspect.common.transform import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
 from typing import List, Tuple, Union, Callable, Type, TypeVar, Any, Dict
-from copy import deepcopy
+import copy
 import math
 from functools import wraps
 import logging
@@ -257,7 +257,7 @@ class _Base:
         for name in required:
             if name == "meta" and "meta" in kwargs.keys():
                 # joint meta dictionaries
-                tmp = deepcopy(other._meta)
+                tmp = copy.copy(other._meta)
                 if drop_meta_types is not None:
                     tmp = {
                         k: v
@@ -285,13 +285,15 @@ class _Base:
 
         return cls(**kwargs, **other_args)
 
+    def from_self(self: T, drop_meta_types: List[Type] = None, **kwargs) -> T:
+        return type(self).from_other(self, drop_meta_types=drop_meta_types, **kwargs)
+
 
 class Image(_Base):
     """A general image"""
 
     @staticmethod
     def _map_numpy_dtype(dtype):
-        print(dtype)
         if dtype == np.float32 or dtype == np.float64:
             return DType.FLOAT
         elif (
@@ -411,16 +413,16 @@ class Image(_Base):
 
     def as_type(self: _T, dtype: DType) -> _T:
         if dtype == DType.FLOAT:
-            return type(self).from_other(self, data=img_as_float(self._data))
+            return self.from_self(data=img_as_float(self._data))
         elif dtype == DType.UNSIGNED_INT:
-            return type(self).from_other(self, data=img_as_uint(self._data))
+            return self.from_self(data=img_as_uint(self._data))
         elif dtype == DType.INT:
-            return type(self).from_other(self, data=img_as_int(self._data))
+            return self.from_self(data=img_as_int(self._data))
 
     def __add__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data + other._data)
+        return self.from_other(data=self._data + other._data)
 
     def __sub__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
@@ -429,34 +431,38 @@ class Image(_Base):
             res = self._data.astype(DTYPE_INT) - other._data.astype(DTYPE_INT)
             iinfo = np.iinfo(DTYPE_UNSIGNED_INT)
             res = np.clip(res, 0, iinfo.max)
-            return type(self).from_other(self, data=res)
+            return self.from_self(data=res)
         else:
-            return type(self).from_other(self, data=self._data - other._data)
+            return self.from_self(data=self._data - other._data)
 
     def __mul__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data * other._data)
+        return self.from_self(data=self._data * other._data)
 
     def __truediv__(self: _T, other: _T) -> _T:
         if self.dtype != DType.FLOAT or other.dtype != DType.FLOAT:
             raise RuntimeError("Images must be of type float")
-        return type(self).from_other(self, data=self._data / other._data)
+        return self.from_self(data=self._data / other._data)
 
     def __floordiv__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data // other._data)
+        return self.from_self(data=self._data // other._data)
 
     def __mod__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data % other._data)
+        return self.from_self(data=self._data % other._data)
 
     def __pow__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data ** other._data)
+        return self.from_self(data=self._data ** other._data)
+
+    def __deepcopy__(self: _T, memo) -> _T:
+        # let behavior be determined by overridden attributes
+        return type(self).from_other(self)
 
     @property
     def data(self) -> np.ndarray:
@@ -478,7 +484,7 @@ class Image(_Base):
     @property
     def shape(self) -> Tuple[int, int]:
         """Shape of the image"""
-        return deepcopy(self.data.shape)
+        return copy.deepcopy(self.data.shape)
 
     @property
     def modality(self) -> Modality:
@@ -492,7 +498,7 @@ class Image(_Base):
             v.setflags(write=False)
             return v
         else:
-            return deepcopy(self._meta[key])
+            return copy.copy(self._meta[key])
 
     def has_meta(self, key: str) -> bool:
         """Check if a meta attribute is set"""
@@ -530,7 +536,7 @@ class Image(_Base):
         if transform is not None:
             v = transform(v)
         v = target_type(v)
-        return type(self).from_other(self, meta={key: v})
+        return self.from_self(meta={key: v})
 
     def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -> Image:
         """Extract meta data using given callable
@@ -678,7 +684,7 @@ class ImageSequence(_Base):
         p = tqdm if progress_bar else lambda x: x
         for img in p(self._images):
             result.append(fn(img, *argv, **kwargs))
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def apply_image_data(
         self: _T,
@@ -704,7 +710,7 @@ class ImageSequence(_Base):
             data = img.data
             res = fn(data, *argv, **kwargs)
             result.append(type(img).from_other(img, data=res))
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def meta_from_path(
         self,
@@ -739,7 +745,7 @@ class ImageSequence(_Base):
                     transform=transform,
                 )
             )
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def meta_from_fn(
         self, fn: Callable[[Image], Dict[str, Any]], **kwargs
@@ -764,35 +770,35 @@ class ImageSequence(_Base):
     def as_type(self: _T, dtype: DType) -> _T:
         """Convert sequence to specified dtype"""
         result = [img.as_type(dtype) for img in self._images]
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def __add__(self: _T, other: _T) -> _T:
         res = [x + y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __sub__(self: _T, other: _T) -> _T:
         res = [x - y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __mul__(self: _T, other: _T) -> _T:
         res = [x * y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __truediv__(self: _T, other: _T) -> _T:
         res = [x / y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __floordiv__(self: _T, other: _T) -> _T:
         res = [x // y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __mod__(self: _T, other: _T) -> _T:
         res = [x % y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __pow__(self: _T, other: _T) -> _T:
         res = [x ** y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     @property
     def images(self) -> List[Image]:
