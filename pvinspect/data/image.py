@@ -422,7 +422,7 @@ class Image(_Base):
     def __add__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return self.from_other(data=self._data + other._data)
+        return self.from_self(data=self._data + other._data)
 
     def __sub__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
