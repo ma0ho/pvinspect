@@ -3,6 +3,7 @@
 ## In development
 
 * Add performance test for single module detection
+* Speed up meta data handling
 
 ## 0.2.3
 

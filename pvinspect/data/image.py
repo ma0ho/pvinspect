@@ -523,7 +523,9 @@ class ImageSequence(_Base):
                 if isinstance(pandas_result, pd.DataFrame):
                     idx = pandas_result.index.to_list()
                     result = [self._parent._images[i] for i in idx]
-                    return type(self._parent).from_other(self._parent, images=result)
+                    seq = type(self._parent).from_other(self._parent, images=result)
+                    seq._meta_df = pandas_result
+                    return seq
                 elif isinstance(pandas_result, pd.Series):
                     idx = pandas_result.name
                     return self._parent[idx]
