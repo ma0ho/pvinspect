@@ -259,11 +259,13 @@ class _Base:
                 # joint meta dictionaries
                 tmp = deepcopy(other._meta)
                 if drop_meta_types is not None:
-                    tmp = {
-                        k: v
-                        for k, v in tmp.items()
-                        if not np.any([isinstance(v, x) for x in drop_meta_types])
-                    }
+                    tmp = pd.Series(
+                        {
+                            k: v
+                            for k, v in tmp.items()
+                            if not np.any([isinstance(v, x) for x in drop_meta_types])
+                        }
+                    )
                 kwargs["meta"] = kwargs["meta"].combine_first(tmp)
 
             if name not in kwargs.keys() and name != "self":
@@ -313,7 +315,7 @@ class Image(_Base):
             else pd.Series()
         )
         self._meta["modality"] = modality
-        self._meta["path"] = path
+        self._meta["path"] = path.absolute()
 
         # unify datatypes
         if self.dtype == DType.UNSIGNED_INT and self._data.dtype != DTYPE_UNSIGNED_INT:
