@@ -291,7 +291,7 @@ class Image(_Base):
         data: np.ndarray,
         path: Path,
         modality: Modality = None,
-        meta: Dict[str, Any] = None,
+        meta: Union[Dict[str, Any], pd.Series] = None,
     ):
         """Create a new image. All non-float images as automatically converted to uint.
 
@@ -302,7 +302,13 @@ class Image(_Base):
             meta (Dict[str, Any]): Meta attributes of this image
         """
         self._data = data
-        self._meta = meta if meta is not None else dict()
+        self._meta = (
+            meta
+            if isinstance(meta, pd.Series)
+            else pd.Series(meta)
+            if meta is not None
+            else pd.Series()
+        )
         self._meta["modality"] = modality
         self._meta["path"] = path
 
@@ -440,11 +446,11 @@ class Image(_Base):
 
     def has_meta(self, key: str) -> bool:
         """Check if a meta attribute is set"""
-        return key in self._meta.keys()
+        return key in self._meta.index
 
     def list_meta(self) -> List[str]:
         """List avaliable meta keys"""
-        return list(self._meta.keys())
+        return list(self._meta.index)
 
     def meta_from_path(
         self,
@@ -487,12 +493,16 @@ class Image(_Base):
         """
         return self.from_other(self, meta=fn(self))
 
+    def _meta_to_pandas(self) -> pd.Series:
+        """Convert (compatible) meta data to pandas series"""
+        if isinstance(self._data, np.ndarray):
+            self._meta["shape"] = self.shape
+            self._meta["dtype"] = self.dtype
+        return self._meta
+
     def meta_to_pandas(self) -> pd.Series:
         """Convert (compatible) meta data to pandas series"""
-        data = pd.Series(self._meta, copy=True)
-        data["shape"] = self.shape
-        data["dtype"] = self.dtype
-        return data
+        return deepcopy(self._meta_to_pandas())
 
 
 class ImageSequence(_Base):
@@ -700,7 +710,7 @@ class ImageSequence(_Base):
     def meta_to_pandas(self) -> pd.DataFrame:
         """Convert meta from images to pandas DataFrame"""
         if self._meta_df is None:
-            series = [img.meta_to_pandas() for img in self._images]
+            series = [img._meta_to_pandas() for img in self._images]
             self._meta_df = pd.DataFrame(data=series)
             self._meta_df = self._meta_df.astype(
                 {"modality": str}
