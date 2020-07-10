@@ -23,9 +23,11 @@ class BaseModel(ABC):
 
 class ONNXModel(BaseModel):
     def __init__(self, file: Path, *argv, **kwargs):
+        super().__init__(*argv, **kwargs)
+
         # init session
         self._session = onnxruntime.InferenceSession(file)
-        super().__init__(*argv, **kwargs)
+        self._output_names = [x.name for x in self._session.get_outputs()]
 
     def predict(
         self, images: ImageOrSequence, norm_mean: float = None, norm_std: float = None,
@@ -59,10 +61,11 @@ class ONNXModel(BaseModel):
             # predict
             data = np.tile(data, (1, 3, 1, 1)).astype(np.float32)
             ort_inputs = {self._session.get_inputs()[0].name: data}
-            pred = self._session.run(None, ort_inputs)[0]
-            return {"prediction": pred}
+            pred = self._session.run(None, ort_inputs)
+            return {"onnx_{}".format(k): v for k, v in zip(self._output_names, pred)}
 
-        return images.meta_from_fn(apply, progress_bar=True)
+        x = images.meta_from_fn(apply, progress_bar=True)
+        return x
 
 
 class ClassificationModel:
@@ -94,7 +97,7 @@ class ClassificationModel:
         )
 
         def apply(x: Image):
-            pred = x.get_meta("prediction").flatten()
+            pred = x.get_meta("onnx_prediction").flatten()
 
             # sigmoid
             if self._logistic_transform:
