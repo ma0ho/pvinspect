@@ -68,7 +68,7 @@ def test_image_from_other():
     img2 = Image.from_other(img, path=p)
     assert_equal(img._data, img2._data)
     assert img.modality == img2.modality
-    assert img2.path == p
+    assert img2.path == p.absolute()
 
 
 def test_module_image_from_other():
@@ -391,7 +391,6 @@ def test_image_meta_from_path():
     meta = img.meta_to_pandas()
 
     assert meta["k"] == 12
-    assert isinstance(meta["k"], int)
 
 
 def test_image_meta_from_path_transform():
@@ -406,7 +405,6 @@ def test_image_meta_from_path_transform():
     meta = img.meta_to_pandas()
 
     assert meta["k"] == 24
-    assert isinstance(meta["k"], int)
 
 
 def test_sequence_meta_to_pandas():
@@ -457,11 +455,11 @@ def test_sequence_pandas_array_access_single():
 
 
 def test_from_other_drop_types():
-    img1 = random_image(meta={"k1": 1, "k2": 0.2})
-    img2 = img1.from_other(img1, drop_meta_types=[int])
+    img1 = random_image(meta={"k1": 1, "k2": "x"})
+    img2 = img1.from_other(img1, drop_meta_types=[str])
 
-    assert img2.has_meta("k2")
-    assert not img2.has_meta("k1")
+    assert img2.has_meta("k1")
+    assert not img2.has_meta("k2")
 
 
 def test_image_data_is_view():
