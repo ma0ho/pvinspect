@@ -250,6 +250,9 @@ class _Base:
         """
         required = inspect.getfullargspec(cls.__init__)[0]
 
+        if "meta" in kwargs.keys() and isinstance(kwargs["meta"], dict):
+            kwargs["meta"] = pd.Series(kwargs["meta"])
+
         other_args = dict()
         for name in required:
             if name == "meta" and "meta" in kwargs.keys():
@@ -261,8 +264,8 @@ class _Base:
                         for k, v in tmp.items()
                         if not np.any([isinstance(v, x) for x in drop_meta_types])
                     }
-                tmp.update(kwargs["meta"])
-                kwargs["meta"] = tmp
+                kwargs["meta"] = kwargs["meta"].combine_first(tmp)
+
             if name not in kwargs.keys() and name != "self":
 
                 # first, try public property, then private property, then meta attribute
