@@ -68,7 +68,7 @@ def test_image_from_other():
     img2 = Image.from_other(img, path=p)
     assert_equal(img._data, img2._data)
     assert img.modality == img2.modality
-    assert img2.path == p
+    assert img2.path == p.absolute()
 
 
 def test_module_image_from_other():

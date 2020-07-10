@@ -294,7 +294,7 @@ class Image(_Base):
     def __init__(
         self,
         data: np.ndarray,
-        path: Path,
+        path: Path = None,
         modality: Modality = None,
         meta: Union[Dict[str, Any], pd.Series] = None,
     ):
@@ -315,7 +315,7 @@ class Image(_Base):
             else pd.Series()
         )
         self._meta["modality"] = modality
-        self._meta["path"] = path.absolute()
+        self._meta["path"] = path.absolute() if path is not None else None
 
         # unify datatypes
         if self.dtype == DType.UNSIGNED_INT and self._data.dtype != DTYPE_UNSIGNED_INT:
