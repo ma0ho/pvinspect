@@ -2,10 +2,13 @@ import onnxruntime
 import numpy as np
 from scipy import special
 from typing import List, Tuple
-from pvinspect.data.image import ImageOrSequence, _sequence, Image
+from pvinspect.data.image import ImageOrSequence, _sequence, Image, ImageSequence
 from skimage.transform import rescale
 from pathlib import Path
 from abc import ABC, abstractmethod
+import random
+from tqdm.autonotebook import trange
+import multiprocessing.pool
 
 
 class BaseModel(ABC):
@@ -29,8 +32,15 @@ class ONNXModel(BaseModel):
         self._session = onnxruntime.InferenceSession(file)
         self._output_names = [x.name for x in self._session.get_outputs()]
 
+        # thread pool for data loading
+        self._pool = multiprocessing.pool.ThreadPool(processes=1)
+
     def predict(
-        self, images: ImageOrSequence, norm_mean: float = None, norm_std: float = None,
+        self,
+        images: ImageOrSequence,
+        norm_mean: float = None,
+        norm_std: float = None,
+        batch_size: int = 8,
     ) -> ImageOrSequence:
 
         if (norm_mean is None or norm_std is None) and len(images) < 20:
@@ -38,34 +48,58 @@ class ONNXModel(BaseModel):
                 "Please provide a sufficient amount of images to automatically compute statistics"
             )
         elif norm_mean is None or norm_std is None:
-            # automatically compute statistics using all images
-            imgs = np.stack(
-                [images[i].data.astype(np.float) for i in range(len(images))]
-            )
+            # automatically compute statistics using 20 or 200 images
+            samples = random.choices(images, k=20 if len(images) < 200 else 200)
+            imgs = np.stack([image.data.astype(np.float) for image in samples])
             norm_mean = np.mean(imgs)
             norm_std = np.std(imgs)
 
-        def apply(x: Image):
-            data = x.data.astype(np.float)
+        def apply(x: ImageSequence):
+            data = [item.data.astype(np.float32) for item in x]
 
             # conditionally resize
             if self._input_shape is not None:
                 tgt = [
-                    s1 / s2 for s1, s2 in zip(list(self._input_shape), list(data.shape))
+                    s1 / s2
+                    for s1, s2 in zip(list(self._input_shape), list(data[0].shape))
                 ]
-                data = rescale(data, scale=tgt)
+                data = [rescale(x, scale=tgt) for x in data]
+            data = np.stack(data, axis=0)
 
-            # normalize
+            # normalize + reshape
             data = (data - norm_mean) / norm_std
+            data = np.tile(np.expand_dims(data, axis=1), (1, 3, 1, 1))
 
             # predict
-            data = np.tile(data, (1, 3, 1, 1)).astype(np.float32)
             ort_inputs = {self._session.get_inputs()[0].name: data}
             pred = self._session.run(None, ort_inputs)
-            return {"onnx_{}".format(k): v for k, v in zip(self._output_names, pred)}
+            return [
+                {
+                    "onnx_{}".format(k): pred[i][b]
+                    for i, k in enumerate(self._output_names)
+                }
+                for b in range(len(x))
+            ]
 
-        x = images.meta_from_fn(apply, progress_bar=True)
-        return x
+        results = []
+        cur_batch_thread = self._pool.apply_async(
+            lambda: images.pandas.iloc[0 * batch_size : (0 + 1) * batch_size]
+        )
+        for i in trange(
+            len(images) // batch_size + (0 if len(images) % batch_size == 0 else 1)
+        ):
+            next_batch_thread = self._pool.apply_async(
+                lambda: images.pandas.iloc[i * batch_size : (i + 1) * batch_size]
+            )
+            batch = cur_batch_thread.get()
+            results.extend(apply(batch))
+            cur_batch_thread = next_batch_thread
+
+        images_new = []
+        for img, anns in zip(images, results):
+            images_new.append(img.from_self(meta=anns))
+
+        return images.from_self(images=images_new)
 
 
 class ClassificationModel:
@@ -84,17 +118,11 @@ class ClassificationModel:
         self._prediction_postfix = prediction_postfix
 
     def predict(
-        self,
-        images: ImageOrSequence,
-        norm_mean: float = None,
-        norm_std: float = None,
-        thresh: float = 0.5,
+        self, images: ImageOrSequence, thresh: float = 0.5, **kwargs,
     ) -> ImageOrSequence:
 
         # run base model
-        images = self._base.predict(
-            images=images, norm_mean=norm_mean, norm_std=norm_std
-        )
+        images = self._base.predict(images=images, **kwargs)
 
         def apply(x: Image):
             pred = x.get_meta("onnx_prediction").flatten()
