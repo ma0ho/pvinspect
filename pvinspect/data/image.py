@@ -569,7 +569,7 @@ class Image(_Base):
 
     def meta_to_pandas(self) -> pd.Series:
         """Convert (compatible) meta data to pandas series"""
-        return deepcopy(self._meta_to_pandas())
+        return copy.deepcopy(self._meta_to_pandas())
 
 
 class ImageSequence(_Base):
