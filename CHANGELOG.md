@@ -4,7 +4,7 @@
 
 * Add performance test for single module detection
 * Pandas methods are now (all) available from `ImageSequence.pandas`
-* `Image` now supports lazy loading of data
+* `Image` now supports lazy loading of data (which is now default)
 * Introduced convenience method `from_self` to avoid using `type(self).from_other(self, ...)`
 * Add PyTorch `Dataset` implementation
 * Speed up meta data handling
