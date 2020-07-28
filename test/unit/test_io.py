@@ -228,16 +228,16 @@ def test_dump_load_json():
 
 
 def test_save_and_load_image_with_meta(tmp_path: Path):
-    meta = _test_dict()
+    meta = {"a": 1, "b": "xxx"}
     img = random_image(meta=meta)
     save_image(tmp_path / "test.tif", img, save_meta=True)
     img2 = read_image(tmp_path / "test.tif")
 
-    meta2 = {k: img2.get_meta(k) for k in img2.list_meta()}
-    meta["e"] = None
-    meta["path"] = None  # they must differ
-    meta2["path"] = None
-    assert meta == meta2
+    d1 = img.meta_to_pandas().to_dict()
+    d2 = img2.meta_to_pandas().to_dict()
+    del d1["path"]
+    del d2["path"]
+    assert d1 == d2
 
 
 def test_save_with_prefix(tmp_path: Path):

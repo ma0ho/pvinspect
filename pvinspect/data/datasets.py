@@ -1,18 +1,32 @@
 """Provides access to demo datasets"""
 
-from .image import ModuleImageSequence, ModuleImage, EL_IMAGE, ImageSequence
+from .image import (
+    ModuleImageSequence,
+    ModuleImage,
+    EL_IMAGE,
+    ImageSequence,
+    CellImage,
+    CellImageSequence,
+)
 from .io import *
 from pathlib import Path
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from typing import Tuple, Dict
 import os
+import requests
+from zipfile import ZipFile
 
-_ds_keys = {"20191219_poly10x6": "1B5fQPLvStuMvuYJ5CxbzyxfwuWQdfNVE"}
+_DS_PATH = Path(__file__).parent.absolute() / "datasets"
+_DS_KEYS = {
+    "20191219_poly10x6": "1B5fQPLvStuMvuYJ5CxbzyxfwuWQdfNVE",
+    "20200728_elpv_labels": "1hK_hViiZ1-rHhvI3yGxpC6DSCXAyAFiJ",
+}
+_ZIP_DS_URLS = {"elpv": "https://github.com/zae-bayern/elpv-dataset/archive/master.zip"}
 
 
 def _get_dataset_key(name: str):
-    if name in _ds_keys.keys():
-        return _ds_keys[name]
+    if name in _DS_KEYS.keys():
+        return _DS_KEYS[name]
     else:
         keys = os.getenv("PVINSPECT_KEYS").split(";")
         keys = {x.split(",")[0]: x.split(",")[1] for x in keys}
@@ -34,6 +48,20 @@ def _check_and_download_ds(name: str):
     return ds_path
 
 
+def _check_and_download_zip_ds(name: str) -> Path:
+    url = _ZIP_DS_URLS[name]
+    r = requests.get(url, allow_redirects=True)
+    target = _DS_PATH / name
+
+    if not target.is_dir():
+        target.mkdir()
+        open(target / "data.zip", "wb").write(r.content)
+        zipf = ZipFile(target / "data.zip")
+        zipf.extractall(target)
+
+    return target
+
+
 def poly10x6(N: int = 0) -> ModuleImageSequence:
     """Read sequence of 10x6 poly modules
     
@@ -42,6 +70,51 @@ def poly10x6(N: int = 0) -> ModuleImageSequence:
     """
     p = _check_and_download_ds("20191219_poly10x6")
     return read_module_images(p, EL_IMAGE, True, 10, 6, N=N)
+
+
+def elpv(N: int = 0) -> ImageSequence:
+    """Read images from ELPV dataset
+
+        Note:
+            This dataset is part of the following publication:
+            Deitsch, Sergiu, et al. "Automatic classification of defective photovoltaic module cells in electroluminescence images."
+            Solar Energy, Elsevier BV, 2019, 185, 455-468. 
+            
+            Additional labels for defect types are provided by the author of this toolbox.
+        
+        Args:
+            N (int): Number of images to return. Defaults to using all images.
+
+        Returns:
+            images: Images from the ELPV dataset with defect type annotations as `Image` meta data
+    """
+    images_path = _check_and_download_zip_ds("elpv") / "elpv-dataset-master" / "images"
+    labels_path = _check_and_download_ds("20200728_elpv_labels") / "labels.csv"
+    labels = pd.read_csv(
+        labels_path,
+        delimiter=";",
+        index_col="filename",
+        dtype={
+            "defect probability": float,
+            "wafer": str,
+            "crack": bool,
+            "inactive": bool,
+            "blob": bool,
+            "finger": bool,
+            "testset": bool,
+        },
+    ).rename(columns={"defect probability": "defect_probability"})
+
+    # associate images with labels
+    def label(img: Image):
+        l = labels.loc["images/{}".format(img.path.name)]
+        return l.to_dict()
+
+    # read images and labels
+    seq = read_images(images_path, same_camera=False, modality=EL_IMAGE, N=N)
+    seq = seq.meta_from_fn(label)
+
+    return seq
 
 
 def caip_dataB() -> Tuple[ModuleImageSequence, ModuleImageSequence, ObjectAnnotations]:

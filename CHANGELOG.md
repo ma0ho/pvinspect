@@ -7,6 +7,8 @@
 * `Image` now supports lazy loading of data
 * Introduced convenience method `from_self` to avoid using `type(self).from_other(self, ...)`
 * Add PyTorch `Dataset` implementation
+* Speed up meta data handling
+* Add ELPV cell image dataset
 
 ## 0.2.3
 

@@ -51,3 +51,23 @@ def test_multi_module_detection():
     assert isinstance(imgs, ImageSequence)
     for img in imgs:
         assert img.path.name in anns.keys()
+
+
+def test_elpv():
+    imgs = data.datasets.elpv(N=2)
+    assert isinstance(imgs, ImageSequence)
+    assert imgs.modality == EL_IMAGE
+
+    # check meta available
+    meta = [
+        "defect_probability",
+        "wafer",
+        "crack",
+        "inactive",
+        "blob",
+        "finger",
+        "testset",
+    ]
+
+    for m in meta:
+        assert imgs[0].has_meta(m)

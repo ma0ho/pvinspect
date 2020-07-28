@@ -32,12 +32,12 @@ def random_image(lazy: bool = False, **kwargs) -> Image:
 
 def random_uint_image() -> Image:
     data = (np.random.random((10, 10)) * 100).astype(np.uint32)
-    return Image(data, EL_IMAGE, Path() / "test.png")
+    return Image(data, modality=EL_IMAGE, path=Path() / "test.png")
 
 
 def random_module_image() -> ModuleImage:
     data = np.random.random((10, 10))
-    return ModuleImage(data, EL_IMAGE, Path() / "test.tif")
+    return ModuleImage(data, modality=EL_IMAGE, path=Path() / "test.tif")
 
 
 def random_image_sequence(
