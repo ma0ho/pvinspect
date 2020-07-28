@@ -34,8 +34,11 @@ class Dataset(t.utils.data.Dataset):
         # make sure that for every meta attribute there is a callable transform
         n_meta_transforms = len(meta_transforms) if meta_transforms is not None else 0
         if meta_attrs is not None:
+            meta_transforms_keys = (
+                meta_transforms.keys() if meta_transforms is not None else []
+            )
             self._meta_transforms = [
-                meta_transforms[k] if k in meta_transforms.keys() else identity
+                meta_transforms[k] if k in meta_transforms_keys else identity
                 for k in meta_attrs
             ]
         else:
