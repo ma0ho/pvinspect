@@ -567,14 +567,11 @@ class Image(_Base):
 
     def _meta_to_pandas(self) -> pd.Series:
         """Convert (compatible) meta data to pandas series"""
-        if isinstance(self._data, np.ndarray):
-            self._meta["shape"] = self.shape
-            self._meta["dtype"] = self.dtype
         return self._meta
 
     def meta_to_pandas(self) -> pd.Series:
         """Convert (compatible) meta data to pandas series"""
-        return deepcopy(self._meta_to_pandas())
+        return copy.deepcopy(self._meta_to_pandas())
 
 
 class ImageSequence(_Base):
