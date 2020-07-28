@@ -6,6 +6,7 @@
 * Pandas methods are now (all) available from `ImageSequence.pandas`
 * `Image` now supports lazy loading of data
 * Introduced convenience method `from_self` to avoid using `type(self).from_other(self, ...)`
+* Add PyTorch `Dataset` implementation
 
 ## 0.2.3
 
