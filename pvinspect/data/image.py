@@ -491,6 +491,11 @@ class Image(_Base):
         """The imaging modality"""
         return self.get_meta("modality")
 
+    @property
+    def lazy(self) -> bool:
+        """Check, if this is lazy loaded"""
+        return isinstance(self._data, Image.LazyData)
+
     def get_meta(self, key: str) -> Any:
         """Access a meta attribute"""
         if isinstance(self._meta[key], np.ndarray):

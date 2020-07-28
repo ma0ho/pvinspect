@@ -7,6 +7,7 @@ from pvinspect.data import (
     ModuleImageSequence,
     EL_IMAGE,
 )
+from typing import List, Dict, Any, Optional
 
 
 def assert_equal(value, target, precision=1e-3):
@@ -15,8 +16,11 @@ def assert_equal(value, target, precision=1e-3):
     ), "got value={}, target={}".format(value, target)
 
 
-def random_image(**kwargs) -> Image:
-    data = np.random.random((10, 10))
+def random_image(lazy: bool = False, **kwargs) -> Image:
+    if lazy:
+        data = Image.LazyData(lambda: np.random.random((10, 10)))
+    else:
+        data = np.random.random((10, 10))
 
     if "modality" not in kwargs.keys():
         kwargs["modality"] = EL_IMAGE
@@ -36,8 +40,14 @@ def random_module_image() -> ModuleImage:
     return ModuleImage(data, EL_IMAGE, Path() / "test.tif")
 
 
-def random_image_sequence() -> ImageSequence:
-    imgs = [random_image() for x in range(3)]
+def random_image_sequence(
+    N: int = 3, meta: Optional[List[Dict[str, Any]]] = None, **kwargs
+) -> ImageSequence:
+    if meta is None:
+        imgs = [random_image(**kwargs) for i in range(N)]
+    else:
+        assert len(meta) == N
+        imgs = [random_image(meta=m, **kwargs) for m in meta]
     return ImageSequence(imgs, False)
 
 
