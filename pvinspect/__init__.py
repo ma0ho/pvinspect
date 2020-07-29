@@ -1,4 +1,4 @@
-from . import data, preproc, common
+from . import data, preproc, common, integration
 
 __all__ = ["data", "preproc", "common", "integration"]
 

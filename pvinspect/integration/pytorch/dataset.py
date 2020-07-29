@@ -53,8 +53,13 @@ class Dataset(TorchDataset):
             )
 
     def __getitem__(self, index: int) -> Union[D, Tuple[Any, ...]]:
+        # 64 -> 32bit floats
+        imgdata = self._data[index].data
+        if imgdata.dtype == np.float64:
+            imgdata = imgdata.astype(np.float32)
+
         # image data
-        d = self._data_transform(self._data[index].data)
+        d = self._data_transform(imgdata)
 
         # meta -> labels
         if self._meta_attrs is not None:
