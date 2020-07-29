@@ -356,11 +356,12 @@ class Image(_Base):
         return array
 
     class LazyData:
-        @staticmethod
+        @classmethod
         @lru_cache(maxsize=SEQUENCE_MAX_CACHE_SIZE, typed=True)
         def _load(
-            load_fn: Callable[None, np.ndarray],
-            checks: Tuple[Callable[np.ndarray, np.ndarray]],
+            cls,
+            load_fn: Callable[[], np.ndarray],
+            checks: Tuple[Callable[[np.ndarray], np.ndarray]],
         ) -> np.ndarray:
             data = load_fn()
 
@@ -368,21 +369,32 @@ class Image(_Base):
             for check in checks:
                 data = check(data)
 
+            # make it immutable
+            data.setflags(write=False)
+
             return data
 
-        def __init__(self, load_fn: Callable[None, np.ndarray]):
+        def __init__(self, load_fn: Callable[[], np.ndarray]):
             self._load_fn = load_fn
-            self._checks: List[Callable[np.ndarray, np.ndarray]] = list()
+            self._checks: List[Callable[[np.ndarray], np.ndarray]] = list()
 
         def __getattr__(self, name: str):
-            data = self._load(self._load_fn, tuple(self._checks))
-            return getattr(data, name)
+            if name == "view":
+                # just return yourself
+                return lambda: self
+            if name == "copy":
+                # return a copy of yourself
+                return copy.deepcopy(self)
+            else:
+                # forward to numpy
+                data = self._load(self._load_fn, tuple(self._checks))
+                return getattr(data, name)
 
         def __getitem__(self, s):
             data = self._load(self._load_fn, tuple(self._checks))
             return data[s]
 
-        def push_check(self, fn: Callable[np.ndarray, np.ndarray]):
+        def push_check(self, fn: Callable[[np.ndarray], np.ndarray]):
             self._checks.append(fn)
 
     def __init__(
@@ -413,6 +425,7 @@ class Image(_Base):
 
         if isinstance(data, np.ndarray):
             self._data = Image._unify_dtypes(self._data)
+            self._data.setflags(write=False)
         else:
             self._data.push_check(Image._unify_dtypes)
 
@@ -479,7 +492,6 @@ class Image(_Base):
     def data(self) -> np.ndarray:
         """The underlying image data"""
         v = self._data.view()
-        v.setflags(write=False)
         return v
 
     @property
