@@ -23,6 +23,17 @@ class Dataset(TorchDataset):
         meta_attrs: List[str] = list(),
         meta_transforms: Dict[str, Callable[[Any], Any]] = dict(),
     ):
+        """A PyTorch-compatible Dataset implementation for ImageSequence
+
+        Args:
+            data (ImageSequence): The ImageSequence that should be wrapped in the dataset
+            data_transform (Optional[Callable[[np.ndarray], D]]): Callable that transforms data, use 
+                this for online data augmentation/conversion etc.
+            meta_attrs (List[str]): Meta attributes that should be returned in addition to the data
+                on accessing single elements of the dataset
+            meta_transforms (Dict[str, Callable[[Any], Any]]): Use this to specify additional transforms
+                for individual meta attributes
+        """
         super().__init__()
         self._data = data
         self._meta_attrs = meta_attrs
@@ -79,10 +90,10 @@ class ClassificationDataset(Dataset):
 
     ClassificationMeta = Dict[str, bool]
 
-    def meta_to_tensor(self, meta: List[Any]) -> t.Tensor:
+    def _meta_to_tensor(self, meta: List[Any]) -> t.Tensor:
         return t.tensor([meta[i] for i in self._meta_classes_idx], dtype=t.float32)
 
-    def tensor_to_meta_dict(self, tensor: t.Tensor, prefix: str) -> ClassificationMeta:
+    def _tensor_to_meta_dict(self, tensor: t.Tensor, prefix: str) -> ClassificationMeta:
         l = tensor.to(t.bool).tolist()
         return {prefix + k: v for k, v in zip(self._meta_classes, l)}
 
@@ -94,6 +105,19 @@ class ClassificationDataset(Dataset):
         meta_attrs: List[str] = list(),
         meta_transforms: Dict[str, Callable[[Any], Any]] = dict(),
     ):
+        """A PyTorch-compatible Dataset implementation for ImageSequence
+
+        Args:
+            data (ImageSequence): The ImageSequence that should be wrapped in the dataset
+            meta_classes (List[str]): List of meta attributes that should become part of the
+                one-hot encoded target vector. These meta attributes must be boolean.
+            data_transform (Optional[Callable[[np.ndarray], D]]): Callable that transforms data, use 
+                this for online data augmentation/conversion etc.
+            meta_attrs (List[str]): Meta attributes that should be returned in addition to the data
+                and the one-hot encoded target on accessing single elements of the dataset
+            meta_transforms (Dict[str, Callable[[Any], Any]]): Use this to specify additional transforms
+                for individual meta attributes. These apply to members of meta_classes as well
+        """
         meta_attrs = meta_classes + meta_attrs
         super().__init__(
             data=data,
@@ -107,7 +131,7 @@ class ClassificationDataset(Dataset):
     def __getitem__(self, index: int) -> Union[D, Tuple[D, t.Tensor], Tuple[Any, ...]]:
         res = list(super().__getitem__(index))
         x = res[0]
-        y = self.meta_to_tensor(res[1:])
+        y = self._meta_to_tensor(res[1:])
         if len(res) > len(self._meta_classes) + 1:
             other = res[len(self._meta_classes) + 1 :]
         else:
@@ -118,6 +142,17 @@ class ClassificationDataset(Dataset):
     def result_sequence(
         self, results: List[t.Tensor], prefix: str = "pred_"
     ) -> ImageSequence:
+        """Feed classification results back to obtain an ImageSequence with predictions
+
+        Args:
+            results (List[torch.Tensor]): List of predictions from the network. Convert to
+                boolean before calling this. The order of elements must be the same as in
+                the underlying ImageSequence.
+            prefix (str): Prefix prediction result meta attributes by this
+        
+        Returns:
+            result (ImageSequence): The ImageSequence with additional meta data
+        """
         assert len(results) == len(self._data)
 
         # build an inverse map from Image to index
@@ -126,6 +161,6 @@ class ClassificationDataset(Dataset):
         # assign meta data
         def meta_fn(x: Image) -> ClassificationDataset.ClassificationMeta:
             idx = imap[x]
-            return self.tensor_to_meta_dict(results[idx], prefix=prefix)
+            return self._tensor_to_meta_dict(results[idx], prefix=prefix)
 
         return self._data.meta_from_fn(meta_fn)
