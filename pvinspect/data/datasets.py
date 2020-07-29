@@ -112,7 +112,7 @@ def elpv(N: int = 0) -> ImageSequence:
 
     # read images and labels
     seq = read_images(images_path, same_camera=False, modality=EL_IMAGE, N=N)
-    seq = seq.meta_from_fn(label)
+    seq = seq.meta_from_fn(label, progress_bar=False)
 
     return seq
 
