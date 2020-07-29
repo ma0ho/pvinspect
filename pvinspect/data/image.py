@@ -603,7 +603,7 @@ class ImageSequence(_Base):
                     idx = pandas_result.index.to_list()
                     result = [self._parent._images[i] for i in idx]
                     seq = type(self._parent).from_other(self._parent, images=result)
-                    seq._meta_df = pandas_result
+                    seq._meta_df = pandas_result.reset_index(drop=True)
                     return seq
                 elif isinstance(pandas_result, pd.Series):
                     idx = pandas_result.name
