@@ -50,11 +50,11 @@ def _check_and_download_ds(name: str):
 
 def _check_and_download_zip_ds(name: str) -> Path:
     url = _ZIP_DS_URLS[name]
-    r = requests.get(url, allow_redirects=True)
     target = _DS_PATH / name
 
     if not target.is_dir():
         target.mkdir()
+        r = requests.get(url, allow_redirects=True)
         open(target / "data.zip", "wb").write(r.content)
         zipf = ZipFile(target / "data.zip")
         zipf.extractall(target)
