@@ -162,9 +162,9 @@ def _read_image(
 def _read_images(
     path: PathOrStr,
     is_module_image: bool,
-    same_camera: bool,
     is_partial_module: bool,
     lazy: bool,
+    same_camera: bool = False,
     modality: int = None,
     cols: int = None,
     rows: int = None,
@@ -264,7 +264,7 @@ def read_image(
 
 def read_images(
     path: PathOrStr,
-    same_camera: bool,
+    same_camera: bool = False,
     modality: int = None,
     N: int = 0,
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
@@ -336,7 +336,7 @@ def read_module_image(
 def read_module_images(
     path: PathOrStr,
     modality: int,
-    same_camera: bool,
+    same_camera: bool = False,
     cols: int = None,
     rows: int = None,
     N: int = 0,
@@ -413,7 +413,7 @@ def read_partial_module_image(
 def read_partial_module_images(
     path: PathOrStr,
     modality: int,
-    same_camera: bool,
+    same_camera: bool = False,
     cols: int = None,
     rows: int = None,
     N: int = 0,

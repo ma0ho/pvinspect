@@ -639,7 +639,10 @@ class ImageSequence(_Base):
             return self._Sub(self._parent, attr)
 
     def __init__(
-        self, images: List[Image], same_camera: bool, allow_different_dtypes=False
+        self,
+        images: List[Image],
+        same_camera: bool = False,
+        allow_different_dtypes=False,
     ):
         """Initialize a module image sequence
         
@@ -874,9 +877,9 @@ class CellImage(Image):
         self,
         data: np.ndarray,
         modality: Modality,
-        path: Path,
         row: int,
         col: int,
+        path: Path = None,
         meta: Dict[str, Any] = None,
     ):
         """Initialize a cell image
@@ -929,7 +932,7 @@ class ModuleImage(Image):
         self,
         data: np.ndarray,
         modality: Modality,
-        path: Path,
+        path: Path = None,
         cols: int = None,
         rows: int = None,
         meta: dict = None,
@@ -981,7 +984,7 @@ class PartialModuleImage(ModuleImage):
         self,
         data: np.ndarray,
         modality: Modality,
-        path: Path,
+        path: Path = None,
         cols: int = None,
         rows: int = None,
         first_col: int = None,
@@ -1015,7 +1018,7 @@ class ModuleImageSequence(ImageSequence):
     def __init__(
         self,
         images: List[ModuleOrPartialModuleImage],
-        same_camera: bool,
+        same_camera: bool = False,
         allow_different_dtypes=False,
     ):
         """Initialize a module image sequence
