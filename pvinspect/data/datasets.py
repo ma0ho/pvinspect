@@ -15,6 +15,7 @@ from typing import Tuple, Dict
 import os
 import requests
 from zipfile import ZipFile
+import logging
 
 _DS_PATH = Path(__file__).parent.absolute() / "datasets"
 _DS_KEYS = {
@@ -42,6 +43,7 @@ def _get_dataset_key(name: str):
 def _check_and_download_ds(name: str):
     ds_path = Path(__file__).parent.absolute() / "datasets" / name
     if not ds_path.is_dir():
+        logging.info("Data is being downloaded..")
         k = _get_dataset_key(name)
         ds_path.mkdir(parents=True, exist_ok=False)
         gdd.download_file_from_google_drive(k, str(ds_path / "data.zip"), unzip=True)
@@ -50,11 +52,12 @@ def _check_and_download_ds(name: str):
 
 def _check_and_download_zip_ds(name: str) -> Path:
     url = _ZIP_DS_URLS[name]
-    r = requests.get(url, allow_redirects=True)
     target = _DS_PATH / name
 
     if not target.is_dir():
+        logging.info("Data is being downloaded..")
         target.mkdir()
+        r = requests.get(url, allow_redirects=True)
         open(target / "data.zip", "wb").write(r.content)
         zipf = ZipFile(target / "data.zip")
         zipf.extractall(target)
@@ -88,8 +91,14 @@ def elpv(N: int = 0) -> ImageSequence:
         Returns:
             images: Images from the ELPV dataset with defect type annotations as `Image` meta data
     """
+    # download and read images
     images_path = _check_and_download_zip_ds("elpv") / "elpv-dataset-master" / "images"
+    seq = read_images(images_path, same_camera=False, modality=EL_IMAGE, N=N)
+
+    # download and read labels
     labels_path = _check_and_download_ds("20200728_elpv_labels") / "labels.csv"
+
+    logging.info("Loading labels..")
     labels = pd.read_csv(
         labels_path,
         delimiter=";",
@@ -111,8 +120,7 @@ def elpv(N: int = 0) -> ImageSequence:
         return l.to_dict()
 
     # read images and labels
-    seq = read_images(images_path, same_camera=False, modality=EL_IMAGE, N=N)
-    seq = seq.meta_from_fn(label)
+    seq = seq.meta_from_fn(label, progress_bar=False)
 
     return seq
 

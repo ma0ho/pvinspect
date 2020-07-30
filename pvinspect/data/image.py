@@ -9,7 +9,7 @@ from pvinspect.common.transform import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
 from typing import List, Tuple, Union, Callable, Type, TypeVar, Any, Dict
-from copy import deepcopy
+import copy
 import math
 from functools import wraps
 import logging
@@ -20,7 +20,7 @@ from enum import Enum
 import re
 import pandas as pd
 from tqdm.autonotebook import tqdm
-from functools import partial
+from functools import partial, lru_cache
 
 # this is a pointer to the module object instance itself
 this = sys.modules[__name__]
@@ -43,6 +43,9 @@ DTYPE_INT = np.int32
 DTYPE_UNSIGNED_INT = np.uint16
 DTYPE_FLOAT = np.float64
 img_as_float = img_as_float64
+
+# caching
+SEQUENCE_MAX_CACHE_SIZE = 5000
 
 
 class DType(Enum):
@@ -257,7 +260,7 @@ class _Base:
         for name in required:
             if name == "meta" and "meta" in kwargs.keys():
                 # joint meta dictionaries
-                tmp = deepcopy(other._meta)
+                tmp = copy.copy(other._meta)
                 if drop_meta_types is not None:
                     tmp = pd.Series(
                         {
@@ -271,7 +274,9 @@ class _Base:
             if name not in kwargs.keys() and name != "self":
 
                 # first, try public property, then private property, then meta attribute
-                if hasattr(other, name):
+                if name == "data":
+                    other_args[name] = other._data
+                elif hasattr(other, name):
                     other_args[name] = getattr(other, name)
                 elif hasattr(other, "_" + name):
                     other_args[name] = getattr(other, "_" + name)
@@ -287,9 +292,108 @@ class _Base:
 
         return cls(**kwargs, **other_args)
 
+    def from_self(self: T, drop_meta_types: List[Type] = None, **kwargs) -> T:
+        return type(self).from_other(self, drop_meta_types=drop_meta_types, **kwargs)
+
 
 class Image(_Base):
     """A general image"""
+
+    @staticmethod
+    def _map_numpy_dtype(dtype):
+        if dtype == np.float32 or dtype == np.float64:
+            return DType.FLOAT
+        elif (
+            dtype == np.uint8
+            or dtype == np.uint16
+            or dtype == np.uint32
+            or dtype == np.uint64
+        ):
+            return DType.UNSIGNED_INT
+        elif (
+            dtype == np.int8
+            or dtype == np.int16
+            or dtype == np.int32
+            or dtype == np.int64
+        ):
+            return DType.INT
+
+    @staticmethod
+    def _unify_dtypes(array):
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.UNSIGNED_INT
+            and array.dtype != DTYPE_UNSIGNED_INT
+        ):
+            if (
+                array.max() > np.iinfo(DTYPE_UNSIGNED_INT).max
+                or array.min() < np.iinfo(DTYPE_UNSIGNED_INT).min
+            ):
+                raise RuntimeError(
+                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
+                        DTYPE_UNSIGNED_INT
+                    )
+                )
+            return array.astype(DTYPE_UNSIGNED_INT)
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.INT
+            and array.dtype != DTYPE_INT
+        ):
+            if (
+                array.max() > np.iinfo(DTYPE_INT).max
+                or array.min() < np.iinfo(DTYPE_INT).min
+            ):
+                raise RuntimeError(
+                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
+                        DTYPE_INT
+                    )
+                )
+            return array.astype(DTYPE_INT)
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.FLOAT
+            and array.dtype != DTYPE_FLOAT
+        ):
+            return array.astype(DTYPE_FLOAT)
+
+        # default
+        return array
+
+    class LazyData:
+        @classmethod
+        @lru_cache(maxsize=SEQUENCE_MAX_CACHE_SIZE, typed=True)
+        def _load(
+            cls,
+            load_fn: Callable[[], np.ndarray],
+            checks: Tuple[Callable[[np.ndarray], np.ndarray]],
+        ) -> np.ndarray:
+            data = load_fn()
+
+            # perform data checks/conversions
+            for check in checks:
+                data = check(data)
+
+            # make it immutable
+            data.setflags(write=False)
+
+            return data
+
+        def __init__(self, load_fn: Callable[[], np.ndarray]):
+            self._load_fn = load_fn
+            self._checks: List[Callable[[np.ndarray], np.ndarray]] = list()
+
+        def __getattr__(self, name: str):
+            # forward to numpy
+            data = self._load(self._load_fn, tuple(self._checks))
+            return getattr(data, name)
+
+        def __getitem__(self, s):
+            data = self._load(self._load_fn, tuple(self._checks))
+            return data[s]
+
+        def push_check(self, fn: Callable[[np.ndarray], np.ndarray]):
+            self._checks.append(fn)
+
+        def load(self) -> np.ndarray:
+            return self._load(self._load_fn, tuple(self._checks))
 
     def __init__(
         self,
@@ -317,31 +421,11 @@ class Image(_Base):
         self._meta["modality"] = modality
         self._meta["path"] = path.absolute() if path is not None else None
 
-        # unify datatypes
-        if self.dtype == DType.UNSIGNED_INT and self._data.dtype != DTYPE_UNSIGNED_INT:
-            if (
-                self._data.max() > np.iinfo(DTYPE_UNSIGNED_INT).max
-                or self._data.min() < np.iinfo(DTYPE_UNSIGNED_INT).min
-            ):
-                raise RuntimeError(
-                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
-                        DTYPE_UNSIGNED_INT
-                    )
-                )
-            self._data = self._data.astype(DTYPE_UNSIGNED_INT)
-        if self.dtype == DType.INT and self._data.dtype != DTYPE_INT:
-            if (
-                self._data.max() > np.iinfo(DTYPE_INT).max
-                or self._data.min() < np.iinfo(DTYPE_INT).min
-            ):
-                raise RuntimeError(
-                    "Datatype conversion to {} failed, since original data exceeds dtype limits.".format(
-                        DTYPE_INT
-                    )
-                )
-            self._data = self._data.astype(DTYPE_INT)
-        if self.dtype == DType.FLOAT and self._data.dtype != DTYPE_FLOAT:
-            self._data = self._data.astype(DTYPE_FLOAT)
+        if isinstance(data, np.ndarray):
+            self._data = Image._unify_dtypes(self._data)
+            self._data.setflags(write=False)
+        else:
+            self._data.push_check(Image._unify_dtypes)
 
     def show(self, **kwargs):
         """Show this image"""
@@ -351,16 +435,16 @@ class Image(_Base):
 
     def as_type(self: _T, dtype: DType) -> _T:
         if dtype == DType.FLOAT:
-            return type(self).from_other(self, data=img_as_float(self._data))
+            return self.from_self(data=img_as_float(self._data))
         elif dtype == DType.UNSIGNED_INT:
-            return type(self).from_other(self, data=img_as_uint(self._data))
+            return self.from_self(data=img_as_uint(self._data))
         elif dtype == DType.INT:
-            return type(self).from_other(self, data=img_as_int(self._data))
+            return self.from_self(data=img_as_int(self._data))
 
     def __add__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data + other._data)
+        return self.from_self(data=self._data + other._data)
 
     def __sub__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
@@ -369,40 +453,46 @@ class Image(_Base):
             res = self._data.astype(DTYPE_INT) - other._data.astype(DTYPE_INT)
             iinfo = np.iinfo(DTYPE_UNSIGNED_INT)
             res = np.clip(res, 0, iinfo.max)
-            return type(self).from_other(self, data=res)
+            return self.from_self(data=res)
         else:
-            return type(self).from_other(self, data=self._data - other._data)
+            return self.from_self(data=self._data - other._data)
 
     def __mul__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data * other._data)
+        return self.from_self(data=self._data * other._data)
 
     def __truediv__(self: _T, other: _T) -> _T:
         if self.dtype != DType.FLOAT or other.dtype != DType.FLOAT:
             raise RuntimeError("Images must be of type float")
-        return type(self).from_other(self, data=self._data / other._data)
+        return self.from_self(data=self._data / other._data)
 
     def __floordiv__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data // other._data)
+        return self.from_self(data=self._data // other._data)
 
     def __mod__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data % other._data)
+        return self.from_self(data=self._data % other._data)
 
     def __pow__(self: _T, other: _T) -> _T:
         if self.dtype != other.dtype:
             raise RuntimeError("Images must have the same datatype")
-        return type(self).from_other(self, data=self._data ** other._data)
+        return self.from_self(data=self._data ** other._data)
+
+    def __deepcopy__(self: _T, memo) -> _T:
+        # let behavior be determined by overridden attributes
+        return type(self).from_other(self)
 
     @property
     def data(self) -> np.ndarray:
         """The underlying image data"""
-        v = self._data.view()
-        v.setflags(write=False)
+        if isinstance(self._data, Image.LazyData):
+            v = self._data.load()
+        else:
+            v = self._data.view()
         return v
 
     @property
@@ -413,32 +503,22 @@ class Image(_Base):
     @property
     def dtype(self) -> DType:
         """Datatype of the image"""
-        if self.data.dtype == np.float32 or self.data.dtype == np.float64:
-            return DType.FLOAT
-        elif (
-            self.data.dtype == np.uint8
-            or self.data.dtype == np.uint16
-            or self.data.dtype == np.uint32
-            or self.data.dtype == np.uint64
-        ):
-            return DType.UNSIGNED_INT
-        elif (
-            self.data.dtype == np.int8
-            or self.data.dtype == np.int16
-            or self.data.dtype == np.int32
-            or self.data.dtype == np.int64
-        ):
-            return DType.INT
+        return Image._map_numpy_dtype(self._data.dtype)
 
     @property
     def shape(self) -> Tuple[int, int]:
         """Shape of the image"""
-        return deepcopy(self.data.shape)
+        return copy.deepcopy(self.data.shape)
 
     @property
     def modality(self) -> Modality:
         """The imaging modality"""
         return self.get_meta("modality")
+
+    @property
+    def lazy(self) -> bool:
+        """Check, if this is lazy loaded"""
+        return isinstance(self._data, Image.LazyData)
 
     def get_meta(self, key: str) -> Any:
         """Access a meta attribute"""
@@ -447,7 +527,7 @@ class Image(_Base):
             v.setflags(write=False)
             return v
         else:
-            return deepcopy(self._meta[key])
+            return copy.copy(self._meta[key])
 
     def has_meta(self, key: str) -> bool:
         """Check if a meta attribute is set"""
@@ -485,7 +565,7 @@ class Image(_Base):
         if transform is not None:
             v = transform(v)
         v = target_type(v)
-        return type(self).from_other(self, meta={key: v})
+        return self.from_self(meta={key: v})
 
     def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -> Image:
         """Extract meta data using given callable
@@ -500,14 +580,11 @@ class Image(_Base):
 
     def _meta_to_pandas(self) -> pd.Series:
         """Convert (compatible) meta data to pandas series"""
-        if isinstance(self._data, np.ndarray):
-            self._meta["shape"] = self.shape
-            self._meta["dtype"] = self.dtype
         return self._meta
 
     def meta_to_pandas(self) -> pd.Series:
         """Convert (compatible) meta data to pandas series"""
-        return deepcopy(self._meta_to_pandas())
+        return copy.deepcopy(self._meta_to_pandas())
 
 
 class ImageSequence(_Base):
@@ -584,20 +661,20 @@ class ImageSequence(_Base):
         shape = self.images[0].shape
         dtype = self.images[0].dtype
         modality = self.images[0].modality
-        for img in self.images:
-            if img.dtype != dtype and not allow_different_dtypes:
-                logging.error(
-                    'Cannot create sequence from mixed dtypes. Consider using the "allow_different_dtypes" argument, when reading images.'
-                )
-                exit()
-            if img.shape != shape and same_camera:
-                logging.error(
-                    'Cannot create sequence from mixed shapes. Consider using the "same_camera" argument, when reading images.'
-                )
-                exit()
-            if img.modality != modality:
-                logging.error("Cannot create a sequence from mixed modalities.")
-                exit()
+        # for img in self.images:
+        #    if img.dtype != dtype and not allow_different_dtypes:
+        #        logging.error(
+        #            'Cannot create sequence from mixed dtypes. Consider using the "allow_different_dtypes" argument, when reading images.'
+        #        )
+        #        exit()
+        #    if img.shape != shape and same_camera:
+        #        logging.error(
+        #            'Cannot create sequence from mixed shapes. Consider using the "same_camera" argument, when reading images.'
+        #        )
+        #        exit()
+        #    if img.modality != modality:
+        #        logging.error("Cannot create a sequence from mixed modalities.")
+        #        exit()
 
         # namespace for accessing pandas methods
         self.pandas = self._PandasHandler(self)
@@ -639,7 +716,7 @@ class ImageSequence(_Base):
         p = tqdm if progress_bar else lambda x: x
         for img in p(self._images):
             result.append(fn(img, *argv, **kwargs))
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def apply_image_data(
         self: _T,
@@ -665,7 +742,7 @@ class ImageSequence(_Base):
             data = img.data
             res = fn(data, *argv, **kwargs)
             result.append(type(img).from_other(img, data=res))
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def meta_from_path(
         self,
@@ -700,7 +777,7 @@ class ImageSequence(_Base):
                     transform=transform,
                 )
             )
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def meta_from_fn(
         self, fn: Callable[[Image], Dict[str, Any]], **kwargs
@@ -725,35 +802,35 @@ class ImageSequence(_Base):
     def as_type(self: _T, dtype: DType) -> _T:
         """Convert sequence to specified dtype"""
         result = [img.as_type(dtype) for img in self._images]
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def __add__(self: _T, other: _T) -> _T:
         res = [x + y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __sub__(self: _T, other: _T) -> _T:
         res = [x - y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __mul__(self: _T, other: _T) -> _T:
         res = [x * y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __truediv__(self: _T, other: _T) -> _T:
         res = [x / y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __floordiv__(self: _T, other: _T) -> _T:
         res = [x // y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __mod__(self: _T, other: _T) -> _T:
         res = [x % y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __pow__(self: _T, other: _T) -> _T:
         res = [x ** y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     @property
     def images(self) -> List[Image]:

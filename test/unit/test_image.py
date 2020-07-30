@@ -470,3 +470,70 @@ def test_image_data_is_view():
 def test_image_data_is_readonly():
     img = random_image()
     assert img.data.flags["WRITEABLE"] == False
+
+
+def test_lazy_load():
+    class Loader:
+        def __init__(self):
+            self.loaded = False
+
+        def __call__(self):
+            self.loaded = True
+            return np.ones((2), dtype=DTYPE_INT)
+
+    loader = Loader()
+    data = Image.LazyData(loader)
+    img = Image(data=data, path=Path())
+
+    assert loader.loaded == False
+    assert np.sum(img.data) == 2
+    assert loader.loaded == True
+
+
+def test_lazy_load_checks():
+    data = Image.LazyData(lambda: np.ones((2), dtype=np.uint8))
+    img = Image(data=data, path=Path())
+
+    assert img.data.dtype == DTYPE_UNSIGNED_INT
+
+
+def test_load_cached():
+    class Loader:
+        def __init__(self):
+            self.n_calls = 0
+
+        def __call__(self):
+            self.n_calls += 1
+            return np.ones((2, 2))
+
+    loader = Loader()
+    data = Image.LazyData(loader)
+    img = Image(data=data, path=Path("test.png"))
+
+    data = img.data
+    assert loader.n_calls == 1
+    adata = img.data
+    assert loader.n_calls == 1
+
+    # make sure that we get the same instance
+    assert data is adata
+
+
+def test_lazy_from_other():
+    class Loader:
+        def __init__(self):
+            self.n_calls = 0
+
+        def __call__(self):
+            self.n_calls += 1
+            return np.ones((2, 2))
+
+    loader = Loader()
+    data = Image.LazyData(loader)
+    img = Image(data=data, path=Path("test.png"))
+
+    # create another image from img
+    img2 = Image.from_other(img)
+
+    # assure that image is not loaded
+    assert loader.n_calls == 0

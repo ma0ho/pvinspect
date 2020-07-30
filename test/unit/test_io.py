@@ -126,6 +126,12 @@ def test_read_images():
         assert isinstance(img, Image)
 
 
+def test_lazy_read_images():
+    _check_download_demo()
+    seq = read_images(EXAMPLES, True, N=2, lazy=True)
+    assert isinstance(seq[0]._data, Image.LazyData)
+
+
 def test_read_module_images():
     _check_download_demo()
     seq = read_module_images(EXAMPLES, EL_IMAGE, True, N=2)
@@ -182,7 +188,7 @@ def test_hierachical_with_keys_save(tmp_path: Path):
             / ("m2_" + str(img.get_meta("m2")))
             / img.path.name
         )
-        ref = read_image(p)
+        ref = read_image(p, lazy=False)
         assert_equal(img.data, ref.data)
 
 
@@ -196,7 +202,7 @@ def test_hierachical_without_keys_save(tmp_path: Path):
 
     for img in seq:
         p = tmp_path / str(img.get_meta("m1")) / str(img.get_meta("m2")) / img.path.name
-        ref = read_image(p)
+        ref = read_image(p, lazy=False)
         assert_equal(img.data, ref.data)
 
 
