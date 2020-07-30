@@ -274,7 +274,9 @@ class _Base:
             if name not in kwargs.keys() and name != "self":
 
                 # first, try public property, then private property, then meta attribute
-                if hasattr(other, name):
+                if name == "data":
+                    other_args[name] = other._data
+                elif hasattr(other, name):
                     other_args[name] = getattr(other, name)
                 elif hasattr(other, "_" + name):
                     other_args[name] = getattr(other, "_" + name)
@@ -379,16 +381,9 @@ class Image(_Base):
             self._checks: List[Callable[[np.ndarray], np.ndarray]] = list()
 
         def __getattr__(self, name: str):
-            if name == "view":
-                # just return yourself
-                return lambda: self
-            if name == "copy":
-                # return a copy of yourself
-                return copy.deepcopy(self)
-            else:
-                # forward to numpy
-                data = self._load(self._load_fn, tuple(self._checks))
-                return getattr(data, name)
+            # forward to numpy
+            data = self._load(self._load_fn, tuple(self._checks))
+            return getattr(data, name)
 
         def __getitem__(self, s):
             data = self._load(self._load_fn, tuple(self._checks))
@@ -396,6 +391,9 @@ class Image(_Base):
 
         def push_check(self, fn: Callable[[np.ndarray], np.ndarray]):
             self._checks.append(fn)
+
+        def load(self) -> np.ndarray:
+            return self._load(self._load_fn, tuple(self._checks))
 
     def __init__(
         self,
@@ -491,7 +489,10 @@ class Image(_Base):
     @property
     def data(self) -> np.ndarray:
         """The underlying image data"""
-        v = self._data.view()
+        if isinstance(self._data, Image.LazyData):
+            v = self._data.load()
+        else:
+            v = self._data.view()
         return v
 
     @property
