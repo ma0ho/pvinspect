@@ -238,10 +238,7 @@ def _read_images(
 
 
 def read_image(
-    path: PathOrStr,
-    modality: int = None,
-    force_dtype: DType = None,
-    lazy: bool = False,
+    path: PathOrStr, modality: int = None, force_dtype: DType = None, lazy: bool = True,
 ) -> Image:
     """Read a single image of a solar module and return it
 
@@ -273,7 +270,7 @@ def read_images(
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
     force_dtype: DType = None,
-    lazy: bool = False,
+    lazy: bool = True,
 ) -> ImageSequence:
     """Read a sequence of images and return it
 
@@ -310,7 +307,7 @@ def read_module_image(
     modality: int,
     cols: int = None,
     rows: int = None,
-    lazy: bool = False,
+    lazy: bool = True,
 ) -> ModuleImage:
     """Read a single image of a solar module and return it
 
@@ -346,7 +343,7 @@ def read_module_images(
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
     force_dtype: DType = None,
-    lazy: bool = False,
+    lazy: bool = True,
 ) -> ModuleImageSequence:
     """Read a sequence of module images and return it
 
@@ -387,7 +384,7 @@ def read_partial_module_image(
     modality: int,
     cols: int = None,
     rows: int = None,
-    lazy: bool = False,
+    lazy: bool = True,
 ) -> ModuleImage:
     """Read a single partial view of a solar module and return it
 
@@ -423,7 +420,7 @@ def read_partial_module_images(
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
     force_dtype: DType = None,
-    lazy: bool = False,
+    lazy: bool = True,
 ) -> ModuleImageSequence:
     """Read a sequence of partial views of solar modules and return it
 

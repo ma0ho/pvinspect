@@ -188,7 +188,7 @@ def test_hierachical_with_keys_save(tmp_path: Path):
             / ("m2_" + str(img.get_meta("m2")))
             / img.path.name
         )
-        ref = read_image(p)
+        ref = read_image(p, lazy=False)
         assert_equal(img.data, ref.data)
 
 
@@ -202,7 +202,7 @@ def test_hierachical_without_keys_save(tmp_path: Path):
 
     for img in seq:
         p = tmp_path / str(img.get_meta("m1")) / str(img.get_meta("m2")) / img.path.name
-        ref = read_image(p)
+        ref = read_image(p, lazy=False)
         assert_equal(img.data, ref.data)
 
 

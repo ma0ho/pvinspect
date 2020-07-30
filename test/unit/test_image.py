@@ -514,3 +514,26 @@ def test_load_cached():
     assert loader.n_calls == 1
     adata = img.data
     assert loader.n_calls == 1
+
+    # make sure that we get the same instance
+    assert data is adata
+
+
+def test_lazy_from_other():
+    class Loader:
+        def __init__(self):
+            self.n_calls = 0
+
+        def __call__(self):
+            self.n_calls += 1
+            return np.ones((2, 2))
+
+    loader = Loader()
+    data = Image.LazyData(loader)
+    img = Image(data=data, path=Path("test.png"))
+
+    # create another image from img
+    img2 = Image.from_other(img)
+
+    # assure that image is not loaded
+    assert loader.n_calls == 0

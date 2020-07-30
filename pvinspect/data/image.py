@@ -274,7 +274,9 @@ class _Base:
             if name not in kwargs.keys() and name != "self":
 
                 # first, try public property, then private property, then meta attribute
-                if hasattr(other, name):
+                if name == "data":
+                    other_args[name] = other._data
+                elif hasattr(other, name):
                     other_args[name] = getattr(other, name)
                 elif hasattr(other, "_" + name):
                     other_args[name] = getattr(other, "_" + name)
@@ -356,11 +358,12 @@ class Image(_Base):
         return array
 
     class LazyData:
-        @staticmethod
+        @classmethod
         @lru_cache(maxsize=SEQUENCE_MAX_CACHE_SIZE, typed=True)
         def _load(
-            load_fn: Callable[None, np.ndarray],
-            checks: Tuple[Callable[np.ndarray, np.ndarray]],
+            cls,
+            load_fn: Callable[[], np.ndarray],
+            checks: Tuple[Callable[[np.ndarray], np.ndarray]],
         ) -> np.ndarray:
             data = load_fn()
 
@@ -368,13 +371,17 @@ class Image(_Base):
             for check in checks:
                 data = check(data)
 
+            # make it immutable
+            data.setflags(write=False)
+
             return data
 
-        def __init__(self, load_fn: Callable[None, np.ndarray]):
+        def __init__(self, load_fn: Callable[[], np.ndarray]):
             self._load_fn = load_fn
-            self._checks: List[Callable[np.ndarray, np.ndarray]] = list()
+            self._checks: List[Callable[[np.ndarray], np.ndarray]] = list()
 
         def __getattr__(self, name: str):
+            # forward to numpy
             data = self._load(self._load_fn, tuple(self._checks))
             return getattr(data, name)
 
@@ -382,8 +389,11 @@ class Image(_Base):
             data = self._load(self._load_fn, tuple(self._checks))
             return data[s]
 
-        def push_check(self, fn: Callable[np.ndarray, np.ndarray]):
+        def push_check(self, fn: Callable[[np.ndarray], np.ndarray]):
             self._checks.append(fn)
+
+        def load(self) -> np.ndarray:
+            return self._load(self._load_fn, tuple(self._checks))
 
     def __init__(
         self,
@@ -413,6 +423,7 @@ class Image(_Base):
 
         if isinstance(data, np.ndarray):
             self._data = Image._unify_dtypes(self._data)
+            self._data.setflags(write=False)
         else:
             self._data.push_check(Image._unify_dtypes)
 
@@ -478,8 +489,10 @@ class Image(_Base):
     @property
     def data(self) -> np.ndarray:
         """The underlying image data"""
-        v = self._data.view()
-        v.setflags(write=False)
+        if isinstance(self._data, Image.LazyData):
+            v = self._data.load()
+        else:
+            v = self._data.view()
         return v
 
     @property
@@ -501,6 +514,11 @@ class Image(_Base):
     def modality(self) -> Modality:
         """The imaging modality"""
         return self.get_meta("modality")
+
+    @property
+    def lazy(self) -> bool:
+        """Check, if this is lazy loaded"""
+        return isinstance(self._data, Image.LazyData)
 
     def get_meta(self, key: str) -> Any:
         """Access a meta attribute"""
@@ -562,9 +580,6 @@ class Image(_Base):
 
     def _meta_to_pandas(self) -> pd.Series:
         """Convert (compatible) meta data to pandas series"""
-        if isinstance(self._data, np.ndarray):
-            self._meta["shape"] = self.shape
-            self._meta["dtype"] = self.dtype
         return self._meta
 
     def meta_to_pandas(self) -> pd.Series:
@@ -601,7 +616,7 @@ class ImageSequence(_Base):
                     idx = pandas_result.index.to_list()
                     result = [self._parent._images[i] for i in idx]
                     seq = type(self._parent).from_other(self._parent, images=result)
-                    seq._meta_df = pandas_result
+                    seq._meta_df = pandas_result.reset_index(drop=True)
                     return seq
                 elif isinstance(pandas_result, pd.Series):
                     idx = pandas_result.name
