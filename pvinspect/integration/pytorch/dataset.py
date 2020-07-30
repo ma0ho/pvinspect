@@ -64,8 +64,20 @@ class Dataset(TorchDataset):
             )
 
     def __getitem__(self, index: int) -> Union[D, Tuple[Any, ...]]:
+        # PyTorch does not like uint>8 -> perform automatic conversion
+        array = self._data[index].data
+        if array.dtype in (np.uint16, np.uint32):
+            if np.max(array) > 255:
+                logging.error(
+                    "Uint-images with more than 8 bits are incompatible to PyTorch. "
+                    "However, image exceeds 8 bit and cannot be automatically converted. "
+                    "Please consider to convert to float images in advance."
+                )
+            else:
+                array = array.astype(np.uint8)
+
         # image data
-        d = self._data_transform(self._data[index].data)
+        d = self._data_transform(array)
 
         # meta -> labels
         if self._meta_attrs is not None:
