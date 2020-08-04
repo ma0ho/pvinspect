@@ -1,15 +1,19 @@
 # Changelog
 
-## In development
+## 0.3.0
 
+### New
+
+* Add PyTorch `Dataset` and `ClassificationDataset` implementation
 * Add performance test for single module detection
 * Pandas methods are now (all) available from `ImageSequence.pandas`
 * `Image` now supports lazy loading of data (which is now default)
-* Introduced convenience method `from_self` to avoid using `type(self).from_other(self, ...)`
-* Speed up meta data handling
-* Add PyTorch `Dataset` and `ClassificationDataset` implementation
-* Speed up meta data handling
 * Add ELPV cell image dataset
+* Introduced convenience method `from_self` to avoid using `type(self).from_other(self, ...)`
+
+### Fixed/Improved
+
+* Speed up meta data handling
 
 ## 0.2.3
 
