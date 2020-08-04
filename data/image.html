@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.1" />
+<meta name="generator" content="pdoc 0.8.4" />
 <title>pvinspect.data.image API documentation</title>
 <meta name="description" content="" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -35,7 +37,7 @@ from pvinspect.common.transform import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
 from typing import List, Tuple, Union, Callable, Type, TypeVar, Any, Dict
-from copy import deepcopy
+import copy
 import math
 from functools import wraps
 import logging
@@ -46,6 +48,7 @@ from enum import Enum
 import re
 import pandas as pd
 from tqdm.autonotebook import tqdm
+from functools import partial, lru_cache
 
 # this is a pointer to the module object instance itself
 this = sys.modules[__name__]
@@ -68,6 +71,9 @@ DTYPE_INT = np.int32
 DTYPE_UNSIGNED_INT = np.uint16
 DTYPE_FLOAT = np.float64
 img_as_float = img_as_float64
+
+# caching
+SEQUENCE_MAX_CACHE_SIZE = 5000
 
 
 class DType(Enum):
@@ -275,23 +281,30 @@ class _Base:
         &#34;&#34;&#34;
         required = inspect.getfullargspec(cls.__init__)[0]
 
+        if &#34;meta&#34; in kwargs.keys() and isinstance(kwargs[&#34;meta&#34;], dict):
+            kwargs[&#34;meta&#34;] = pd.Series(kwargs[&#34;meta&#34;])
+
         other_args = dict()
         for name in required:
             if name == &#34;meta&#34; and &#34;meta&#34; in kwargs.keys():
                 # joint meta dictionaries
-                tmp = deepcopy(other._meta)
+                tmp = copy.copy(other._meta)
                 if drop_meta_types is not None:
-                    tmp = {
-                        k: v
-                        for k, v in tmp.items()
-                        if not np.any([isinstance(v, x) for x in drop_meta_types])
-                    }
-                tmp.update(kwargs[&#34;meta&#34;])
-                kwargs[&#34;meta&#34;] = tmp
+                    tmp = pd.Series(
+                        {
+                            k: v
+                            for k, v in tmp.items()
+                            if not np.any([isinstance(v, x) for x in drop_meta_types])
+                        }
+                    )
+                kwargs[&#34;meta&#34;] = kwargs[&#34;meta&#34;].combine_first(tmp)
+
             if name not in kwargs.keys() and name != &#34;self&#34;:
 
                 # first, try public property, then private property, then meta attribute
-                if hasattr(other, name):
+                if name == &#34;data&#34;:
+                    other_args[name] = other._data
+                elif hasattr(other, name):
                     other_args[name] = getattr(other, name)
                 elif hasattr(other, &#34;_&#34; + name):
                     other_args[name] = getattr(other, &#34;_&#34; + name)
@@ -307,16 +320,115 @@ class _Base:
 
         return cls(**kwargs, **other_args)
 
+    def from_self(self: T, drop_meta_types: List[Type] = None, **kwargs) -&gt; T:
+        return type(self).from_other(self, drop_meta_types=drop_meta_types, **kwargs)
+
 
 class Image(_Base):
     &#34;&#34;&#34;A general image&#34;&#34;&#34;
 
+    @staticmethod
+    def _map_numpy_dtype(dtype):
+        if dtype == np.float32 or dtype == np.float64:
+            return DType.FLOAT
+        elif (
+            dtype == np.uint8
+            or dtype == np.uint16
+            or dtype == np.uint32
+            or dtype == np.uint64
+        ):
+            return DType.UNSIGNED_INT
+        elif (
+            dtype == np.int8
+            or dtype == np.int16
+            or dtype == np.int32
+            or dtype == np.int64
+        ):
+            return DType.INT
+
+    @staticmethod
+    def _unify_dtypes(array):
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.UNSIGNED_INT
+            and array.dtype != DTYPE_UNSIGNED_INT
+        ):
+            if (
+                array.max() &gt; np.iinfo(DTYPE_UNSIGNED_INT).max
+                or array.min() &lt; np.iinfo(DTYPE_UNSIGNED_INT).min
+            ):
+                raise RuntimeError(
+                    &#34;Datatype conversion to {} failed, since original data exceeds dtype limits.&#34;.format(
+                        DTYPE_UNSIGNED_INT
+                    )
+                )
+            return array.astype(DTYPE_UNSIGNED_INT)
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.INT
+            and array.dtype != DTYPE_INT
+        ):
+            if (
+                array.max() &gt; np.iinfo(DTYPE_INT).max
+                or array.min() &lt; np.iinfo(DTYPE_INT).min
+            ):
+                raise RuntimeError(
+                    &#34;Datatype conversion to {} failed, since original data exceeds dtype limits.&#34;.format(
+                        DTYPE_INT
+                    )
+                )
+            return array.astype(DTYPE_INT)
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.FLOAT
+            and array.dtype != DTYPE_FLOAT
+        ):
+            return array.astype(DTYPE_FLOAT)
+
+        # default
+        return array
+
+    class LazyData:
+        @classmethod
+        @lru_cache(maxsize=SEQUENCE_MAX_CACHE_SIZE, typed=True)
+        def _load(
+            cls,
+            load_fn: Callable[[], np.ndarray],
+            checks: Tuple[Callable[[np.ndarray], np.ndarray]],
+        ) -&gt; np.ndarray:
+            data = load_fn()
+
+            # perform data checks/conversions
+            for check in checks:
+                data = check(data)
+
+            # make it immutable
+            data.setflags(write=False)
+
+            return data
+
+        def __init__(self, load_fn: Callable[[], np.ndarray]):
+            self._load_fn = load_fn
+            self._checks: List[Callable[[np.ndarray], np.ndarray]] = list()
+
+        def __getattr__(self, name: str):
+            # forward to numpy
+            data = self._load(self._load_fn, tuple(self._checks))
+            return getattr(data, name)
+
+        def __getitem__(self, s):
+            data = self._load(self._load_fn, tuple(self._checks))
+            return data[s]
+
+        def push_check(self, fn: Callable[[np.ndarray], np.ndarray]):
+            self._checks.append(fn)
+
+        def load(self) -&gt; np.ndarray:
+            return self._load(self._load_fn, tuple(self._checks))
+
     def __init__(
         self,
         data: np.ndarray,
-        path: Path,
+        path: Path = None,
         modality: Modality = None,
-        meta: Dict[str, Any] = None,
+        meta: Union[Dict[str, Any], pd.Series] = None,
     ):
         &#34;&#34;&#34;Create a new image. All non-float images as automatically converted to uint.
 
@@ -327,35 +439,21 @@ class Image(_Base):
             meta (Dict[str, Any]): Meta attributes of this image
         &#34;&#34;&#34;
         self._data = data
-        self._meta = meta if meta is not None else dict()
+        self._meta = (
+            meta
+            if isinstance(meta, pd.Series)
+            else pd.Series(meta)
+            if meta is not None
+            else pd.Series()
+        )
         self._meta[&#34;modality&#34;] = modality
-        self._meta[&#34;path&#34;] = path
+        self._meta[&#34;path&#34;] = path.absolute() if path is not None else None
 
-        # unify datatypes
-        if self.dtype == DType.UNSIGNED_INT and self._data.dtype != DTYPE_UNSIGNED_INT:
-            if (
-                self._data.max() &gt; np.iinfo(DTYPE_UNSIGNED_INT).max
-                or self._data.min() &lt; np.iinfo(DTYPE_UNSIGNED_INT).min
-            ):
-                raise RuntimeError(
-                    &#34;Datatype conversion to {} failed, since original data exceeds dtype limits.&#34;.format(
-                        DTYPE_UNSIGNED_INT
-                    )
-                )
-            self._data = self._data.astype(DTYPE_UNSIGNED_INT)
-        if self.dtype == DType.INT and self._data.dtype != DTYPE_INT:
-            if (
-                self._data.max() &gt; np.iinfo(DTYPE_INT).max
-                or self._data.min() &lt; np.iinfo(DTYPE_INT).min
-            ):
-                raise RuntimeError(
-                    &#34;Datatype conversion to {} failed, since original data exceeds dtype limits.&#34;.format(
-                        DTYPE_INT
-                    )
-                )
-            self._data = self._data.astype(DTYPE_INT)
-        if self.dtype == DType.FLOAT and self._data.dtype != DTYPE_FLOAT:
-            self._data = self._data.astype(DTYPE_FLOAT)
+        if isinstance(data, np.ndarray):
+            self._data = Image._unify_dtypes(self._data)
+            self._data.setflags(write=False)
+        else:
+            self._data.push_check(Image._unify_dtypes)
 
     def show(self, **kwargs):
         &#34;&#34;&#34;Show this image&#34;&#34;&#34;
@@ -365,16 +463,16 @@ class Image(_Base):
 
     def as_type(self: _T, dtype: DType) -&gt; _T:
         if dtype == DType.FLOAT:
-            return type(self).from_other(self, data=img_as_float(self._data))
+            return self.from_self(data=img_as_float(self._data))
         elif dtype == DType.UNSIGNED_INT:
-            return type(self).from_other(self, data=img_as_uint(self._data))
+            return self.from_self(data=img_as_uint(self._data))
         elif dtype == DType.INT:
-            return type(self).from_other(self, data=img_as_int(self._data))
+            return self.from_self(data=img_as_int(self._data))
 
     def __add__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data + other._data)
+        return self.from_self(data=self._data + other._data)
 
     def __sub__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
@@ -383,40 +481,46 @@ class Image(_Base):
             res = self._data.astype(DTYPE_INT) - other._data.astype(DTYPE_INT)
             iinfo = np.iinfo(DTYPE_UNSIGNED_INT)
             res = np.clip(res, 0, iinfo.max)
-            return type(self).from_other(self, data=res)
+            return self.from_self(data=res)
         else:
-            return type(self).from_other(self, data=self._data - other._data)
+            return self.from_self(data=self._data - other._data)
 
     def __mul__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data * other._data)
+        return self.from_self(data=self._data * other._data)
 
     def __truediv__(self: _T, other: _T) -&gt; _T:
         if self.dtype != DType.FLOAT or other.dtype != DType.FLOAT:
             raise RuntimeError(&#34;Images must be of type float&#34;)
-        return type(self).from_other(self, data=self._data / other._data)
+        return self.from_self(data=self._data / other._data)
 
     def __floordiv__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data // other._data)
+        return self.from_self(data=self._data // other._data)
 
     def __mod__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data % other._data)
+        return self.from_self(data=self._data % other._data)
 
     def __pow__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data ** other._data)
+        return self.from_self(data=self._data ** other._data)
+
+    def __deepcopy__(self: _T, memo) -&gt; _T:
+        # let behavior be determined by overridden attributes
+        return type(self).from_other(self)
 
     @property
     def data(self) -&gt; np.ndarray:
         &#34;&#34;&#34;The underlying image data&#34;&#34;&#34;
-        v = self._data.view()
-        v.setflags(write=False)
+        if isinstance(self._data, Image.LazyData):
+            v = self._data.load()
+        else:
+            v = self._data.view()
         return v
 
     @property
@@ -427,32 +531,22 @@ class Image(_Base):
     @property
     def dtype(self) -&gt; DType:
         &#34;&#34;&#34;Datatype of the image&#34;&#34;&#34;
-        if self.data.dtype == np.float32 or self.data.dtype == np.float64:
-            return DType.FLOAT
-        elif (
-            self.data.dtype == np.uint8
-            or self.data.dtype == np.uint16
-            or self.data.dtype == np.uint32
-            or self.data.dtype == np.uint64
-        ):
-            return DType.UNSIGNED_INT
-        elif (
-            self.data.dtype == np.int8
-            or self.data.dtype == np.int16
-            or self.data.dtype == np.int32
-            or self.data.dtype == np.int64
-        ):
-            return DType.INT
+        return Image._map_numpy_dtype(self._data.dtype)
 
     @property
     def shape(self) -&gt; Tuple[int, int]:
         &#34;&#34;&#34;Shape of the image&#34;&#34;&#34;
-        return deepcopy(self.data.shape)
+        return copy.deepcopy(self.data.shape)
 
     @property
     def modality(self) -&gt; Modality:
         &#34;&#34;&#34;The imaging modality&#34;&#34;&#34;
         return self.get_meta(&#34;modality&#34;)
+
+    @property
+    def lazy(self) -&gt; bool:
+        &#34;&#34;&#34;Check, if this is lazy loaded&#34;&#34;&#34;
+        return isinstance(self._data, Image.LazyData)
 
     def get_meta(self, key: str) -&gt; Any:
         &#34;&#34;&#34;Access a meta attribute&#34;&#34;&#34;
@@ -461,15 +555,15 @@ class Image(_Base):
             v.setflags(write=False)
             return v
         else:
-            return deepcopy(self._meta[key])
+            return copy.copy(self._meta[key])
 
     def has_meta(self, key: str) -&gt; bool:
         &#34;&#34;&#34;Check if a meta attribute is set&#34;&#34;&#34;
-        return key in self._meta.keys()
+        return key in self._meta.index
 
     def list_meta(self) -&gt; List[str]:
         &#34;&#34;&#34;List avaliable meta keys&#34;&#34;&#34;
-        return list(self._meta.keys())
+        return list(self._meta.index)
 
     def meta_from_path(
         self,
@@ -499,7 +593,7 @@ class Image(_Base):
         if transform is not None:
             v = transform(v)
         v = target_type(v)
-        return type(self).from_other(self, meta={key: v})
+        return self.from_self(meta={key: v})
 
     def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -&gt; Image:
         &#34;&#34;&#34;Extract meta data using given callable
@@ -512,12 +606,13 @@ class Image(_Base):
         &#34;&#34;&#34;
         return self.from_other(self, meta=fn(self))
 
+    def _meta_to_pandas(self) -&gt; pd.Series:
+        &#34;&#34;&#34;Convert (compatible) meta data to pandas series&#34;&#34;&#34;
+        return self._meta
+
     def meta_to_pandas(self) -&gt; pd.Series:
         &#34;&#34;&#34;Convert (compatible) meta data to pandas series&#34;&#34;&#34;
-        data = pd.Series(self._meta, copy=True)
-        data[&#34;shape&#34;] = self.shape
-        data[&#34;dtype&#34;] = self.dtype
-        return data
+        return copy.deepcopy(self._meta_to_pandas())
 
 
 class ImageSequence(_Base):
@@ -538,8 +633,44 @@ class ImageSequence(_Base):
             plt.subplot(rows, cols, i + 1)
             img.show(*args, **kwargs)
 
+    class _PandasHandler:
+        def __init__(self, parent: ImageSequence):
+            self._parent = parent
+            pass
+
+        class _Sub:
+            def _result(self, pandas_result):
+                if isinstance(pandas_result, pd.DataFrame):
+                    idx = pandas_result.index.to_list()
+                    result = [self._parent._images[i] for i in idx]
+                    seq = type(self._parent).from_other(self._parent, images=result)
+                    seq._meta_df = pandas_result.reset_index(drop=True)
+                    return seq
+                elif isinstance(pandas_result, pd.Series):
+                    idx = pandas_result.name
+                    return self._parent[idx]
+
+            def __init__(self, parent: ImageSequence, attr):
+                self._parent = parent
+                self._attr = attr
+
+            def __call__(self, *argv, **kwargs):
+                pandas_result = self._attr(*argv, **kwargs)
+                return self._result(pandas_result)
+
+            def __getitem__(self, arg):
+                pandas_result = self._attr[arg]
+                return self._result(pandas_result)
+
+        def __getattr__(self, name):
+            attr = getattr(self._parent.meta_to_pandas(), name)
+            return self._Sub(self._parent, attr)
+
     def __init__(
-        self, images: List[Image], same_camera: bool, allow_different_dtypes=False
+        self,
+        images: List[Image],
+        same_camera: bool = False,
+        allow_different_dtypes=False,
     ):
         &#34;&#34;&#34;Initialize a module image sequence
         
@@ -561,20 +692,23 @@ class ImageSequence(_Base):
         shape = self.images[0].shape
         dtype = self.images[0].dtype
         modality = self.images[0].modality
-        for img in self.images:
-            if img.dtype != dtype and not allow_different_dtypes:
-                logging.error(
-                    &#39;Cannot create sequence from mixed dtypes. Consider using the &#34;allow_different_dtypes&#34; argument, when reading images.&#39;
-                )
-                exit()
-            if img.shape != shape and same_camera:
-                logging.error(
-                    &#39;Cannot create sequence from mixed shapes. Consider using the &#34;same_camera&#34; argument, when reading images.&#39;
-                )
-                exit()
-            if img.modality != modality:
-                logging.error(&#34;Cannot create a sequence from mixed modalities.&#34;)
-                exit()
+        # for img in self.images:
+        #    if img.dtype != dtype and not allow_different_dtypes:
+        #        logging.error(
+        #            &#39;Cannot create sequence from mixed dtypes. Consider using the &#34;allow_different_dtypes&#34; argument, when reading images.&#39;
+        #        )
+        #        exit()
+        #    if img.shape != shape and same_camera:
+        #        logging.error(
+        #            &#39;Cannot create sequence from mixed shapes. Consider using the &#34;same_camera&#34; argument, when reading images.&#39;
+        #        )
+        #        exit()
+        #    if img.modality != modality:
+        #        logging.error(&#34;Cannot create a sequence from mixed modalities.&#34;)
+        #        exit()
+
+        # namespace for accessing pandas methods
+        self.pandas = self._PandasHandler(self)
 
     def head(self, N: int = 4, cols: int = 2, *args, **kwargs):
         &#34;&#34;&#34;Show the first N images
@@ -613,7 +747,7 @@ class ImageSequence(_Base):
         p = tqdm if progress_bar else lambda x: x
         for img in p(self._images):
             result.append(fn(img, *argv, **kwargs))
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def apply_image_data(
         self: _T,
@@ -639,7 +773,7 @@ class ImageSequence(_Base):
             data = img.data
             res = fn(data, *argv, **kwargs)
             result.append(type(img).from_other(img, data=res))
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def meta_from_path(
         self,
@@ -674,94 +808,60 @@ class ImageSequence(_Base):
                     transform=transform,
                 )
             )
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
-    def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -&gt; ImageSequence:
+    def meta_from_fn(
+        self, fn: Callable[[Image], Dict[str, Any]], **kwargs
+    ) -&gt; ImageSequence:
         &#34;&#34;&#34;Extract meta information using given function
 
         Args:
             fn (Callable[[Image], Dict[str, Any]]): Function that is applied on every element of the sequence
         &#34;&#34;&#34;
-        return self.from_other(
-            self, images=[img.meta_from_fn(fn) for img in self._images]
-        )
+        return self.apply(fn=lambda x: x.meta_from_fn(fn), **kwargs)
 
     def meta_to_pandas(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;Convert meta from images to pandas DataFrame&#34;&#34;&#34;
         if self._meta_df is None:
-            series = [img.meta_to_pandas() for img in self._images]
+            series = [img._meta_to_pandas() for img in self._images]
             self._meta_df = pd.DataFrame(data=series)
             self._meta_df = self._meta_df.astype(
                 {&#34;modality&#34;: str}
             )  # allow for easy comparison
         return self._meta_df.copy()  # pd.DataFrame has no writable flag :(
 
-    def drop_duplicates(
-        self, subset: List[str] = None, keep: str = &#34;first&#34;
-    ) -&gt; ImageSequence:
-        &#34;&#34;&#34;Drop duplicates based on meta attributes. For further reference, please
-            refer to the corresponding pandas method
-
-        Args:
-            subset (List[str]): Meta keys
-            keep (str): Same as pandas method
-
-        Returns:
-            result (ImageSequence): The images with duplicates dropped
-        &#34;&#34;&#34;
-        idx = (
-            self.meta_to_pandas()
-            .drop_duplicates(subset=subset, keep=keep)
-            .index.to_list()
-        )
-        result = [self._images[i] for i in idx]
-        return type(self).from_other(self, images=result)
-
-    def query(self, query: str) -&gt; ImageSequence:
-        &#34;&#34;&#34;Query image sequence using image meta attributes
-
-        Args:
-            query (str): The query string using the query syntax of pandas library
-
-        Returns:
-            result (ImageSequence): The images, where query evaluated true
-        &#34;&#34;&#34;
-        idx = self.meta_to_pandas().query(query).index.to_list()
-        result = [self._images[i] for i in idx]
-        return type(self).from_other(self, images=result)
-
     def as_type(self: _T, dtype: DType) -&gt; _T:
         &#34;&#34;&#34;Convert sequence to specified dtype&#34;&#34;&#34;
         result = [img.as_type(dtype) for img in self._images]
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def __add__(self: _T, other: _T) -&gt; _T:
         res = [x + y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __sub__(self: _T, other: _T) -&gt; _T:
         res = [x - y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __mul__(self: _T, other: _T) -&gt; _T:
         res = [x * y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __truediv__(self: _T, other: _T) -&gt; _T:
         res = [x / y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __floordiv__(self: _T, other: _T) -&gt; _T:
         res = [x // y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __mod__(self: _T, other: _T) -&gt; _T:
         res = [x % y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __pow__(self: _T, other: _T) -&gt; _T:
         res = [x ** y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     @property
     def images(self) -&gt; List[Image]:
@@ -805,9 +905,9 @@ class CellImage(Image):
         self,
         data: np.ndarray,
         modality: Modality,
-        path: Path,
         row: int,
         col: int,
+        path: Path = None,
         meta: Dict[str, Any] = None,
     ):
         &#34;&#34;&#34;Initialize a cell image
@@ -860,7 +960,7 @@ class ModuleImage(Image):
         self,
         data: np.ndarray,
         modality: Modality,
-        path: Path,
+        path: Path = None,
         cols: int = None,
         rows: int = None,
         meta: dict = None,
@@ -912,7 +1012,7 @@ class PartialModuleImage(ModuleImage):
         self,
         data: np.ndarray,
         modality: Modality,
-        path: Path,
+        path: Path = None,
         cols: int = None,
         rows: int = None,
         first_col: int = None,
@@ -946,7 +1046,7 @@ class ModuleImageSequence(ImageSequence):
     def __init__(
         self,
         images: List[ModuleOrPartialModuleImage],
-        same_camera: bool,
+        same_camera: bool = False,
         allow_different_dtypes=False,
     ):
         &#34;&#34;&#34;Initialize a module image sequence
@@ -1067,7 +1167,7 @@ last and hence appears on top)</dd>
 <dl>
 <dt id="pvinspect.data.image.CellImage"><code class="flex name class">
 <span>class <span class="ident">CellImage</span></span>
-<span>(</span><span>data: np.ndarray, modality: Modality, path: Path, row: int, col: int, meta: Dict[str, Any] = None)</span>
+<span>(</span><span>data: np.ndarray, modality: <a title="pvinspect.data.image.Modality" href="#pvinspect.data.image.Modality">Modality</a>, row: int, col: int, path: Path = None, meta: Dict[str, Any] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An image of a solar cell with additional meta data</p>
@@ -1098,9 +1198,9 @@ last and hence appears on top)</dd>
         self,
         data: np.ndarray,
         modality: Modality,
-        path: Path,
         row: int,
         col: int,
+        path: Path = None,
         meta: Dict[str, Any] = None,
     ):
         &#34;&#34;&#34;Initialize a cell image
@@ -1174,6 +1274,7 @@ def row(self) -&gt; int:
 <li><code><a title="pvinspect.data.image.Image.dtype" href="#pvinspect.data.image.Image.dtype">dtype</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.get_meta" href="#pvinspect.data.image.Image.get_meta">get_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.has_meta" href="#pvinspect.data.image.Image.has_meta">has_meta</a></code></li>
+<li><code><a title="pvinspect.data.image.Image.lazy" href="#pvinspect.data.image.Image.lazy">lazy</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.list_meta" href="#pvinspect.data.image.Image.list_meta">list_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.meta_from_fn" href="#pvinspect.data.image.Image.meta_from_fn">meta_from_fn</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.meta_from_path" href="#pvinspect.data.image.Image.meta_from_path">meta_from_path</a></code></li>
@@ -1188,7 +1289,7 @@ def row(self) -&gt; int:
 </dd>
 <dt id="pvinspect.data.image.CellImageSequence"><code class="flex name class">
 <span>class <span class="ident">CellImageSequence</span></span>
-<span>(</span><span>images: List[CellImage])</span>
+<span>(</span><span>images: List[<a title="pvinspect.data.image.CellImage" href="#pvinspect.data.image.CellImage">CellImage</a>])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An immutable sequence of cell images, allowing for access to single images as well as analysis of the sequence</p>
@@ -1226,7 +1327,6 @@ def row(self) -&gt; int:
 <li><code><a title="pvinspect.data.image.ImageSequence.apply" href="#pvinspect.data.image.ImageSequence.apply">apply</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.apply_image_data" href="#pvinspect.data.image.ImageSequence.apply_image_data">apply_image_data</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.as_type" href="#pvinspect.data.image.ImageSequence.as_type">as_type</a></code></li>
-<li><code><a title="pvinspect.data.image.ImageSequence.drop_duplicates" href="#pvinspect.data.image.ImageSequence.drop_duplicates">drop_duplicates</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.dtype" href="#pvinspect.data.image.ImageSequence.dtype">dtype</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.head" href="#pvinspect.data.image.ImageSequence.head">head</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.images" href="#pvinspect.data.image.ImageSequence.images">images</a></code></li>
@@ -1234,7 +1334,6 @@ def row(self) -&gt; int:
 <li><code><a title="pvinspect.data.image.ImageSequence.meta_from_path" href="#pvinspect.data.image.ImageSequence.meta_from_path">meta_from_path</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.meta_to_pandas" href="#pvinspect.data.image.ImageSequence.meta_to_pandas">meta_to_pandas</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.modality" href="#pvinspect.data.image.ImageSequence.modality">modality</a></code></li>
-<li><code><a title="pvinspect.data.image.ImageSequence.query" href="#pvinspect.data.image.ImageSequence.query">query</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.same_camera" href="#pvinspect.data.image.ImageSequence.same_camera">same_camera</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.shape" href="#pvinspect.data.image.ImageSequence.shape">shape</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.tail" href="#pvinspect.data.image.ImageSequence.tail">tail</a></code></li>
@@ -1279,7 +1378,7 @@ def row(self) -&gt; int:
 </dd>
 <dt id="pvinspect.data.image.Image"><code class="flex name class">
 <span>class <span class="ident">Image</span></span>
-<span>(</span><span>data: np.ndarray, path: Path, modality: Modality = None, meta: Dict[str, Any] = None)</span>
+<span>(</span><span>data: np.ndarray, path: Path = None, modality: <a title="pvinspect.data.image.Modality" href="#pvinspect.data.image.Modality">Modality</a> = None, meta: Union[Dict[str, Any], pd.Series] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A general image</p>
@@ -1302,12 +1401,108 @@ def row(self) -&gt; int:
 <pre><code class="python">class Image(_Base):
     &#34;&#34;&#34;A general image&#34;&#34;&#34;
 
+    @staticmethod
+    def _map_numpy_dtype(dtype):
+        if dtype == np.float32 or dtype == np.float64:
+            return DType.FLOAT
+        elif (
+            dtype == np.uint8
+            or dtype == np.uint16
+            or dtype == np.uint32
+            or dtype == np.uint64
+        ):
+            return DType.UNSIGNED_INT
+        elif (
+            dtype == np.int8
+            or dtype == np.int16
+            or dtype == np.int32
+            or dtype == np.int64
+        ):
+            return DType.INT
+
+    @staticmethod
+    def _unify_dtypes(array):
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.UNSIGNED_INT
+            and array.dtype != DTYPE_UNSIGNED_INT
+        ):
+            if (
+                array.max() &gt; np.iinfo(DTYPE_UNSIGNED_INT).max
+                or array.min() &lt; np.iinfo(DTYPE_UNSIGNED_INT).min
+            ):
+                raise RuntimeError(
+                    &#34;Datatype conversion to {} failed, since original data exceeds dtype limits.&#34;.format(
+                        DTYPE_UNSIGNED_INT
+                    )
+                )
+            return array.astype(DTYPE_UNSIGNED_INT)
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.INT
+            and array.dtype != DTYPE_INT
+        ):
+            if (
+                array.max() &gt; np.iinfo(DTYPE_INT).max
+                or array.min() &lt; np.iinfo(DTYPE_INT).min
+            ):
+                raise RuntimeError(
+                    &#34;Datatype conversion to {} failed, since original data exceeds dtype limits.&#34;.format(
+                        DTYPE_INT
+                    )
+                )
+            return array.astype(DTYPE_INT)
+        if (
+            Image._map_numpy_dtype(array.dtype) == DType.FLOAT
+            and array.dtype != DTYPE_FLOAT
+        ):
+            return array.astype(DTYPE_FLOAT)
+
+        # default
+        return array
+
+    class LazyData:
+        @classmethod
+        @lru_cache(maxsize=SEQUENCE_MAX_CACHE_SIZE, typed=True)
+        def _load(
+            cls,
+            load_fn: Callable[[], np.ndarray],
+            checks: Tuple[Callable[[np.ndarray], np.ndarray]],
+        ) -&gt; np.ndarray:
+            data = load_fn()
+
+            # perform data checks/conversions
+            for check in checks:
+                data = check(data)
+
+            # make it immutable
+            data.setflags(write=False)
+
+            return data
+
+        def __init__(self, load_fn: Callable[[], np.ndarray]):
+            self._load_fn = load_fn
+            self._checks: List[Callable[[np.ndarray], np.ndarray]] = list()
+
+        def __getattr__(self, name: str):
+            # forward to numpy
+            data = self._load(self._load_fn, tuple(self._checks))
+            return getattr(data, name)
+
+        def __getitem__(self, s):
+            data = self._load(self._load_fn, tuple(self._checks))
+            return data[s]
+
+        def push_check(self, fn: Callable[[np.ndarray], np.ndarray]):
+            self._checks.append(fn)
+
+        def load(self) -&gt; np.ndarray:
+            return self._load(self._load_fn, tuple(self._checks))
+
     def __init__(
         self,
         data: np.ndarray,
-        path: Path,
+        path: Path = None,
         modality: Modality = None,
-        meta: Dict[str, Any] = None,
+        meta: Union[Dict[str, Any], pd.Series] = None,
     ):
         &#34;&#34;&#34;Create a new image. All non-float images as automatically converted to uint.
 
@@ -1318,35 +1513,21 @@ def row(self) -&gt; int:
             meta (Dict[str, Any]): Meta attributes of this image
         &#34;&#34;&#34;
         self._data = data
-        self._meta = meta if meta is not None else dict()
+        self._meta = (
+            meta
+            if isinstance(meta, pd.Series)
+            else pd.Series(meta)
+            if meta is not None
+            else pd.Series()
+        )
         self._meta[&#34;modality&#34;] = modality
-        self._meta[&#34;path&#34;] = path
+        self._meta[&#34;path&#34;] = path.absolute() if path is not None else None
 
-        # unify datatypes
-        if self.dtype == DType.UNSIGNED_INT and self._data.dtype != DTYPE_UNSIGNED_INT:
-            if (
-                self._data.max() &gt; np.iinfo(DTYPE_UNSIGNED_INT).max
-                or self._data.min() &lt; np.iinfo(DTYPE_UNSIGNED_INT).min
-            ):
-                raise RuntimeError(
-                    &#34;Datatype conversion to {} failed, since original data exceeds dtype limits.&#34;.format(
-                        DTYPE_UNSIGNED_INT
-                    )
-                )
-            self._data = self._data.astype(DTYPE_UNSIGNED_INT)
-        if self.dtype == DType.INT and self._data.dtype != DTYPE_INT:
-            if (
-                self._data.max() &gt; np.iinfo(DTYPE_INT).max
-                or self._data.min() &lt; np.iinfo(DTYPE_INT).min
-            ):
-                raise RuntimeError(
-                    &#34;Datatype conversion to {} failed, since original data exceeds dtype limits.&#34;.format(
-                        DTYPE_INT
-                    )
-                )
-            self._data = self._data.astype(DTYPE_INT)
-        if self.dtype == DType.FLOAT and self._data.dtype != DTYPE_FLOAT:
-            self._data = self._data.astype(DTYPE_FLOAT)
+        if isinstance(data, np.ndarray):
+            self._data = Image._unify_dtypes(self._data)
+            self._data.setflags(write=False)
+        else:
+            self._data.push_check(Image._unify_dtypes)
 
     def show(self, **kwargs):
         &#34;&#34;&#34;Show this image&#34;&#34;&#34;
@@ -1356,16 +1537,16 @@ def row(self) -&gt; int:
 
     def as_type(self: _T, dtype: DType) -&gt; _T:
         if dtype == DType.FLOAT:
-            return type(self).from_other(self, data=img_as_float(self._data))
+            return self.from_self(data=img_as_float(self._data))
         elif dtype == DType.UNSIGNED_INT:
-            return type(self).from_other(self, data=img_as_uint(self._data))
+            return self.from_self(data=img_as_uint(self._data))
         elif dtype == DType.INT:
-            return type(self).from_other(self, data=img_as_int(self._data))
+            return self.from_self(data=img_as_int(self._data))
 
     def __add__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data + other._data)
+        return self.from_self(data=self._data + other._data)
 
     def __sub__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
@@ -1374,40 +1555,46 @@ def row(self) -&gt; int:
             res = self._data.astype(DTYPE_INT) - other._data.astype(DTYPE_INT)
             iinfo = np.iinfo(DTYPE_UNSIGNED_INT)
             res = np.clip(res, 0, iinfo.max)
-            return type(self).from_other(self, data=res)
+            return self.from_self(data=res)
         else:
-            return type(self).from_other(self, data=self._data - other._data)
+            return self.from_self(data=self._data - other._data)
 
     def __mul__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data * other._data)
+        return self.from_self(data=self._data * other._data)
 
     def __truediv__(self: _T, other: _T) -&gt; _T:
         if self.dtype != DType.FLOAT or other.dtype != DType.FLOAT:
             raise RuntimeError(&#34;Images must be of type float&#34;)
-        return type(self).from_other(self, data=self._data / other._data)
+        return self.from_self(data=self._data / other._data)
 
     def __floordiv__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data // other._data)
+        return self.from_self(data=self._data // other._data)
 
     def __mod__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data % other._data)
+        return self.from_self(data=self._data % other._data)
 
     def __pow__(self: _T, other: _T) -&gt; _T:
         if self.dtype != other.dtype:
             raise RuntimeError(&#34;Images must have the same datatype&#34;)
-        return type(self).from_other(self, data=self._data ** other._data)
+        return self.from_self(data=self._data ** other._data)
+
+    def __deepcopy__(self: _T, memo) -&gt; _T:
+        # let behavior be determined by overridden attributes
+        return type(self).from_other(self)
 
     @property
     def data(self) -&gt; np.ndarray:
         &#34;&#34;&#34;The underlying image data&#34;&#34;&#34;
-        v = self._data.view()
-        v.setflags(write=False)
+        if isinstance(self._data, Image.LazyData):
+            v = self._data.load()
+        else:
+            v = self._data.view()
         return v
 
     @property
@@ -1418,32 +1605,22 @@ def row(self) -&gt; int:
     @property
     def dtype(self) -&gt; DType:
         &#34;&#34;&#34;Datatype of the image&#34;&#34;&#34;
-        if self.data.dtype == np.float32 or self.data.dtype == np.float64:
-            return DType.FLOAT
-        elif (
-            self.data.dtype == np.uint8
-            or self.data.dtype == np.uint16
-            or self.data.dtype == np.uint32
-            or self.data.dtype == np.uint64
-        ):
-            return DType.UNSIGNED_INT
-        elif (
-            self.data.dtype == np.int8
-            or self.data.dtype == np.int16
-            or self.data.dtype == np.int32
-            or self.data.dtype == np.int64
-        ):
-            return DType.INT
+        return Image._map_numpy_dtype(self._data.dtype)
 
     @property
     def shape(self) -&gt; Tuple[int, int]:
         &#34;&#34;&#34;Shape of the image&#34;&#34;&#34;
-        return deepcopy(self.data.shape)
+        return copy.deepcopy(self.data.shape)
 
     @property
     def modality(self) -&gt; Modality:
         &#34;&#34;&#34;The imaging modality&#34;&#34;&#34;
         return self.get_meta(&#34;modality&#34;)
+
+    @property
+    def lazy(self) -&gt; bool:
+        &#34;&#34;&#34;Check, if this is lazy loaded&#34;&#34;&#34;
+        return isinstance(self._data, Image.LazyData)
 
     def get_meta(self, key: str) -&gt; Any:
         &#34;&#34;&#34;Access a meta attribute&#34;&#34;&#34;
@@ -1452,15 +1629,15 @@ def row(self) -&gt; int:
             v.setflags(write=False)
             return v
         else:
-            return deepcopy(self._meta[key])
+            return copy.copy(self._meta[key])
 
     def has_meta(self, key: str) -&gt; bool:
         &#34;&#34;&#34;Check if a meta attribute is set&#34;&#34;&#34;
-        return key in self._meta.keys()
+        return key in self._meta.index
 
     def list_meta(self) -&gt; List[str]:
         &#34;&#34;&#34;List avaliable meta keys&#34;&#34;&#34;
-        return list(self._meta.keys())
+        return list(self._meta.index)
 
     def meta_from_path(
         self,
@@ -1490,7 +1667,7 @@ def row(self) -&gt; int:
         if transform is not None:
             v = transform(v)
         v = target_type(v)
-        return type(self).from_other(self, meta={key: v})
+        return self.from_self(meta={key: v})
 
     def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -&gt; Image:
         &#34;&#34;&#34;Extract meta data using given callable
@@ -1503,12 +1680,13 @@ def row(self) -&gt; int:
         &#34;&#34;&#34;
         return self.from_other(self, meta=fn(self))
 
+    def _meta_to_pandas(self) -&gt; pd.Series:
+        &#34;&#34;&#34;Convert (compatible) meta data to pandas series&#34;&#34;&#34;
+        return self._meta
+
     def meta_to_pandas(self) -&gt; pd.Series:
         &#34;&#34;&#34;Convert (compatible) meta data to pandas series&#34;&#34;&#34;
-        data = pd.Series(self._meta, copy=True)
-        data[&#34;shape&#34;] = self.shape
-        data[&#34;dtype&#34;] = self.dtype
-        return data</code></pre>
+        return copy.deepcopy(self._meta_to_pandas())</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1519,6 +1697,13 @@ def row(self) -&gt; int:
 <li><a title="pvinspect.data.image.CellImage" href="#pvinspect.data.image.CellImage">CellImage</a></li>
 <li><a title="pvinspect.data.image.ModuleImage" href="#pvinspect.data.image.ModuleImage">ModuleImage</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="pvinspect.data.image.Image.LazyData"><code class="name">var <span class="ident">LazyData</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="pvinspect.data.image.Image.data"><code class="name">var <span class="ident">data</span> : numpy.ndarray</code></dt>
@@ -1531,8 +1716,10 @@ def row(self) -&gt; int:
 <pre><code class="python">@property
 def data(self) -&gt; np.ndarray:
     &#34;&#34;&#34;The underlying image data&#34;&#34;&#34;
-    v = self._data.view()
-    v.setflags(write=False)
+    if isinstance(self._data, Image.LazyData):
+        v = self._data.load()
+    else:
+        v = self._data.view()
     return v</code></pre>
 </details>
 </dd>
@@ -1546,22 +1733,20 @@ def data(self) -&gt; np.ndarray:
 <pre><code class="python">@property
 def dtype(self) -&gt; DType:
     &#34;&#34;&#34;Datatype of the image&#34;&#34;&#34;
-    if self.data.dtype == np.float32 or self.data.dtype == np.float64:
-        return DType.FLOAT
-    elif (
-        self.data.dtype == np.uint8
-        or self.data.dtype == np.uint16
-        or self.data.dtype == np.uint32
-        or self.data.dtype == np.uint64
-    ):
-        return DType.UNSIGNED_INT
-    elif (
-        self.data.dtype == np.int8
-        or self.data.dtype == np.int16
-        or self.data.dtype == np.int32
-        or self.data.dtype == np.int64
-    ):
-        return DType.INT</code></pre>
+    return Image._map_numpy_dtype(self._data.dtype)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.image.Image.lazy"><code class="name">var <span class="ident">lazy</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>Check, if this is lazy loaded</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def lazy(self) -&gt; bool:
+    &#34;&#34;&#34;Check, if this is lazy loaded&#34;&#34;&#34;
+    return isinstance(self._data, Image.LazyData)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.modality"><code class="name">var <span class="ident">modality</span> : <a title="pvinspect.data.image.Modality" href="#pvinspect.data.image.Modality">Modality</a></code></dt>
@@ -1600,14 +1785,14 @@ def path(self) -&gt; Path:
 <pre><code class="python">@property
 def shape(self) -&gt; Tuple[int, int]:
     &#34;&#34;&#34;Shape of the image&#34;&#34;&#34;
-    return deepcopy(self.data.shape)</code></pre>
+    return copy.deepcopy(self.data.shape)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
 <dt id="pvinspect.data.image.Image.as_type"><code class="name flex">
-<span>def <span class="ident">as_type</span></span>(<span>self: _T, dtype: DType) -> '_T'</span>
+<span>def <span class="ident">as_type</span></span>(<span>self: _T, dtype: <a title="pvinspect.data.image.DType" href="#pvinspect.data.image.DType">DType</a>) ‑> '_T'</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1617,15 +1802,15 @@ def shape(self) -&gt; Tuple[int, int]:
 </summary>
 <pre><code class="python">def as_type(self: _T, dtype: DType) -&gt; _T:
     if dtype == DType.FLOAT:
-        return type(self).from_other(self, data=img_as_float(self._data))
+        return self.from_self(data=img_as_float(self._data))
     elif dtype == DType.UNSIGNED_INT:
-        return type(self).from_other(self, data=img_as_uint(self._data))
+        return self.from_self(data=img_as_uint(self._data))
     elif dtype == DType.INT:
-        return type(self).from_other(self, data=img_as_int(self._data))</code></pre>
+        return self.from_self(data=img_as_int(self._data))</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.get_meta"><code class="name flex">
-<span>def <span class="ident">get_meta</span></span>(<span>self, key: str) -> Any</span>
+<span>def <span class="ident">get_meta</span></span>(<span>self, key: str) ‑> Any</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Access a meta attribute</p></div>
@@ -1640,11 +1825,11 @@ def shape(self) -&gt; Tuple[int, int]:
         v.setflags(write=False)
         return v
     else:
-        return deepcopy(self._meta[key])</code></pre>
+        return copy.copy(self._meta[key])</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.has_meta"><code class="name flex">
-<span>def <span class="ident">has_meta</span></span>(<span>self, key: str) -> bool</span>
+<span>def <span class="ident">has_meta</span></span>(<span>self, key: str) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check if a meta attribute is set</p></div>
@@ -1654,11 +1839,11 @@ def shape(self) -&gt; Tuple[int, int]:
 </summary>
 <pre><code class="python">def has_meta(self, key: str) -&gt; bool:
     &#34;&#34;&#34;Check if a meta attribute is set&#34;&#34;&#34;
-    return key in self._meta.keys()</code></pre>
+    return key in self._meta.index</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.list_meta"><code class="name flex">
-<span>def <span class="ident">list_meta</span></span>(<span>self) -> List[str]</span>
+<span>def <span class="ident">list_meta</span></span>(<span>self) ‑> List[str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>List avaliable meta keys</p></div>
@@ -1668,11 +1853,11 @@ def shape(self) -&gt; Tuple[int, int]:
 </summary>
 <pre><code class="python">def list_meta(self) -&gt; List[str]:
     &#34;&#34;&#34;List avaliable meta keys&#34;&#34;&#34;
-    return list(self._meta.keys())</code></pre>
+    return list(self._meta.index)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.meta_from_fn"><code class="name flex">
-<span>def <span class="ident">meta_from_fn</span></span>(<span>self, fn: Callable[[Image], Dict[str, Any]]) -> <a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a></span>
+<span>def <span class="ident">meta_from_fn</span></span>(<span>self, fn: Callable[[<a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a>], Dict[str, Any]]) ‑> <a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Extract meta data using given callable</p>
@@ -1680,9 +1865,9 @@ def shape(self) -&gt; Tuple[int, int]:
 <dl>
 <dt><strong><code>fn</code></strong> :&ensp;<code>Callable[[<a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a>], Dict[str, Any]]</code></dt>
 <dd>Function used to extract meta data</dd>
-<dt><strong><code>Returns</code></strong></dt>
-<dd>image (Image): Resulting Image</dd>
-</dl></div>
+</dl>
+<p>Returns
+image (Image): Resulting Image</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1700,7 +1885,7 @@ def shape(self) -&gt; Tuple[int, int]:
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.meta_from_path"><code class="name flex">
-<span>def <span class="ident">meta_from_path</span></span>(<span>self, pattern: str, key: str, target_type: Type, group_n: int = 0, transform: Callable[[Any], Any] = None) -> <a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a></span>
+<span>def <span class="ident">meta_from_path</span></span>(<span>self, pattern: str, key: str, target_type: Type, group_n: int = 0, transform: Callable[[Any], Any] = None) ‑> <a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Extract meta information from path. The group_n'th matching group
@@ -1720,10 +1905,7 @@ from pattern is used as meta value</p>
 before datatype conversion</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>image (Image): Resulting Image</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>image (Image): Resulting Image</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1756,11 +1938,11 @@ before datatype conversion</dd>
     if transform is not None:
         v = transform(v)
     v = target_type(v)
-    return type(self).from_other(self, meta={key: v})</code></pre>
+    return self.from_self(meta={key: v})</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.meta_to_pandas"><code class="name flex">
-<span>def <span class="ident">meta_to_pandas</span></span>(<span>self) -> pandas.core.series.Series</span>
+<span>def <span class="ident">meta_to_pandas</span></span>(<span>self) ‑> pandas.core.series.Series</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert (compatible) meta data to pandas series</p></div>
@@ -1770,10 +1952,7 @@ before datatype conversion</dd>
 </summary>
 <pre><code class="python">def meta_to_pandas(self) -&gt; pd.Series:
     &#34;&#34;&#34;Convert (compatible) meta data to pandas series&#34;&#34;&#34;
-    data = pd.Series(self._meta, copy=True)
-    data[&#34;shape&#34;] = self.shape
-    data[&#34;dtype&#34;] = self.dtype
-    return data</code></pre>
+    return copy.deepcopy(self._meta_to_pandas())</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.Image.show"><code class="name flex">
@@ -1794,7 +1973,7 @@ before datatype conversion</dd>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence"><code class="flex name class">
 <span>class <span class="ident">ImageSequence</span></span>
-<span>(</span><span>images: List[Image], same_camera: bool, allow_different_dtypes=False)</span>
+<span>(</span><span>images: List[<a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a>], same_camera: bool = False, allow_different_dtypes=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An immutable sequence of images, allowing for access to single images as well as analysis of the sequence</p>
@@ -1830,8 +2009,44 @@ before datatype conversion</dd>
             plt.subplot(rows, cols, i + 1)
             img.show(*args, **kwargs)
 
+    class _PandasHandler:
+        def __init__(self, parent: ImageSequence):
+            self._parent = parent
+            pass
+
+        class _Sub:
+            def _result(self, pandas_result):
+                if isinstance(pandas_result, pd.DataFrame):
+                    idx = pandas_result.index.to_list()
+                    result = [self._parent._images[i] for i in idx]
+                    seq = type(self._parent).from_other(self._parent, images=result)
+                    seq._meta_df = pandas_result.reset_index(drop=True)
+                    return seq
+                elif isinstance(pandas_result, pd.Series):
+                    idx = pandas_result.name
+                    return self._parent[idx]
+
+            def __init__(self, parent: ImageSequence, attr):
+                self._parent = parent
+                self._attr = attr
+
+            def __call__(self, *argv, **kwargs):
+                pandas_result = self._attr(*argv, **kwargs)
+                return self._result(pandas_result)
+
+            def __getitem__(self, arg):
+                pandas_result = self._attr[arg]
+                return self._result(pandas_result)
+
+        def __getattr__(self, name):
+            attr = getattr(self._parent.meta_to_pandas(), name)
+            return self._Sub(self._parent, attr)
+
     def __init__(
-        self, images: List[Image], same_camera: bool, allow_different_dtypes=False
+        self,
+        images: List[Image],
+        same_camera: bool = False,
+        allow_different_dtypes=False,
     ):
         &#34;&#34;&#34;Initialize a module image sequence
         
@@ -1853,20 +2068,23 @@ before datatype conversion</dd>
         shape = self.images[0].shape
         dtype = self.images[0].dtype
         modality = self.images[0].modality
-        for img in self.images:
-            if img.dtype != dtype and not allow_different_dtypes:
-                logging.error(
-                    &#39;Cannot create sequence from mixed dtypes. Consider using the &#34;allow_different_dtypes&#34; argument, when reading images.&#39;
-                )
-                exit()
-            if img.shape != shape and same_camera:
-                logging.error(
-                    &#39;Cannot create sequence from mixed shapes. Consider using the &#34;same_camera&#34; argument, when reading images.&#39;
-                )
-                exit()
-            if img.modality != modality:
-                logging.error(&#34;Cannot create a sequence from mixed modalities.&#34;)
-                exit()
+        # for img in self.images:
+        #    if img.dtype != dtype and not allow_different_dtypes:
+        #        logging.error(
+        #            &#39;Cannot create sequence from mixed dtypes. Consider using the &#34;allow_different_dtypes&#34; argument, when reading images.&#39;
+        #        )
+        #        exit()
+        #    if img.shape != shape and same_camera:
+        #        logging.error(
+        #            &#39;Cannot create sequence from mixed shapes. Consider using the &#34;same_camera&#34; argument, when reading images.&#39;
+        #        )
+        #        exit()
+        #    if img.modality != modality:
+        #        logging.error(&#34;Cannot create a sequence from mixed modalities.&#34;)
+        #        exit()
+
+        # namespace for accessing pandas methods
+        self.pandas = self._PandasHandler(self)
 
     def head(self, N: int = 4, cols: int = 2, *args, **kwargs):
         &#34;&#34;&#34;Show the first N images
@@ -1905,7 +2123,7 @@ before datatype conversion</dd>
         p = tqdm if progress_bar else lambda x: x
         for img in p(self._images):
             result.append(fn(img, *argv, **kwargs))
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def apply_image_data(
         self: _T,
@@ -1931,7 +2149,7 @@ before datatype conversion</dd>
             data = img.data
             res = fn(data, *argv, **kwargs)
             result.append(type(img).from_other(img, data=res))
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def meta_from_path(
         self,
@@ -1966,94 +2184,60 @@ before datatype conversion</dd>
                     transform=transform,
                 )
             )
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
-    def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -&gt; ImageSequence:
+    def meta_from_fn(
+        self, fn: Callable[[Image], Dict[str, Any]], **kwargs
+    ) -&gt; ImageSequence:
         &#34;&#34;&#34;Extract meta information using given function
 
         Args:
             fn (Callable[[Image], Dict[str, Any]]): Function that is applied on every element of the sequence
         &#34;&#34;&#34;
-        return self.from_other(
-            self, images=[img.meta_from_fn(fn) for img in self._images]
-        )
+        return self.apply(fn=lambda x: x.meta_from_fn(fn), **kwargs)
 
     def meta_to_pandas(self) -&gt; pd.DataFrame:
         &#34;&#34;&#34;Convert meta from images to pandas DataFrame&#34;&#34;&#34;
         if self._meta_df is None:
-            series = [img.meta_to_pandas() for img in self._images]
+            series = [img._meta_to_pandas() for img in self._images]
             self._meta_df = pd.DataFrame(data=series)
             self._meta_df = self._meta_df.astype(
                 {&#34;modality&#34;: str}
             )  # allow for easy comparison
         return self._meta_df.copy()  # pd.DataFrame has no writable flag :(
 
-    def drop_duplicates(
-        self, subset: List[str] = None, keep: str = &#34;first&#34;
-    ) -&gt; ImageSequence:
-        &#34;&#34;&#34;Drop duplicates based on meta attributes. For further reference, please
-            refer to the corresponding pandas method
-
-        Args:
-            subset (List[str]): Meta keys
-            keep (str): Same as pandas method
-
-        Returns:
-            result (ImageSequence): The images with duplicates dropped
-        &#34;&#34;&#34;
-        idx = (
-            self.meta_to_pandas()
-            .drop_duplicates(subset=subset, keep=keep)
-            .index.to_list()
-        )
-        result = [self._images[i] for i in idx]
-        return type(self).from_other(self, images=result)
-
-    def query(self, query: str) -&gt; ImageSequence:
-        &#34;&#34;&#34;Query image sequence using image meta attributes
-
-        Args:
-            query (str): The query string using the query syntax of pandas library
-
-        Returns:
-            result (ImageSequence): The images, where query evaluated true
-        &#34;&#34;&#34;
-        idx = self.meta_to_pandas().query(query).index.to_list()
-        result = [self._images[i] for i in idx]
-        return type(self).from_other(self, images=result)
-
     def as_type(self: _T, dtype: DType) -&gt; _T:
         &#34;&#34;&#34;Convert sequence to specified dtype&#34;&#34;&#34;
         result = [img.as_type(dtype) for img in self._images]
-        return type(self).from_other(self, images=result)
+        return self.from_self(images=result)
 
     def __add__(self: _T, other: _T) -&gt; _T:
         res = [x + y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __sub__(self: _T, other: _T) -&gt; _T:
         res = [x - y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __mul__(self: _T, other: _T) -&gt; _T:
         res = [x * y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __truediv__(self: _T, other: _T) -&gt; _T:
         res = [x / y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __floordiv__(self: _T, other: _T) -&gt; _T:
         res = [x // y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __mod__(self: _T, other: _T) -&gt; _T:
         res = [x % y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     def __pow__(self: _T, other: _T) -&gt; _T:
         res = [x ** y for x, y in zip(self.images, other.images)]
-        return type(self).from_other(self, images=res)
+        return self.from_self(images=res)
 
     @property
     def images(self) -&gt; List[Image]:
@@ -2166,7 +2350,7 @@ def shape(self) -&gt; Tuple[int, int]:
 <h3>Methods</h3>
 <dl>
 <dt id="pvinspect.data.image.ImageSequence.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, fn: Callable[[Image], Image], *argv, progress_bar: bool = True, **kwargs) -> <a title="pvinspect.data.image.ImageSequence" href="#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
+<span>def <span class="ident">apply</span></span>(<span>self, fn: Callable[[<a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a>], <a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a>], *argv, progress_bar: bool = True, **kwargs) ‑> <a title="pvinspect.data.image.ImageSequence" href="#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Apply the given callable on every image. Returns a copy of the
@@ -2179,10 +2363,7 @@ original sequence</p>
 <dd>Show progress bar?</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>sequence (ImageSequence): The copy with modified images</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>sequence (ImageSequence): The copy with modified images</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2204,11 +2385,11 @@ original sequence</p>
     p = tqdm if progress_bar else lambda x: x
     for img in p(self._images):
         result.append(fn(img, *argv, **kwargs))
-    return type(self).from_other(self, images=result)</code></pre>
+    return self.from_self(images=result)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.apply_image_data"><code class="name flex">
-<span>def <span class="ident">apply_image_data</span></span>(<span>self: _T, fn: Callable[[np.ndarray], np.ndarray], *argv, progress_bar: bool = True, **kwargs) -> '_T'</span>
+<span>def <span class="ident">apply_image_data</span></span>(<span>self: _T, fn: Callable[[np.ndarray], np.ndarray], *argv, progress_bar: bool = True, **kwargs) ‑> '_T'</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Apply the given callable on every image data. Returns a copy of the
@@ -2222,10 +2403,7 @@ and returns a np.ndarray. Note that the argument is immutable.</dd>
 <dd>Show progress bar?</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>sequence (ImageSequence): The copy with modified data</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>sequence (ImageSequence): The copy with modified data</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2254,11 +2432,11 @@ and returns a np.ndarray. Note that the argument is immutable.</dd>
         data = img.data
         res = fn(data, *argv, **kwargs)
         result.append(type(img).from_other(img, data=res))
-    return type(self).from_other(self, images=result)</code></pre>
+    return self.from_self(images=result)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.as_type"><code class="name flex">
-<span>def <span class="ident">as_type</span></span>(<span>self: _T, dtype: DType) -> '_T'</span>
+<span>def <span class="ident">as_type</span></span>(<span>self: _T, dtype: <a title="pvinspect.data.image.DType" href="#pvinspect.data.image.DType">DType</a>) ‑> '_T'</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert sequence to specified dtype</p></div>
@@ -2269,51 +2447,7 @@ and returns a np.ndarray. Note that the argument is immutable.</dd>
 <pre><code class="python">def as_type(self: _T, dtype: DType) -&gt; _T:
     &#34;&#34;&#34;Convert sequence to specified dtype&#34;&#34;&#34;
     result = [img.as_type(dtype) for img in self._images]
-    return type(self).from_other(self, images=result)</code></pre>
-</details>
-</dd>
-<dt id="pvinspect.data.image.ImageSequence.drop_duplicates"><code class="name flex">
-<span>def <span class="ident">drop_duplicates</span></span>(<span>self, subset: List[str] = None, keep: str = 'first') -> <a title="pvinspect.data.image.ImageSequence" href="#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Drop duplicates based on meta attributes. For further reference, please
-refer to the corresponding pandas method</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>subset</code></strong> :&ensp;<code>List[str]</code></dt>
-<dd>Meta keys</dd>
-<dt><strong><code>keep</code></strong> :&ensp;<code>str</code></dt>
-<dd>Same as pandas method</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>result (ImageSequence): The images with duplicates dropped</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def drop_duplicates(
-    self, subset: List[str] = None, keep: str = &#34;first&#34;
-) -&gt; ImageSequence:
-    &#34;&#34;&#34;Drop duplicates based on meta attributes. For further reference, please
-        refer to the corresponding pandas method
-
-    Args:
-        subset (List[str]): Meta keys
-        keep (str): Same as pandas method
-
-    Returns:
-        result (ImageSequence): The images with duplicates dropped
-    &#34;&#34;&#34;
-    idx = (
-        self.meta_to_pandas()
-        .drop_duplicates(subset=subset, keep=keep)
-        .index.to_list()
-    )
-    result = [self._images[i] for i in idx]
-    return type(self).from_other(self, images=result)</code></pre>
+    return self.from_self(images=result)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.head"><code class="name flex">
@@ -2343,7 +2477,7 @@ refer to the corresponding pandas method</p>
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.meta_from_fn"><code class="name flex">
-<span>def <span class="ident">meta_from_fn</span></span>(<span>self, fn: Callable[[Image], Dict[str, Any]]) -> <a title="pvinspect.data.image.ImageSequence" href="#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
+<span>def <span class="ident">meta_from_fn</span></span>(<span>self, fn: Callable[[<a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a>], Dict[str, Any]], **kwargs) ‑> <a title="pvinspect.data.image.ImageSequence" href="#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Extract meta information using given function</p>
@@ -2356,19 +2490,19 @@ refer to the corresponding pandas method</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def meta_from_fn(self, fn: Callable[[Image], Dict[str, Any]]) -&gt; ImageSequence:
+<pre><code class="python">def meta_from_fn(
+    self, fn: Callable[[Image], Dict[str, Any]], **kwargs
+) -&gt; ImageSequence:
     &#34;&#34;&#34;Extract meta information using given function
 
     Args:
         fn (Callable[[Image], Dict[str, Any]]): Function that is applied on every element of the sequence
     &#34;&#34;&#34;
-    return self.from_other(
-        self, images=[img.meta_from_fn(fn) for img in self._images]
-    )</code></pre>
+    return self.apply(fn=lambda x: x.meta_from_fn(fn), **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.meta_from_path"><code class="name flex">
-<span>def <span class="ident">meta_from_path</span></span>(<span>self, pattern: str, key: str, target_type: Type, group_n: int = 1, transform: Callable[[Any], Any] = None) -> <a title="pvinspect.data.image.ImageSequence" href="#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
+<span>def <span class="ident">meta_from_path</span></span>(<span>self, pattern: str, key: str, target_type: Type, group_n: int = 1, transform: Callable[[Any], Any] = None) ‑> <a title="pvinspect.data.image.ImageSequence" href="#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Extract meta information from path of individual aimges. The group_n'th matching group
@@ -2388,10 +2522,7 @@ from pattern is used as meta value</p>
 before datatype conversion</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>images (ImageSequence): Resulting ImageSequence</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
+<p>images (ImageSequence): Resulting ImageSequence</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2429,11 +2560,11 @@ before datatype conversion</dd>
                 transform=transform,
             )
         )
-    return type(self).from_other(self, images=result)</code></pre>
+    return self.from_self(images=result)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.meta_to_pandas"><code class="name flex">
-<span>def <span class="ident">meta_to_pandas</span></span>(<span>self) -> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">meta_to_pandas</span></span>(<span>self) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert meta from images to pandas DataFrame</p></div>
@@ -2444,45 +2575,12 @@ before datatype conversion</dd>
 <pre><code class="python">def meta_to_pandas(self) -&gt; pd.DataFrame:
     &#34;&#34;&#34;Convert meta from images to pandas DataFrame&#34;&#34;&#34;
     if self._meta_df is None:
-        series = [img.meta_to_pandas() for img in self._images]
+        series = [img._meta_to_pandas() for img in self._images]
         self._meta_df = pd.DataFrame(data=series)
         self._meta_df = self._meta_df.astype(
             {&#34;modality&#34;: str}
         )  # allow for easy comparison
     return self._meta_df.copy()  # pd.DataFrame has no writable flag :(</code></pre>
-</details>
-</dd>
-<dt id="pvinspect.data.image.ImageSequence.query"><code class="name flex">
-<span>def <span class="ident">query</span></span>(<span>self, query: str) -> <a title="pvinspect.data.image.ImageSequence" href="#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Query image sequence using image meta attributes</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>query</code></strong> :&ensp;<code>str</code></dt>
-<dd>The query string using the query syntax of pandas library</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>result (ImageSequence): The images, where query evaluated true</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def query(self, query: str) -&gt; ImageSequence:
-    &#34;&#34;&#34;Query image sequence using image meta attributes
-
-    Args:
-        query (str): The query string using the query syntax of pandas library
-
-    Returns:
-        result (ImageSequence): The images, where query evaluated true
-    &#34;&#34;&#34;
-    idx = self.meta_to_pandas().query(query).index.to_list()
-    result = [self._images[i] for i in idx]
-    return type(self).from_other(self, images=result)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.ImageSequence.tail"><code class="name flex">
@@ -2545,7 +2643,7 @@ before datatype conversion</dd>
 </dd>
 <dt id="pvinspect.data.image.ModuleImage"><code class="flex name class">
 <span>class <span class="ident">ModuleImage</span></span>
-<span>(</span><span>data: np.ndarray, modality: Modality, path: Path, cols: int = None, rows: int = None, meta: dict = None)</span>
+<span>(</span><span>data: np.ndarray, modality: <a title="pvinspect.data.image.Modality" href="#pvinspect.data.image.Modality">Modality</a>, path: Path = None, cols: int = None, rows: int = None, meta: dict = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An image of a solar module with additional meta data</p>
@@ -2574,7 +2672,7 @@ before datatype conversion</dd>
         self,
         data: np.ndarray,
         modality: Modality,
-        path: Path,
+        path: Path = None,
         cols: int = None,
         rows: int = None,
         meta: dict = None,
@@ -2659,7 +2757,7 @@ def rows(self):
 <h3>Methods</h3>
 <dl>
 <dt id="pvinspect.data.image.ModuleImage.grid"><code class="name flex">
-<span>def <span class="ident">grid</span></span>(<span>self) -> numpy.ndarray</span>
+<span>def <span class="ident">grid</span></span>(<span>self) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create a grid of corners according to the module geometry</p>
@@ -2697,6 +2795,7 @@ def rows(self):
 <li><code><a title="pvinspect.data.image.Image.dtype" href="#pvinspect.data.image.Image.dtype">dtype</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.get_meta" href="#pvinspect.data.image.Image.get_meta">get_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.has_meta" href="#pvinspect.data.image.Image.has_meta">has_meta</a></code></li>
+<li><code><a title="pvinspect.data.image.Image.lazy" href="#pvinspect.data.image.Image.lazy">lazy</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.list_meta" href="#pvinspect.data.image.Image.list_meta">list_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.meta_from_fn" href="#pvinspect.data.image.Image.meta_from_fn">meta_from_fn</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.meta_from_path" href="#pvinspect.data.image.Image.meta_from_path">meta_from_path</a></code></li>
@@ -2711,7 +2810,7 @@ def rows(self):
 </dd>
 <dt id="pvinspect.data.image.ModuleImageSequence"><code class="flex name class">
 <span>class <span class="ident">ModuleImageSequence</span></span>
-<span>(</span><span>images: List[ModuleOrPartialModuleImage], same_camera: bool, allow_different_dtypes=False)</span>
+<span>(</span><span>images: List[ModuleOrPartialModuleImage], same_camera: bool = False, allow_different_dtypes=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An immutable sequence of module images, allowing for access to single images as well as analysis of the sequence</p>
@@ -2735,7 +2834,7 @@ def rows(self):
     def __init__(
         self,
         images: List[ModuleOrPartialModuleImage],
-        same_camera: bool,
+        same_camera: bool = False,
         allow_different_dtypes=False,
     ):
         &#34;&#34;&#34;Initialize a module image sequence
@@ -2774,7 +2873,6 @@ def rows(self):
 <li><code><a title="pvinspect.data.image.ImageSequence.apply" href="#pvinspect.data.image.ImageSequence.apply">apply</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.apply_image_data" href="#pvinspect.data.image.ImageSequence.apply_image_data">apply_image_data</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.as_type" href="#pvinspect.data.image.ImageSequence.as_type">as_type</a></code></li>
-<li><code><a title="pvinspect.data.image.ImageSequence.drop_duplicates" href="#pvinspect.data.image.ImageSequence.drop_duplicates">drop_duplicates</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.dtype" href="#pvinspect.data.image.ImageSequence.dtype">dtype</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.head" href="#pvinspect.data.image.ImageSequence.head">head</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.images" href="#pvinspect.data.image.ImageSequence.images">images</a></code></li>
@@ -2782,7 +2880,6 @@ def rows(self):
 <li><code><a title="pvinspect.data.image.ImageSequence.meta_from_path" href="#pvinspect.data.image.ImageSequence.meta_from_path">meta_from_path</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.meta_to_pandas" href="#pvinspect.data.image.ImageSequence.meta_to_pandas">meta_to_pandas</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.modality" href="#pvinspect.data.image.ImageSequence.modality">modality</a></code></li>
-<li><code><a title="pvinspect.data.image.ImageSequence.query" href="#pvinspect.data.image.ImageSequence.query">query</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.same_camera" href="#pvinspect.data.image.ImageSequence.same_camera">same_camera</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.shape" href="#pvinspect.data.image.ImageSequence.shape">shape</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.tail" href="#pvinspect.data.image.ImageSequence.tail">tail</a></code></li>
@@ -2792,7 +2889,7 @@ def rows(self):
 </dd>
 <dt id="pvinspect.data.image.PartialModuleImage"><code class="flex name class">
 <span>class <span class="ident">PartialModuleImage</span></span>
-<span>(</span><span>data: np.ndarray, modality: Modality, path: Path, cols: int = None, rows: int = None, first_col: int = None, first_row: int = None, meta: dict = None)</span>
+<span>(</span><span>data: np.ndarray, modality: <a title="pvinspect.data.image.Modality" href="#pvinspect.data.image.Modality">Modality</a>, path: Path = None, cols: int = None, rows: int = None, first_col: int = None, first_row: int = None, meta: dict = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An image of a solar module with additional meta data</p>
@@ -2825,7 +2922,7 @@ def rows(self):
         self,
         data: np.ndarray,
         modality: Modality,
-        path: Path,
+        path: Path = None,
         cols: int = None,
         rows: int = None,
         first_col: int = None,
@@ -2865,6 +2962,7 @@ def rows(self):
 <li><code><a title="pvinspect.data.image.ModuleImage.get_meta" href="#pvinspect.data.image.Image.get_meta">get_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.grid" href="#pvinspect.data.image.ModuleImage.grid">grid</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.has_meta" href="#pvinspect.data.image.Image.has_meta">has_meta</a></code></li>
+<li><code><a title="pvinspect.data.image.ModuleImage.lazy" href="#pvinspect.data.image.Image.lazy">lazy</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.list_meta" href="#pvinspect.data.image.Image.list_meta">list_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.meta_from_fn" href="#pvinspect.data.image.Image.meta_from_fn">meta_from_fn</a></code></li>
 <li><code><a title="pvinspect.data.image.ModuleImage.meta_from_path" href="#pvinspect.data.image.Image.meta_from_path">meta_from_path</a></code></li>
@@ -2926,11 +3024,13 @@ def rows(self):
 <li>
 <h4><code><a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a></code></h4>
 <ul class="two-column">
+<li><code><a title="pvinspect.data.image.Image.LazyData" href="#pvinspect.data.image.Image.LazyData">LazyData</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.as_type" href="#pvinspect.data.image.Image.as_type">as_type</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.data" href="#pvinspect.data.image.Image.data">data</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.dtype" href="#pvinspect.data.image.Image.dtype">dtype</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.get_meta" href="#pvinspect.data.image.Image.get_meta">get_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.has_meta" href="#pvinspect.data.image.Image.has_meta">has_meta</a></code></li>
+<li><code><a title="pvinspect.data.image.Image.lazy" href="#pvinspect.data.image.Image.lazy">lazy</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.list_meta" href="#pvinspect.data.image.Image.list_meta">list_meta</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.meta_from_fn" href="#pvinspect.data.image.Image.meta_from_fn">meta_from_fn</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.meta_from_path" href="#pvinspect.data.image.Image.meta_from_path">meta_from_path</a></code></li>
@@ -2947,7 +3047,6 @@ def rows(self):
 <li><code><a title="pvinspect.data.image.ImageSequence.apply" href="#pvinspect.data.image.ImageSequence.apply">apply</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.apply_image_data" href="#pvinspect.data.image.ImageSequence.apply_image_data">apply_image_data</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.as_type" href="#pvinspect.data.image.ImageSequence.as_type">as_type</a></code></li>
-<li><code><a title="pvinspect.data.image.ImageSequence.drop_duplicates" href="#pvinspect.data.image.ImageSequence.drop_duplicates">drop_duplicates</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.dtype" href="#pvinspect.data.image.ImageSequence.dtype">dtype</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.head" href="#pvinspect.data.image.ImageSequence.head">head</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.images" href="#pvinspect.data.image.ImageSequence.images">images</a></code></li>
@@ -2955,7 +3054,6 @@ def rows(self):
 <li><code><a title="pvinspect.data.image.ImageSequence.meta_from_path" href="#pvinspect.data.image.ImageSequence.meta_from_path">meta_from_path</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.meta_to_pandas" href="#pvinspect.data.image.ImageSequence.meta_to_pandas">meta_to_pandas</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.modality" href="#pvinspect.data.image.ImageSequence.modality">modality</a></code></li>
-<li><code><a title="pvinspect.data.image.ImageSequence.query" href="#pvinspect.data.image.ImageSequence.query">query</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.same_camera" href="#pvinspect.data.image.ImageSequence.same_camera">same_camera</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.shape" href="#pvinspect.data.image.ImageSequence.shape">shape</a></code></li>
 <li><code><a title="pvinspect.data.image.ImageSequence.tail" href="#pvinspect.data.image.ImageSequence.tail">tail</a></code></li>
@@ -2988,9 +3086,7 @@ def rows(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>
