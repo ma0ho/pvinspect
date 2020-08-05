@@ -1,5 +1,9 @@
 # Changelog
 
+## In development
+
+* Add support for uint8 images
+
 ## 0.3.1
 
 ### Fixed/Improved
