@@ -1,11 +1,11 @@
-from test.utilities import random_image_sequence, assert_equal
+from test.utilities import assert_equal, random_ubyte_image_sequence
 import torch as t
 from pvinspect.integration.pytorch import *
 from pvinspect.data import EL_IMAGE
 
 
 def test_dataset():
-    seq = random_image_sequence(lazy=True, N=3)
+    seq = random_ubyte_image_sequence(lazy=True, N=3)
     ds = Dataset(seq)
 
     assert len(ds) == 3
@@ -15,7 +15,7 @@ def test_dataset():
 
 def test_dataset_with_meta():
     meta = [{"k1": v, "k2": -v} for v in range(3)]
-    seq = random_image_sequence(lazy=True, N=3, meta=meta)
+    seq = random_ubyte_image_sequence(lazy=True, N=3, meta=meta)
 
     # only use a single meta attr
     ds = Dataset(seq, meta_attrs=["k1"])
@@ -34,7 +34,7 @@ def test_dataset_with_meta():
 
 
 def test_dataset_with_data_transform():
-    seq = random_image_sequence(lazy=True, N=3)
+    seq = random_ubyte_image_sequence(lazy=True, N=3)
     t = lambda x: x + 1.0
     ds = Dataset(seq, data_transform=t)
 
@@ -44,7 +44,7 @@ def test_dataset_with_data_transform():
 
 def test_dataset_with_meta_transform():
     meta = [{"k1": v, "k2": -v} for v in range(3)]
-    seq = random_image_sequence(lazy=True, N=3, meta=meta)
+    seq = random_ubyte_image_sequence(lazy=True, N=3, meta=meta)
     t = lambda x: -x
     ds = Dataset(seq, meta_attrs=["k2", "k1"], meta_transforms={"k1": t})
 
@@ -56,7 +56,7 @@ def test_dataset_with_meta_transform():
 
 def test_classification_dataset():
     meta = [{"c1": False, "c2": True}, {"c1": True, "c2": False}]
-    seq = random_image_sequence(lazy=True, N=2, meta=meta)
+    seq = random_ubyte_image_sequence(lazy=True, N=2, meta=meta)
     ds = ClassificationDataset(seq, meta_classes=["c2", "c1"])
 
     for i in range(2):
@@ -74,7 +74,7 @@ def test_classification_dataset():
 
 def test_classification_dataset_additional_meta():
     meta = [{"c1": False, "c2": True, "k": 0}, {"c1": True, "c2": False, "k": 1}]
-    seq = random_image_sequence(lazy=True, N=2, meta=meta)
+    seq = random_ubyte_image_sequence(lazy=True, N=2, meta=meta)
     ds = ClassificationDataset(seq, meta_classes=["c2", "c1"], meta_attrs=["k"])
 
     for i in range(2):
@@ -95,7 +95,7 @@ def test_classification_dataset_additional_meta():
 
 def test_classification_dataset_feed_result():
     meta = [{"c1": False, "c2": True}, {"c1": True, "c2": False}]
-    seq = random_image_sequence(lazy=True, N=2, meta=meta)
+    seq = random_ubyte_image_sequence(lazy=True, N=2, meta=meta)
     ds = ClassificationDataset(seq, meta_classes=["c2", "c1"])
 
     result = [

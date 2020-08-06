@@ -494,7 +494,7 @@ def test_lazy_load_checks():
     data = Image.LazyData(lambda: np.ones((2), dtype=np.uint8))
     img = Image(data=data, path=Path())
 
-    assert img.data.dtype == DTYPE_UNSIGNED_INT
+    assert img.data.dtype == DTYPE_UNSIGNED_BYTE
 
 
 def test_load_cached():

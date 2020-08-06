@@ -30,9 +30,36 @@ def random_image(lazy: bool = False, **kwargs) -> Image:
     return Image(data, **kwargs)
 
 
-def random_uint_image() -> Image:
-    data = (np.random.random((10, 10)) * 100).astype(np.uint32)
-    return Image(data, modality=EL_IMAGE, path=Path() / "test.png")
+def random_uint_image(lazy: bool = False, **kwargs) -> Image:
+    if lazy:
+        data = Image.LazyData(
+            lambda: (np.random.random((10, 10)) * 100).astype(np.uint32)
+        )
+    else:
+        data = (np.random.random((10, 10)) * 100).astype(np.uint32)
+
+    if "modality" not in kwargs.keys():
+        kwargs["modality"] = EL_IMAGE
+    if "path" not in kwargs.keys():
+        kwargs["path"] = Path() / "test.tif"
+
+    return Image(data, **kwargs)
+
+
+def random_ubyte_image(lazy: bool = False, **kwargs) -> Image:
+    if lazy:
+        data = Image.LazyData(
+            lambda: (np.random.random((10, 10)) * 100).astype(np.uint8)
+        )
+    else:
+        data = (np.random.random((10, 10)) * 100).astype(np.uint32)
+
+    if "modality" not in kwargs.keys():
+        kwargs["modality"] = EL_IMAGE
+    if "path" not in kwargs.keys():
+        kwargs["path"] = Path() / "test.tif"
+
+    return Image(data, **kwargs)
 
 
 def random_module_image() -> ModuleImage:
@@ -51,8 +78,25 @@ def random_image_sequence(
     return ImageSequence(imgs, False)
 
 
-def random_uint_image_sequence() -> ImageSequence:
-    imgs = [random_uint_image() for x in range(3)]
+def random_uint_image_sequence(
+    N: int = 3, meta: Optional[List[Dict[str, Any]]] = None, **kwargs
+) -> ImageSequence:
+    if meta is None:
+        imgs = [random_uint_image(**kwargs) for i in range(N)]
+    else:
+        assert len(meta) == N
+        imgs = [random_uint_image(meta=m, **kwargs) for m in meta]
+    return ImageSequence(imgs, False)
+
+
+def random_ubyte_image_sequence(
+    N: int = 3, meta: Optional[List[Dict[str, Any]]] = None, **kwargs
+) -> ImageSequence:
+    if meta is None:
+        imgs = [random_ubyte_image(**kwargs) for i in range(N)]
+    else:
+        assert len(meta) == N
+        imgs = [random_ubyte_image(meta=m, **kwargs) for m in meta]
     return ImageSequence(imgs, False)
 
 
