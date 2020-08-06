@@ -2,14 +2,29 @@
 
 ## In development
 
+* Add support for uint8 images
+
+## 0.3.1
+
+### Fixed/Improved
+
+* Add missing dependency
+
+## 0.3.0
+
+### New
+
 * Add performance test for single module detection
 * Pandas methods are now (all) available from `ImageSequence.pandas`
 * `Image` now supports lazy loading of data (which is now default)
 * Introduced convenience method `from_self` to avoid using `type(self).from_other(self, ...)`
 * Speed up meta data handling
 * Add PyTorch `Dataset` and `ClassificationDataset` implementation
-* Speed up meta data handling
 * Add ELPV cell image dataset
+
+### Fixed/Improved
+
+* Speed up meta data handling
 
 ## 0.2.3
 

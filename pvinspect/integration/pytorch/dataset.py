@@ -1,5 +1,5 @@
 import logging
-from pvinspect.data import ImageSequence, Image
+from pvinspect.data import ImageSequence, Image, DType
 from typing import Tuple, List, Optional, Callable, Any, Dict, Union, TypeVar
 import numpy as np
 
@@ -63,18 +63,17 @@ class Dataset(TorchDataset):
                 "We recommend using lazy loaded data in combination with PyTorch."
             )
 
+        if not data.dtype == DType.UNSIGNED_BYTE and not data.dtype == DType.FLOAT:
+            logging.warn(
+                "Image datatype is incompatible to PyTorch. "
+                "Please consider converting them in advance"
+            )
+
     def __getitem__(self, index: int) -> Union[D, Tuple[Any, ...]]:
         # PyTorch does not like uint>8 -> perform automatic conversion
         array = self._data[index].data
-        if array.dtype in (np.uint16, np.uint32):
-            if np.max(array) > 255:
-                logging.error(
-                    "Uint-images with more than 8 bits are incompatible to PyTorch. "
-                    "However, image exceeds 8 bit and cannot be automatically converted. "
-                    "Please consider to convert to float images in advance."
-                )
-            else:
-                array = array.astype(np.uint8)
+        if array.dtype == np.float64:
+            array = array.astype(np.float32)
 
         # image data
         d = self._data_transform(array)

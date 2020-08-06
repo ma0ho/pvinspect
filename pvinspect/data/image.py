@@ -41,6 +41,7 @@ PL_IMAGE = Modality.PL_IMAGE
 # datatypes
 DTYPE_INT = np.int32
 DTYPE_UNSIGNED_INT = np.uint16
+DTYPE_UNSIGNED_BYTE = np.uint8
 DTYPE_FLOAT = np.float64
 img_as_float = img_as_float64
 
@@ -52,6 +53,7 @@ class DType(Enum):
     INT = 0
     UNSIGNED_INT = 1
     FLOAT = 2
+    UNSIGNED_BYTE = 3
 
 
 # global list of plugins that are called on every .show()
@@ -304,12 +306,15 @@ class Image(_Base):
         if dtype == np.float32 or dtype == np.float64:
             return DType.FLOAT
         elif (
-            dtype == np.uint8
-            or dtype == np.uint16
+            dtype == np.uint16
             or dtype == np.uint32
             or dtype == np.uint64
         ):
             return DType.UNSIGNED_INT
+        elif (
+            dtype == np.uint8
+        ):
+            return DType.UNSIGNED_BYTE
         elif (
             dtype == np.int8
             or dtype == np.int16
