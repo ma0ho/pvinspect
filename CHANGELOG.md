@@ -3,6 +3,7 @@
 ## In development
 
 * Add support for uint8 images
+* Force copy images before passing them to PyTorch
 
 ## 0.3.1
 

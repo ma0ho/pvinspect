@@ -74,6 +74,8 @@ class Dataset(TorchDataset):
         array = self._data[index].data
         if array.dtype == np.float64:
             array = array.astype(np.float32)
+        else:
+            array = array.copy()  # PyTorch does not support non-writable Tensors
 
         # image data
         d = self._data_transform(array)
