@@ -459,7 +459,7 @@ def read_partial_module_images(
 def save_image(
     filename: PathOrStr,
     image: Image,
-    with_visusalization: bool = False,
+    with_visualization: bool = False,
     save_meta: bool = False,
     **kwargs
 ):
@@ -471,11 +471,11 @@ def save_image(
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
         save_meta (bool): Save meta data to separate json file (cannot be used with visualization)
     """
-    if with_visusalization and save_meta:
+    if with_visualization and save_meta:
         logging.error("Cannot save meta data for image with visualization")
         return
 
-    if with_visusalization:
+    if with_visualization:
         plt.clf()
         image.show(**kwargs)
         plt.savefig(filename, **kwargs)

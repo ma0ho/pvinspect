@@ -2,8 +2,11 @@
 
 ## In development
 
+### Fixed/Improved
+
 * Add support for uint8 images
 * Force copy images before passing them to PyTorch
+* Fix a typo in keyword argument `with_visualization` for `io.save_image`
 
 ## 0.3.1
 
