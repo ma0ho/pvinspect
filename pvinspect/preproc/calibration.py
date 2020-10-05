@@ -137,12 +137,13 @@ def calibrate_distortion(
     imgpoints = []  # 2d points in image plane.
 
     for img in tqdm(images):
-        img = rescale_intensity(img.data, out_range=(0, 255)).astype(np.uint8)
+        p = np.percentile(img.data, [5, 95])
+        img = rescale_intensity(
+            img.data, in_range=tuple(p.tolist()), out_range=(0, 255)
+        ).astype(np.uint8)
 
         # Find the chess board corners
-        ret, corners = cv2.findChessboardCornersSB(
-            img, checkerboard_size, flags=cv2.CALIB_CB_ACCURACY
-        )
+        ret, corners = cv2.findChessboardCornersSB(img, checkerboard_size)
 
         if ret == True:
             objpoints.append(objp)
