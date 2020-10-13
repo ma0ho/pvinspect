@@ -3,6 +3,7 @@
 ## In development
 
 * Add support for uint8 images
+* Fix occasionally failing checkerboard detection
 
 ## 0.3.1
 
