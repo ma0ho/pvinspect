@@ -1,9 +1,4 @@
 import setuptools
-from setuptools.command.develop import develop
-from setuptools.command.install import install
-import sys
-import os
-from subprocess import check_call
 
 
 with open("README.md", "r") as fh:
