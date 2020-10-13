@@ -1,8 +1,13 @@
 # Changelog
 
-## In development
+## 0.3.2
+
+### New
 
 * Add support for uint8 images
+
+### Fixed
+
 * Fix occasionally failing checkerboard detection
 
 ## 0.3.1
