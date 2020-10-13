@@ -9,7 +9,7 @@ setuptools.setup(
     version="0.3.1",
     author="Mathis Hoffmann",
     author_email="mathis.hoffmann@fau.de",
-    description="Provides methods for the analysis of PV modules using different modailities",
+    description="Provides methods for the analysis of PV modules using different modalities",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ma0ho/pvinspect",
