@@ -462,7 +462,8 @@ def locate_multiple_modules(
     rows: int = None,
     return_bounding_boxes: bool = False,
 ) -> Tuple[ModuleImageSequence, ObjectAnnotations]:
-    """Perform localization and segmentation of multiple modules
+    """Perform localization and segmentation of multiple modules. The method is published in Hoffmann, Mathis, et al. 
+    "Deep Learning-based Pipeline for Module Power Prediction from EL Measurements." arXiv preprint arXiv:2009.14712 (2020).
 
     Args:
         sequence (ImageOrSequence): Input images
