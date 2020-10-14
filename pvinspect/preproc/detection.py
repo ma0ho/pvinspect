@@ -245,10 +245,10 @@ def segment_module_part(
         image,
         drop_meta_types=[Polygon],  # geometric attributes are invalid now..
         data=result,
-        cols=cols,
-        rows=rows,
-        first_col=first_col,
-        first_row=first_row,
+        cols=cols + min(first_col, 0),
+        rows=rows + min(first_row, 0),
+        first_col=first_col if first_col >= 0 else None,
+        first_row=first_row if first_row >= 0 else None,
         meta={"transform": transform, "segment_module_original": original},
     )
 

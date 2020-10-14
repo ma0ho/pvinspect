@@ -1,5 +1,11 @@
 # Changelog
 
+## In development
+
+### Fixed
+
+* `PartialModuleImage.cols` and `PartialModuleImage.rows` is now set correctly with `segment_module_part` and negative `first_col`/`first_row`
+
 ## 0.3.2
 
 ### New

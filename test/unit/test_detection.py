@@ -97,6 +97,30 @@ def test_segment_modules():
     assert_equal(x[1], modules[0].shape[0])
 
 
+def test_segment_module_part():
+    mod = data.datasets.poly10x6(1)[0]
+    mod = detection.locate_module_and_cells(mod)
+    part = detection.segment_module_part(mod, 1, 2, 2, 3)
+
+    assert_equal(part.shape[1], 2 / 3 * part.shape[0], 0.1)
+    assert part.first_col == 1
+    assert part.first_row == 2
+    assert part.cols == 2
+    assert part.rows == 3
+
+
+def test_segment_module_part_padding():
+    mod = data.datasets.poly10x6(1)[0]
+    mod = detection.locate_module_and_cells(mod)
+    part = detection.segment_module_part(mod, -1, -2, 2, 3)
+
+    assert_equal(part.shape[1], 2 / 3 * part.shape[0], 0.1)
+    assert part.first_col == None
+    assert part.first_row == None
+    assert part.cols == 1
+    assert part.rows == 1
+
+
 def test_segment_size():
     img = detection.locate_module_and_cells(data.datasets.poly10x6(1)[0])
     part = detection.segment_module_part(img, 1, 3, 2, 1, size=20)
