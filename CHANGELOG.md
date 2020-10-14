@@ -5,6 +5,7 @@
 ### Fixed
 
 * `PartialModuleImage.cols` and `PartialModuleImage.rows` is now set correctly with `segment_module_part` and negative `first_col`/`first_row`
+* Fix semantic of `first_row` `first_col` in combination with module segmentation
 
 ## 0.3.2
 

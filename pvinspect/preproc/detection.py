@@ -197,9 +197,6 @@ def segment_module_part(
 
     last_col = first_col + cols
     last_row = first_row + rows
-    if last_row > image.rows or last_col > image.cols:
-        logging.error("The row or column index exceeds the module geometry")
-        exit()
 
     size = t.mean_scale() if size is None else size
     result = warp_image(
@@ -216,18 +213,18 @@ def segment_module_part(
     transform = HomographyTransform(
         np.array(
             [
-                [first_row - padding, first_col - padding],
-                [first_row - padding, last_col - padding],
-                [last_row - padding, first_col - padding],
-                [last_row - padding, last_col - padding],
+                [first_col - padding, first_row - padding],
+                [last_col + padding, first_row - padding],
+                [last_col + padding, last_row + padding],
+                [first_col - padding, last_row + padding],
             ]
         ),
         np.array(
             [
                 [0.0, 0.0],
-                [0.0, size * cols],
-                [size * rows, 0.0],
-                [size * rows, size * cols],
+                [result.shape[1], 0.0],
+                [result.shape[1], result.shape[0]],
+                [0.0, result.shape[0]],
             ]
         ),
     )

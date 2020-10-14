@@ -8,7 +8,7 @@ from skimage import io, img_as_uint, img_as_float64, img_as_int
 from pvinspect.common.transform import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
-from typing import List, Tuple, Union, Callable, Type, TypeVar, Any, Dict
+from typing import List, Optional, Tuple, Union, Callable, Type, TypeVar, Any, Dict
 import copy
 import math
 from functools import wraps
@@ -225,8 +225,10 @@ def _register_default_plugins():
                 t = "{} (r: {:d}, c: {:d})".format(
                     str(image.path.name), image.row, image.col
                 )
-            else:
+            elif image.path is not None:
                 t = str(image.path.name)
+            else:
+                t = ""
 
             if len(t) > max_title_length:
                 l1 = max_title_length // 2 - 2
@@ -305,15 +307,9 @@ class Image(_Base):
     def _map_numpy_dtype(dtype):
         if dtype == np.float32 or dtype == np.float64:
             return DType.FLOAT
-        elif (
-            dtype == np.uint16
-            or dtype == np.uint32
-            or dtype == np.uint64
-        ):
+        elif dtype == np.uint16 or dtype == np.uint32 or dtype == np.uint64:
             return DType.UNSIGNED_INT
-        elif (
-            dtype == np.uint8
-        ):
+        elif dtype == np.uint8:
             return DType.UNSIGNED_BYTE
         elif (
             dtype == np.int8
@@ -1012,6 +1008,37 @@ class PartialModuleImage(ModuleImage):
 
         self._meta["first_col"] = first_col
         self._meta["first_row"] = first_row
+
+    def grid(self) -> np.ndarray:
+        """Create a grid of corners according to the module geometry
+        
+        Returns:
+            grid: (cols*rows, 2)-array of coordinates on a regular grid
+        """
+
+        if self.cols is not None and self.rows is not None:
+            x, y = np.mgrid[0 : self.cols + 1 : 1, 0 : self.rows + 1 : 1]
+            x += self.first_col
+            y += self.first_row
+            grid = np.stack([x.flatten(), y.flatten()], axis=1)
+            return grid
+        else:
+            logging.error("Module geometry is not initialized")
+            exit()
+
+    @property
+    def first_col(self) -> Optional[int]:
+        if self.has_meta("first_col"):
+            return self.get_meta("first_col")
+        else:
+            return None
+
+    @property
+    def first_row(self) -> Optional[int]:
+        if self.has_meta("first_row"):
+            return self.get_meta("first_row")
+        else:
+            return None
 
 
 ModuleOrPartialModuleImage = Union[ModuleImage, PartialModuleImage]
