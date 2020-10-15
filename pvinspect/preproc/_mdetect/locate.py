@@ -11,6 +11,7 @@ import numpy as np
 from typing import Tuple
 from skimage import exposure
 from scipy.ndimage.filters import median_filter
+from matplotlib import pyplot as plt
 
 
 def apply(
@@ -63,6 +64,9 @@ def apply(
         is_module_detail=is_module_detail,
     )
     outer_corners_fit = locate_transform(outer_corners_fit)
+    # plt.imshow(img, cmap='gray')
+    # plt.scatter(outer_corners_fit[outer_accepted, 0], outer_corners_fit[outer_accepted, 1], s=1, c='red')
+    # plt.show()
 
     # reestimate transform
     locate_transform = transform.HomographyTransform(
@@ -82,6 +86,9 @@ def apply(
         np.concatenate((module_bb, inner_corners[inner_accepted]), axis=0),
         np.concatenate((module_bb_fit, inner_corners_fit[inner_accepted]), axis=0),
     )
+    # plt.imshow(img, cmap='gray')
+    # plt.scatter(inner_corners_fit[inner_accepted, 0], inner_corners_fit[inner_accepted, 1], s=1, c='red')
+    # plt.show()
 
     # reestimate transform using all correspondences
     all_corners_model = np.concatenate((inner_corners, outer_corners), axis=0)

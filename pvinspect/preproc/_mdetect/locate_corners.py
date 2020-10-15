@@ -215,10 +215,24 @@ def fit_inner_corners(img, coords, transform, patch_size):
 
     for i in range(patches.shape[0]):
         _, _, v = _extract_profile2d(img, patches[i], transform, n_samples)
+        # plt.imshow(v, cmap='gray')
+        # plt.show()
 
         # find stop in x and y direction
         xc = _find_stops(v, 0, sigma_filter, patches[i])
         yc = _find_stops(v, 1, sigma_filter, patches[i])
+        # plt.imshow(v, cmap='gray')
+        # plt.scatter(xc, yc)
+        # plt.show()
+
+        # plt.imshow(img, cmap='gray')
+        # xcc = (xc/v.shape[1]) - 0.5
+        # ycc = (yc/v.shape[0]) - 0.5
+        # xcc *= patch_size
+        # ycc *= patch_size
+        # ct = transform(coords[i]+np.array([xcc, ycc]))
+        # plt.scatter(ct[0], ct[1], s=1)
+        # plt.show()
 
         # if both succeded
         if xc is not None and yc is not None:
@@ -243,7 +257,8 @@ def fit_inner_corners(img, coords, transform, patch_size):
         # plt.clf()
 
     corners = np.array(corners)
-    corners = corners - (patch_size / 2)
+    corners -= 0.5
+    corners *= patch_size
     return coords + corners, np.array(accepted_flags)
 
 
@@ -338,5 +353,6 @@ def fit_outer_corners(
         # plt.clf()
 
     corners = np.array(corners)
-    corners -= patch_size / 2
+    corners -= 0.5
+    corners *= patch_size
     return coords + corners, np.array(accepted_flags)
