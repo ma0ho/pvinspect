@@ -908,6 +908,14 @@ class CellImage(Image):
         """0-based column index of the cell in the original module"""
         return self.get_meta("col")
 
+    @property
+    def path(self) -> Path:
+        """Get this images path"""
+        p = super().path
+        return Path(
+            "{}_row{:02d}_col{:02d}{}".format(p.stem, self.row, self.col, p.suffix)
+        )
+
     def show(self, *argv, **kwargs):
         """Show this image"""
         super().show(*argv, **kwargs)

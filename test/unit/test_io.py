@@ -155,6 +155,21 @@ def test_save_image_with_visualization(tmp_path: Path):
     assert p.is_file()
 
 
+def test_save_images_filename_hook(tmp_path: Path):
+    cells = segment_cells(locate_module_and_cells(datasets.poly10x6(1)[0]))
+    hook = lambda x: "{}_{:02d}{:02d}{}".format(
+        x.path.stem, x.row, x.col, x.path.suffix
+    )
+    save_images(tmp_path, cells)
+
+    for cell in cells:
+        p = tmp_path / "{}_{:02d}{:02d}{}".format(
+            cell.path.stem, cell.row, cell.col, cell.path.suffix
+        )
+        # try read
+        img_read = read_module_image(p, EL_IMAGE)
+
+
 def test_force_dtype(tmp_path: Path):
     # create samples
     a = np.random.rand(10, 10) * 100

@@ -87,7 +87,7 @@ def _read_image(
     is_module_image: bool,
     is_partial_module: bool,
     lazy: bool,
-    modality: int = None,
+    modality: Modality = None,
     cols: int = None,
     rows: int = None,
     force_dtype: DType = None,
@@ -304,7 +304,7 @@ def read_images(
 
 def read_module_image(
     path: PathOrStr,
-    modality: int,
+    modality: Modality,
     cols: int = None,
     rows: int = None,
     lazy: bool = True,
@@ -502,6 +502,7 @@ def save_images(
     save_meta: bool = False,
     filename_prefix: str = "",
     filename_suffix: str = "",
+    filename_hook: Callable[[Image], Path] = lambda image: Path(image.path.name),
     **kwargs
 ):
     """Write a sequence of images to disk
@@ -516,6 +517,7 @@ def save_images(
         save_meta (bool): Save image meta in json file
         filename_prefix (str): Prepend every filename with this
         filename_suffix (str): Add this suffix to every filename
+        filename_hook (Callable[[Image], Path]): Callable that is used to determine the filename
     """
 
     path = __assurePath(path)
@@ -525,15 +527,8 @@ def save_images(
 
     for image in tqdm(sequence.images):
 
-        if isinstance(image, CellImage):
-            fn = Path(
-                "{}_row{:02d}_col{:02d}{}".format(
-                    image.path.stem, image.row, image.col, image.path.suffix
-                )
-            )
-        else:
-            fn = Path(image.path.name)
-
+        # determine filename
+        fn = filename_hook(image)
         fn = Path(filename_prefix + fn.stem + filename_suffix + fn.suffix)
 
         fpath = path

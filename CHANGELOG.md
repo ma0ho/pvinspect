@@ -2,6 +2,10 @@
 
 ## In development
 
+### New
+
+* `save_images` now has an additional argument `filename_hook` that allows to modify the generation of image filenames
+
 ### Fixed
 
 * `PartialModuleImage.cols` and `PartialModuleImage.rows` is now set correctly with `segment_module_part` and negative `first_col`/`first_row`
