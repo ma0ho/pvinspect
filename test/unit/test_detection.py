@@ -52,7 +52,6 @@ def test_segment_cells():
     assert isinstance(cells, CellImageSequence)
     assert len(cells) == 120
     assert isinstance(cells[0], CellImage)
-    assert cells[0].path == seq[0].path
     assert cells[0].row == 0
     assert cells[0].col == 0
     assert cells[1].col == 1
