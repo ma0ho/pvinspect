@@ -38,6 +38,16 @@ This package contains [example notebooks](examples) that demonstate the most com
 
 In case you encounter anything that does not work, please [open an issue](https://github.com/ma0ho/pvinspect/issues/new) and provide a precise description (include your OS version, python distribution and the like) as well as a minimal code example to reproduce the issue.
 
+### Known issues
+
+In case you install `pvinspect` in a conda environment using `pip` on Windows, the `shapely` library, which is installed as a dependency of `pvinspect` does not find `geos.dll`. This can be fixed by installing `shapely` using conda:
+
+```bash
+conda install shapely
+```
+
+This is reported as a bug to shapely: [#1032](https://github.com/Toblerity/Shapely/issues/1032)
+
 ## Citations
 
 In case you use methods from this package for research purposes, please make sure to cite the the corresponding papers correctly. Please refer to the [documentation](https://ma0ho.github.io/pvinspect/) for the correct references.
