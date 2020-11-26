@@ -1,9 +1,11 @@
 from pvinspect.data.image import *
 from pvinspect.preproc.calibration import *
 from pvinspect.preproc.calibration import _calibrate_flatfield, _compensate_flatfield
+from pvinspect.preproc.stitching import *
 from pvinspect.data import datasets
 import numpy as np
 from skimage.exposure import rescale_intensity
+from skimage.measure import compare_ssim as ssim
 from test.utilities import assert_equal
 import cv2
 
@@ -44,6 +46,17 @@ def _make_image_seq(imgs):
     imgs = [ModuleImage(img, EL_IMAGE, None) for img in imgs]
     return ModuleImageSequence(imgs, True, False)
 
+def _prepare_stitching_test_img():
+    image = data.datasets.poly10x6(1)[0]
+    height = image.shape[0]
+    width = image.shape[1]
+
+    img0 = image[0:int(height * 2 // 3)]
+    img1 = image[int(height // 3):]
+
+    img2 = image[:, 0:int(width * 2 // 3)]
+    img3 = image[:, int(width // 3):]
+    return (img0, img1, img2, img3, image)
 
 def test_calibrate_flatfield_linear():
     img0 = np.random.random((10, 10)) / 10
@@ -209,3 +222,28 @@ def test_flatfield_sequences_input():
 
     data = comp.data
     assert data.std() <= 0.01 * np.mean(seqs[1][0].data)
+    
+def test_stitch():
+    image_received = _prepare_stitching_test_img()
+    images_ver = (image_received[0], image_received[1])
+    images_hor = (image_received[2], image_received[3])
+    image = image_received[4]
+
+    height = image.shape[0]
+    width = image.shape[1]
+
+    stitched_ver = stitching.stitch(images_ver)
+    stitched_hor = stitching.stitch(images_hor)
+
+    test_stitched_ver = stitched_ver[:height]
+    test_stitched_hor = stitched_hor[:, :width]
+
+    original = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    vertical = cv2.cvtColor(test_stitched_ver, cv2.COLOR_BGR2GRAY)
+    horizontal = cv2.cvtColor(test_stitched_hor, cv2.COLOR_BGR2GRAY)
+
+    (score_hor, _) = ssim(original, horizontal, full=True)
+    (score_ver, _) = ssim(original, vertical, full=True)
+
+    assert 1 - score_hor < 0.2
+    assert 1 - score_ver < 0.2
