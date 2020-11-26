@@ -223,7 +223,7 @@ def test_flatfield_sequences_input():
     data = comp.data
     assert data.std() <= 0.01 * np.mean(seqs[1][0].data)
     
-def test_stitch():
+def test_stitching():
     image_received = _prepare_stitching_test_img()
     images_ver = (image_received[0], image_received[1])
     images_hor = (image_received[2], image_received[3])
@@ -232,8 +232,8 @@ def test_stitch():
     height = image.shape[0]
     width = image.shape[1]
 
-    stitched_ver = stitching.stitch(images_ver)
-    stitched_hor = stitching.stitch(images_hor)
+    stitched_ver = stitching.stitching(images_ver)
+    stitched_hor = stitching.stitching(images_hor)
 
     test_stitched_ver = stitched_ver[:height]
     test_stitched_hor = stitched_hor[:, :width]
