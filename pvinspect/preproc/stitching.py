@@ -1,5 +1,6 @@
+"""Stitching of two images of same size"""
 import numpy as np
-import imutils
+from typing import List, Tuple
 import cv2
 
 UP = 0
@@ -7,21 +8,38 @@ DOWN = 1
 LEFT = 2
 RIGHT = 3
 
-# img1 is up /down /left /right to img0
-def distinguish_direction(img0, img1, kps0, kps1, matches, status):
-    #initialize the vote arrray whiiich would be used to store the direction
+
+def distinguish_direction(
+        img: np.ndarray,
+        kps0: np.ndarray,
+        kps1: np.ndarray,
+        matches: List[Tuple[int, int]],
+        status: np.ndarray
+) -> int:
+    """Find out the direction relationship between input images
+
+        Args:
+            img(np.ndarray): Input image that would be processed(considering that two image of the same size)
+            kps0(np.ndarray): The obtained keypoints for the first image
+            kps1(np.ndarray): The obtained keypoints for the second image
+            matches(List[Tuple[int, int]]): The matches for all matched keypoints pairs
+            status(np.ndarray): Showing if each keypoints would be regarded as correctly matched
+        Returns:
+            direction: The direction relationship between two images. From 1 - 4 means image1 (kps1) is Up/Down/Left/Right to image0 (kps0)
+        """
+    # initialize the vote array which would be used to store the direction
     vote = [0, 0, 0, 0]
 
-    (height1, width1) = img1.shape[:2]
-    threshold_height = height1 // 10
-    threshold_width = width1 // 10
+    (height, width) = img.shape[:2]
+    threshold_height = height // 10
+    threshold_width = width // 10
 
     # loop over the matches
     for ((trainIdx, queryIdx), s) in zip(matches, status):
         # only process the match if the keypoint was successfully matched
         if s == 1:
             # img0 drew right and img1 left
-            pixel0 = (int(kps0[queryIdx][0] + width1), int(kps0[queryIdx][1]))
+            pixel0 = (int(kps0[queryIdx][0] + width), int(kps0[queryIdx][1]))
             pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
             if np.abs(pixel1[1] - pixel0[1]) > threshold_height:
                 if pixel1[1] > pixel0[1]:
@@ -33,7 +51,7 @@ def distinguish_direction(img0, img1, kps0, kps1, matches, status):
         # only process the match if the keypoint was successfully matched
         if s == 1:
             # img0 drew down and img1 drew up
-            pixel0 = (int(kps0[queryIdx][0]), int(kps0[queryIdx][1] + height1))
+            pixel0 = (int(kps0[queryIdx][0]), int(kps0[queryIdx][1] + height))
             pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
             if np.abs(pixel1[0] - pixel0[0]) > threshold_width:
                 if pixel1[0] > pixel0[0]:
@@ -43,16 +61,46 @@ def distinguish_direction(img0, img1, kps0, kps1, matches, status):
     return np.argmax(vote)
 
 
-def detect_and_describe(image):
+def detect_and_describe(
+        image: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Calculate the keypoints and correspondent features
+
+        Args:
+            image(np.ndarray): Input image that would be calculated
+        Returns:
+            kps: The keypoints calculated
+            features: Correspondent features(1 x 128) for each keypoints
+        """
     descriptor = cv2.xfeatures2d.SIFT_create()
     (kps, features) = descriptor.detectAndCompute(image, None)
     kps = np.float32([kp.pt for kp in kps])
 
-    # return a tuple of keypoints and features
     return (kps, features)
 
 
-def match_keypoints(kps0, kps1, features0, features1, ratio, reproj_thresh):
+def match_keypoints(
+        kps0: np.ndarray,
+        kps1: np.ndarray,
+        features0: np.ndarray,
+        features1: np.ndarray,
+        ratio:  float = 0.55,
+        reproj_thresh: float = 4.0
+) -> Tuple[List[Tuple[int, int]], np.ndarray, np.ndarray]:
+    """To match the keypoints
+
+        Args:
+            kps0(np.ndarray): The obtained keypoints for the first image
+            kps1(np.ndarray): The obtained keypoints for the second image
+            features0(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 0
+            features1(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 1
+            ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
+            reproj_thresh(float): A parameter used in calculate the homography matrix
+        Returns:
+            matches: The matches for all matched keypoints pairs
+            H: Homography matrix
+            status: Showing if each keypoints would be regarded as correctly matched
+        """
     # compute the raw matches and initialize the list of actual matches
     # use BruteForce and k-NearestNeighbor to match
     matcher = cv2.DescriptorMatcher_create("BruteForce")
@@ -82,7 +130,21 @@ def match_keypoints(kps0, kps1, features0, features1, ratio, reproj_thresh):
     return None
 
 
-def stitching(images, ratio=0.55, reproj_thresh=4.0):
+def stitching(
+        images: Tuple[np.ndarray, np.ndarray],
+        ratio: float = 0.55,
+        reproj_thresh: float = 4.0
+) -> np.ndarray:
+    """To match the keypoints
+
+        Args:
+            images(Tuple[np.ndarray, np.ndarray]): Tuple of to be stitched images
+            ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
+            reproj_thresh(float): A parameter used in calculate the homography matrix
+        Returns:
+            result: Stitched images
+            result: Stitched images
+    """
     # unpack the images, then detect keypoints and extract
     # local invariant descriptors from them
     (img1, img0) = images
@@ -102,7 +164,7 @@ def stitching(images, ratio=0.55, reproj_thresh=4.0):
     (matches, H, status) = M
 
     # distinguish the direction and to apply corresponding stitching
-    direction = distinguish_direction(img0, img1, kps0, kps1, matches, status)
+    direction = distinguish_direction(img0, kps0, kps1, matches, status)
     if direction == UP:
         result = cv2.warpPerspective(img0, H, (img0.shape[1], img1.shape[0] + img0.shape[0]))
         result[0:img1.shape[0], 0:img1.shape[1]] = img1
