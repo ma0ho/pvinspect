@@ -47,15 +47,15 @@ def _make_image_seq(imgs):
     return ModuleImageSequence(imgs, True, False)
 
 def _prepare_stitching_test_img():
-    image = data.datasets.poly10x6(1)[0]
+    image = data.datasets.poly10x6(1)._images[0]._data
     height = image.shape[0]
     width = image.shape[1]
 
-    img0 = image[0:int(height * 2 // 3)]
-    img1 = image[int(height // 3):]
+    img0 = Image(image[0:int(height * 2 // 3)])
+    img1 = Image(image[int(height // 3):])
 
-    img2 = image[:, 0:int(width * 2 // 3)]
-    img3 = image[:, int(width // 3):]
+    img2 = Image(image[:, 0:int(width * 2 // 3)])
+    img3 = Image(image[:, int(width // 3):])
     return (img0, img1, img2, img3, image)
 
 def test_calibrate_flatfield_linear():
@@ -232,8 +232,8 @@ def test_stitching():
     height = image.shape[0]
     width = image.shape[1]
 
-    stitched_ver = stitching.stitching(images_ver)
-    stitched_hor = stitching.stitching(images_hor)
+    stitched_ver = stitching.stitching(images_ver)._data
+    stitched_hor = stitching.stitching(images_hor)._data
 
     test_stitched_ver = stitched_ver[:height]
     test_stitched_hor = stitched_hor[:, :width]
