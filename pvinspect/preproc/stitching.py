@@ -1,5 +1,6 @@
 """Stitching of two images of same size"""
 import numpy as np
+from pvinspect.data.image import *
 from typing import List, Tuple
 import cv2
 
@@ -131,14 +132,14 @@ def match_keypoints(
 
 
 def stitching(
-        images: Tuple[np.ndarray, np.ndarray],
+        images: Tuple[Image, Image],
         ratio: float = 0.55,
         reproj_thresh: float = 4.0
-) -> np.ndarray:
+) -> Image:
     """To match the keypoints
 
         Args:
-            images(Tuple[np.ndarray, np.ndarray]): Tuple of to be stitched images
+            images(Tuple[Image, Image]): Tuple of to be stitched images
             ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
             reproj_thresh(float): A parameter used in calculate the homography matrix
         Returns:
@@ -147,7 +148,8 @@ def stitching(
     """
     # unpack the images, then detect keypoints and extract
     # local invariant descriptors from them
-    (img1, img0) = images
+    img1 = images[0]._data
+    img0 = images[1]._data
 
     # To calculate the features
     (kps0, features0) = detect_and_describe(img0)
@@ -184,7 +186,7 @@ def stitching(
         result = cv2.warpPerspective(img1, H,
                                      (img0.shape[1] + img1.shape[1], img1.shape[0]))
         result[0 : img0.shape[0], 0:img0.shape[1]] = img0
-    return result
+    return Image(result)
 
 
 
