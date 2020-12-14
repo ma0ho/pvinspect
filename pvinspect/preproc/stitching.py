@@ -148,8 +148,8 @@ def stitching(
     """
     # unpack the images, then detect keypoints and extract
     # local invariant descriptors from them
-    img1 = images[0]._data
-    img0 = images[1]._data
+    img1 = images[0].data
+    img0 = images[1].data
 
     # To calculate the features
     (kps0, features0) = detect_and_describe(img0)
