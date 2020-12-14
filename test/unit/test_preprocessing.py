@@ -47,7 +47,7 @@ def _make_image_seq(imgs):
     return ModuleImageSequence(imgs, True, False)
 
 def _prepare_stitching_test_img():
-    image = data.datasets.poly10x6(1)._images[0]._data
+    image = data.datasets.poly10x6(1)[0].data
     height = image.shape[0]
     width = image.shape[1]
 
@@ -224,16 +224,15 @@ def test_flatfield_sequences_input():
     assert data.std() <= 0.01 * np.mean(seqs[1][0].data)
     
 def test_stitching():
-    image_received = _prepare_stitching_test_img()
-    images_ver = (image_received[0], image_received[1])
-    images_hor = (image_received[2], image_received[3])
-    image = image_received[4]
+    image_ver0, image_ver1, image_hor0, image_hor1, image = _prepare_stitching_test_img()
+    images_ver = (image_ver0, image_ver1)
+    images_hor = (image_hor0, image_hor1)
 
     height = image.shape[0]
     width = image.shape[1]
 
-    stitched_ver = stitching.stitching(images_ver)._data
-    stitched_hor = stitching.stitching(images_hor)._data
+    stitched_ver = stitching.stitching(images_ver).data
+    stitched_hor = stitching.stitching(images_hor).data
 
     test_stitched_ver = stitched_ver[:height]
     test_stitched_hor = stitched_hor[:, :width]
@@ -245,5 +244,5 @@ def test_stitching():
     (score_hor, _) = ssim(original, horizontal, full=True)
     (score_ver, _) = ssim(original, vertical, full=True)
 
-    assert 1 - score_hor < 0.2
-    assert 1 - score_ver < 0.2
+    assert score_hor > 0.8
+    assert score_ver > 0.8
