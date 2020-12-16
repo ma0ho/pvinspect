@@ -1,6 +1,7 @@
 # PVInspect
 
-![travis status](https://travis-ci.com/ma0ho/pvinspect.svg?branch=master "travis status")
+[![travis status](https://travis-ci.com/ma0ho/pvinspect.svg?branch=master "travis status")](https://travis-ci.com/github/ma0ho/pvinspect)
+[![Downloads](https://pepy.tech/badge/pvinspect)](https://pepy.tech/project/pvinspect)
 
 This package provides methods for the analysis of solar modules using different imaging modalities. We put huge efforts into providing a clean and easy to use API and additional tooling like the wrapper classes for module images that bundle image with meta data in an expressive way. You are invited to publish you own methods using this API and hence contribute to building a consistent and open tooling that might be useful to others. If you like to integrate your methods directly, please create a merge request.
 
