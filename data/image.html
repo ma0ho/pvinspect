@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>pvinspect.data.image API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -36,7 +36,7 @@ from skimage import io, img_as_uint, img_as_float64, img_as_int
 from pvinspect.common.transform import Transform
 from matplotlib import pyplot as plt
 from pathlib import Path
-from typing import List, Tuple, Union, Callable, Type, TypeVar, Any, Dict
+from typing import List, Optional, Tuple, Union, Callable, Type, TypeVar, Any, Dict
 import copy
 import math
 from functools import wraps
@@ -253,8 +253,10 @@ def _register_default_plugins():
                 t = &#34;{} (r: {:d}, c: {:d})&#34;.format(
                     str(image.path.name), image.row, image.col
                 )
-            else:
+            elif image.path is not None:
                 t = str(image.path.name)
+            else:
+                t = &#34;&#34;
 
             if len(t) &gt; max_title_length:
                 l1 = max_title_length // 2 - 2
@@ -333,15 +335,9 @@ class Image(_Base):
     def _map_numpy_dtype(dtype):
         if dtype == np.float32 or dtype == np.float64:
             return DType.FLOAT
-        elif (
-            dtype == np.uint16
-            or dtype == np.uint32
-            or dtype == np.uint64
-        ):
+        elif dtype == np.uint16 or dtype == np.uint32 or dtype == np.uint64:
             return DType.UNSIGNED_INT
-        elif (
-            dtype == np.uint8
-        ):
+        elif dtype == np.uint8:
             return DType.UNSIGNED_BYTE
         elif (
             dtype == np.int8
@@ -940,6 +936,14 @@ class CellImage(Image):
         &#34;&#34;&#34;0-based column index of the cell in the original module&#34;&#34;&#34;
         return self.get_meta(&#34;col&#34;)
 
+    @property
+    def path(self) -&gt; Path:
+        &#34;&#34;&#34;Get this images path&#34;&#34;&#34;
+        p = super().path
+        return Path(
+            &#34;{}_row{:02d}_col{:02d}{}&#34;.format(p.stem, self.row, self.col, p.suffix)
+        )
+
     def show(self, *argv, **kwargs):
         &#34;&#34;&#34;Show this image&#34;&#34;&#34;
         super().show(*argv, **kwargs)
@@ -1040,6 +1044,37 @@ class PartialModuleImage(ModuleImage):
 
         self._meta[&#34;first_col&#34;] = first_col
         self._meta[&#34;first_row&#34;] = first_row
+
+    def grid(self) -&gt; np.ndarray:
+        &#34;&#34;&#34;Create a grid of corners according to the module geometry
+        
+        Returns:
+            grid: (cols*rows, 2)-array of coordinates on a regular grid
+        &#34;&#34;&#34;
+
+        if self.cols is not None and self.rows is not None:
+            x, y = np.mgrid[0 : self.cols + 1 : 1, 0 : self.rows + 1 : 1]
+            x += self.first_col
+            y += self.first_row
+            grid = np.stack([x.flatten(), y.flatten()], axis=1)
+            return grid
+        else:
+            logging.error(&#34;Module geometry is not initialized&#34;)
+            exit()
+
+    @property
+    def first_col(self) -&gt; Optional[int]:
+        if self.has_meta(&#34;first_col&#34;):
+            return self.get_meta(&#34;first_col&#34;)
+        else:
+            return None
+
+    @property
+    def first_row(self) -&gt; Optional[int]:
+        if self.has_meta(&#34;first_row&#34;):
+            return self.get_meta(&#34;first_row&#34;)
+        else:
+            return None
 
 
 ModuleOrPartialModuleImage = Union[ModuleImage, PartialModuleImage]
@@ -1233,6 +1268,14 @@ last and hence appears on top)</dd>
         &#34;&#34;&#34;0-based column index of the cell in the original module&#34;&#34;&#34;
         return self.get_meta(&#34;col&#34;)
 
+    @property
+    def path(self) -&gt; Path:
+        &#34;&#34;&#34;Get this images path&#34;&#34;&#34;
+        p = super().path
+        return Path(
+            &#34;{}_row{:02d}_col{:02d}{}&#34;.format(p.stem, self.row, self.col, p.suffix)
+        )
+
     def show(self, *argv, **kwargs):
         &#34;&#34;&#34;Show this image&#34;&#34;&#34;
         super().show(*argv, **kwargs)</code></pre>
@@ -1255,6 +1298,22 @@ last and hence appears on top)</dd>
 def col(self) -&gt; int:
     &#34;&#34;&#34;0-based column index of the cell in the original module&#34;&#34;&#34;
     return self.get_meta(&#34;col&#34;)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.image.CellImage.path"><code class="name">var <span class="ident">path</span> : pathlib.Path</code></dt>
+<dd>
+<div class="desc"><p>Get this images path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def path(self) -&gt; Path:
+    &#34;&#34;&#34;Get this images path&#34;&#34;&#34;
+    p = super().path
+    return Path(
+        &#34;{}_row{:02d}_col{:02d}{}&#34;.format(p.stem, self.row, self.col, p.suffix)
+    )</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.image.CellImage.row"><code class="name">var <span class="ident">row</span> : int</code></dt>
@@ -1285,7 +1344,6 @@ def row(self) -&gt; int:
 <li><code><a title="pvinspect.data.image.Image.meta_from_path" href="#pvinspect.data.image.Image.meta_from_path">meta_from_path</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.meta_to_pandas" href="#pvinspect.data.image.Image.meta_to_pandas">meta_to_pandas</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.modality" href="#pvinspect.data.image.Image.modality">modality</a></code></li>
-<li><code><a title="pvinspect.data.image.Image.path" href="#pvinspect.data.image.Image.path">path</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.shape" href="#pvinspect.data.image.Image.shape">shape</a></code></li>
 <li><code><a title="pvinspect.data.image.Image.show" href="#pvinspect.data.image.Image.show">show</a></code></li>
 </ul>
@@ -1415,15 +1473,9 @@ def row(self) -&gt; int:
     def _map_numpy_dtype(dtype):
         if dtype == np.float32 or dtype == np.float64:
             return DType.FLOAT
-        elif (
-            dtype == np.uint16
-            or dtype == np.uint32
-            or dtype == np.uint64
-        ):
+        elif dtype == np.uint16 or dtype == np.uint32 or dtype == np.uint64:
             return DType.UNSIGNED_INT
-        elif (
-            dtype == np.uint8
-        ):
+        elif dtype == np.uint8:
             return DType.UNSIGNED_BYTE
         elif (
             dtype == np.int8
@@ -2957,7 +3009,38 @@ def rows(self):
         super().__init__(data, modality, path, cols, rows, meta)
 
         self._meta[&#34;first_col&#34;] = first_col
-        self._meta[&#34;first_row&#34;] = first_row</code></pre>
+        self._meta[&#34;first_row&#34;] = first_row
+
+    def grid(self) -&gt; np.ndarray:
+        &#34;&#34;&#34;Create a grid of corners according to the module geometry
+        
+        Returns:
+            grid: (cols*rows, 2)-array of coordinates on a regular grid
+        &#34;&#34;&#34;
+
+        if self.cols is not None and self.rows is not None:
+            x, y = np.mgrid[0 : self.cols + 1 : 1, 0 : self.rows + 1 : 1]
+            x += self.first_col
+            y += self.first_row
+            grid = np.stack([x.flatten(), y.flatten()], axis=1)
+            return grid
+        else:
+            logging.error(&#34;Module geometry is not initialized&#34;)
+            exit()
+
+    @property
+    def first_col(self) -&gt; Optional[int]:
+        if self.has_meta(&#34;first_col&#34;):
+            return self.get_meta(&#34;first_col&#34;)
+        else:
+            return None
+
+    @property
+    def first_row(self) -&gt; Optional[int]:
+        if self.has_meta(&#34;first_row&#34;):
+            return self.get_meta(&#34;first_row&#34;)
+        else:
+            return None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2965,6 +3048,39 @@ def rows(self):
 <li><a title="pvinspect.data.image.Image" href="#pvinspect.data.image.Image">Image</a></li>
 <li>pvinspect.data.image._Base</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pvinspect.data.image.PartialModuleImage.first_col"><code class="name">var <span class="ident">first_col</span> : Union[int, NoneType]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def first_col(self) -&gt; Optional[int]:
+    if self.has_meta(&#34;first_col&#34;):
+        return self.get_meta(&#34;first_col&#34;)
+    else:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.data.image.PartialModuleImage.first_row"><code class="name">var <span class="ident">first_row</span> : Union[int, NoneType]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def first_row(self) -&gt; Optional[int]:
+    if self.has_meta(&#34;first_row&#34;):
+        return self.get_meta(&#34;first_row&#34;)
+    else:
+        return None</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="pvinspect.data.image.ModuleImage" href="#pvinspect.data.image.ModuleImage">ModuleImage</a></b></code>:
@@ -3020,6 +3136,7 @@ def rows(self):
 <h4><code><a title="pvinspect.data.image.CellImage" href="#pvinspect.data.image.CellImage">CellImage</a></code></h4>
 <ul class="">
 <li><code><a title="pvinspect.data.image.CellImage.col" href="#pvinspect.data.image.CellImage.col">col</a></code></li>
+<li><code><a title="pvinspect.data.image.CellImage.path" href="#pvinspect.data.image.CellImage.path">path</a></code></li>
 <li><code><a title="pvinspect.data.image.CellImage.row" href="#pvinspect.data.image.CellImage.row">row</a></code></li>
 </ul>
 </li>
@@ -3093,6 +3210,10 @@ def rows(self):
 </li>
 <li>
 <h4><code><a title="pvinspect.data.image.PartialModuleImage" href="#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a></code></h4>
+<ul class="">
+<li><code><a title="pvinspect.data.image.PartialModuleImage.first_col" href="#pvinspect.data.image.PartialModuleImage.first_col">first_col</a></code></li>
+<li><code><a title="pvinspect.data.image.PartialModuleImage.first_row" href="#pvinspect.data.image.PartialModuleImage.first_row">first_row</a></code></li>
+</ul>
 </li>
 </ul>
 </li>
@@ -3100,7 +3221,7 @@ def rows(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

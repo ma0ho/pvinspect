@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>pvinspect.data.io API documentation</title>
 <meta name="description" content="Read and write images" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -29,6 +29,7 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Read and write images&#34;&#34;&#34;
 
+from numpy.lib.npyio import save
 from .image import *
 from pathlib import Path
 import numpy as np
@@ -49,6 +50,7 @@ from datetime import date, datetime
 from pvinspect.data.image import Modality
 import urllib.parse
 from pvinspect.common import util
+import pickle
 
 
 def _prepare_json_meta(meta):
@@ -116,11 +118,12 @@ def _read_image(
     is_module_image: bool,
     is_partial_module: bool,
     lazy: bool,
-    modality: int = None,
+    modality: Modality = None,
     cols: int = None,
     rows: int = None,
     force_dtype: DType = None,
-):
+    meta: Optional[pd.Series] = None,
+) -&gt; Image:
     assert (
         is_module_image
         and not is_partial_module
@@ -166,26 +169,35 @@ def _read_image(
 
     # try to read meta file
     meta_path = _get_meta_path(path)
-    if meta_path.is_file():
+    meta_series: pd.Series = None
+    if meta is not None:
+        meta_series = meta
+    elif meta_path.is_file():
         with open(meta_path, &#34;r&#34;) as f:
-            meta = json.load(f, object_hook=_load_json_meta_hook)
-    else:
-        meta = None
+            meta_series = pd.Series(json.load(f, object_hook=_load_json_meta_hook))
 
     # merge modality, rows and cols
-    if meta is not None and &#34;modality&#34; in meta.keys() and modality is None:
-        modality = meta[&#34;modality&#34;]
-    if meta is not None and &#34;rows&#34; in meta.keys() and rows is None:
-        rows = meta[&#34;rows&#34;]
-    if meta is not None and &#34;cols&#34; in meta.keys() and cols is None:
-        cols = meta[&#34;cols&#34;]
+    if (
+        meta_series is not None
+        and &#34;modality&#34; in meta_series.keys()
+        and modality is None
+    ):
+        modality = meta_series[&#34;modality&#34;]
+    if meta_series is not None and &#34;rows&#34; in meta_series.keys() and rows is None:
+        rows = meta_series[&#34;rows&#34;]
+    if meta_series is not None and &#34;cols&#34; in meta_series.keys() and cols is None:
+        cols = meta_series[&#34;cols&#34;]
 
     if is_partial_module:
-        return PartialModuleImage(img, modality, path, cols, rows, meta=meta)
+        return PartialModuleImage(img, modality, path, cols, rows, meta=meta_series)
     elif is_module_image:
-        return ModuleImage(img, modality, path, cols, rows, meta=meta)
+        return ModuleImage(img, modality, path, cols, rows, meta=meta_series)
     else:
-        return Image(img, path, modality, meta=meta)
+        return Image(img, path, modality, meta=meta_series)
+
+
+def _get_meta_cache_path(sequence_path: Path) -&gt; Path:
+    return sequence_path / &#34;.cached_meta.pck&#34;
 
 
 def _read_images(
@@ -201,24 +213,47 @@ def _read_images(
     pattern: Union[str, Tuple[str]] = (&#34;*.png&#34;, &#34;*.tif&#34;, &#34;*.tiff&#34;, &#34;*.bmp&#34;),
     allow_different_dtypes=False,
     force_dtype: DType = None,
-):
+) -&gt; ImageSequence:
     path = __assurePath(path)
 
     if isinstance(pattern, str):
         pattern = [pattern]
 
     # find files and skip if more than N
-    imgpaths = list(
+    imgpaths: List[Path] = list(
         reduce(lambda x, y: x + y, [list(path.glob(pat)) for pat in pattern])
     )
     imgpaths.sort()
     if N &gt; 0 and N &lt; len(imgpaths):
         imgpaths = imgpaths[:N]
 
+    # check if cached meta data is available
+    cache_file = _get_meta_cache_path(path)
+    cached_meta: pd.DataFrame = None
+    if cache_file.is_file():
+        with open(cache_file, &#34;rb&#34;) as f:
+            try:
+                cached_meta = pd.read_pickle(f)
+            except:
+                cache_file.unlink()
+
     imgs = list()
+    missing_meta: Dict[str, pd.Series] = dict()
     for fn in tqdm(imgpaths):
-        imgs.append(
-            _read_image(
+        if cached_meta is not None and fn.name in cached_meta.keys():
+            img = _read_image(
+                fn,
+                is_module_image,
+                is_partial_module,
+                lazy,
+                modality,
+                cols,
+                rows,
+                force_dtype=force_dtype,
+                meta=cached_meta.loc[fn.name],
+            )
+        else:
+            img = _read_image(
                 fn,
                 is_module_image,
                 is_partial_module,
@@ -228,7 +263,18 @@ def _read_images(
                 rows,
                 force_dtype=force_dtype,
             )
+            missing_meta[fn.name] = img.meta_to_pandas()
+        imgs.append(img)
+
+    # update/create meta cache file
+    if len(missing_meta.keys()) &gt; 0:
+        missing_meta_df = pd.DataFrame(missing_meta).T
+        new_meta = (
+            pd.concat([cached_meta, missing_meta_df])
+            if cached_meta is not None
+            else missing_meta_df
         )
+        new_meta.to_pickle(cache_file)
 
     # TODO: How to handle this with lazy loading?
     # if not same_camera:
@@ -259,11 +305,13 @@ def _read_images(
     #        imgs = [conv(img) for img in imgs]
 
     if is_module_image or is_partial_module:
-        return ModuleImageSequence(
+        res = ModuleImageSequence(
             imgs, same_camera=same_camera, allow_different_dtypes=allow_different_dtypes
         )
     else:
-        return ImageSequence(imgs, same_camera, allow_different_dtypes)
+        res = ImageSequence(imgs, same_camera, allow_different_dtypes)
+
+    return res
 
 
 def read_image(
@@ -333,7 +381,7 @@ def read_images(
 
 def read_module_image(
     path: PathOrStr,
-    modality: int,
+    modality: Modality,
     cols: int = None,
     rows: int = None,
     lazy: bool = True,
@@ -500,6 +548,8 @@ def save_image(
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
         save_meta (bool): Save meta data to separate json file (cannot be used with visualization)
     &#34;&#34;&#34;
+    filename = __assurePath(filename)
+
     if with_visusalization and save_meta:
         logging.error(&#34;Cannot save meta data for image with visualization&#34;)
         return
@@ -520,6 +570,13 @@ def save_image(
             with open(meta_path, &#34;w&#34;) as f:
                 json.dump(meta, f)
 
+    # delete cached entry
+    cache_file = _get_meta_cache_path(filename.parent)
+    if save_meta and cache_file.is_file():
+        cached_meta: pd.DataFrame = pd.read_pickle(cache_file)
+        cached_meta.drop(filename.name, inplace=True)
+        cached_meta.to_pickle(cache_file)
+
 
 def save_images(
     path: PathOrStr,
@@ -531,6 +588,7 @@ def save_images(
     save_meta: bool = False,
     filename_prefix: str = &#34;&#34;,
     filename_suffix: str = &#34;&#34;,
+    filename_hook: Callable[[Image], Path] = lambda image: Path(image.path.name),
     **kwargs
 ):
     &#34;&#34;&#34;Write a sequence of images to disk
@@ -545,6 +603,7 @@ def save_images(
         save_meta (bool): Save image meta in json file
         filename_prefix (str): Prepend every filename with this
         filename_suffix (str): Add this suffix to every filename
+        filename_hook (Callable[[Image], Path]): Callable that is used to determine the filename
     &#34;&#34;&#34;
 
     path = __assurePath(path)
@@ -552,17 +611,15 @@ def save_images(
     if mkdir:
         path.mkdir(parents=True, exist_ok=True)
 
+    # check if meta cache exists and delete if necessary
+    cache_file = _get_meta_cache_path(path)
+    if save_meta and cache_file.is_file():
+        cache_file.unlink()
+
     for image in tqdm(sequence.images):
 
-        if isinstance(image, CellImage):
-            fn = Path(
-                &#34;{}_row{:02d}_col{:02d}{}&#34;.format(
-                    image.path.stem, image.row, image.col, image.path.suffix
-                )
-            )
-        else:
-            fn = Path(image.path.name)
-
+        # determine filename
+        fn = filename_hook(image)
         fn = Path(filename_prefix + fn.stem + filename_suffix + fn.suffix)
 
         fpath = path
@@ -835,7 +892,7 @@ annotation is a tuple of "classname" and a Polygon</dd>
 </details>
 </dd>
 <dt id="pvinspect.data.io.read_module_image"><code class="name flex">
-<span>def <span class="ident">read_module_image</span></span>(<span>path: Union[pathlib.Path, str], modality: int, cols: int = None, rows: int = None, lazy: bool = True) ‑> <a title="pvinspect.data.image.ModuleImage" href="image.html#pvinspect.data.image.ModuleImage">ModuleImage</a></span>
+<span>def <span class="ident">read_module_image</span></span>(<span>path: Union[pathlib.Path, str], modality: <a title="pvinspect.data.image.Modality" href="image.html#pvinspect.data.image.Modality">Modality</a>, cols: int = None, rows: int = None, lazy: bool = True) ‑> <a title="pvinspect.data.image.ModuleImage" href="image.html#pvinspect.data.image.ModuleImage">ModuleImage</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read a single image of a solar module and return it</p>
@@ -863,7 +920,7 @@ annotation is a tuple of "classname" and a Polygon</dd>
 </summary>
 <pre><code class="python">def read_module_image(
     path: PathOrStr,
-    modality: int,
+    modality: Modality,
     cols: int = None,
     rows: int = None,
     lazy: bool = True,
@@ -1151,6 +1208,8 @@ annotation is a tuple of "classname" and a Polygon</dd>
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
         save_meta (bool): Save meta data to separate json file (cannot be used with visualization)
     &#34;&#34;&#34;
+    filename = __assurePath(filename)
+
     if with_visusalization and save_meta:
         logging.error(&#34;Cannot save meta data for image with visualization&#34;)
         return
@@ -1169,11 +1228,18 @@ annotation is a tuple of "classname" and a Polygon</dd>
             meta = _prepare_json_meta(meta)
             meta_path = _get_meta_path(filename)
             with open(meta_path, &#34;w&#34;) as f:
-                json.dump(meta, f)</code></pre>
+                json.dump(meta, f)
+
+    # delete cached entry
+    cache_file = _get_meta_cache_path(filename.parent)
+    if save_meta and cache_file.is_file():
+        cached_meta: pd.DataFrame = pd.read_pickle(cache_file)
+        cached_meta.drop(filename.name, inplace=True)
+        cached_meta.to_pickle(cache_file)</code></pre>
 </details>
 </dd>
 <dt id="pvinspect.data.io.save_images"><code class="name flex">
-<span>def <span class="ident">save_images</span></span>(<span>path: Union[pathlib.Path, str], sequence: <a title="pvinspect.data.image.ImageSequence" href="image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, mkdir: bool = True, with_visualization: bool = False, hierarchical: List[str] = None, include_meta_keys: bool = True, save_meta: bool = False, filename_prefix: str = '', filename_suffix: str = '', **kwargs)</span>
+<span>def <span class="ident">save_images</span></span>(<span>path: Union[pathlib.Path, str], sequence: <a title="pvinspect.data.image.ImageSequence" href="image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, mkdir: bool = True, with_visualization: bool = False, hierarchical: List[str] = None, include_meta_keys: bool = True, save_meta: bool = False, filename_prefix: str = '', filename_suffix: str = '', filename_hook: Callable[[<a title="pvinspect.data.image.Image" href="image.html#pvinspect.data.image.Image">Image</a>], pathlib.Path] = &lt;function &lt;lambda&gt;&gt;, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write a sequence of images to disk</p>
@@ -1197,6 +1263,8 @@ annotation is a tuple of "classname" and a Polygon</dd>
 <dd>Prepend every filename with this</dd>
 <dt><strong><code>filename_suffix</code></strong> :&ensp;<code>str</code></dt>
 <dd>Add this suffix to every filename</dd>
+<dt><strong><code>filename_hook</code></strong> :&ensp;<code>Callable[[Image], Path]</code></dt>
+<dd>Callable that is used to determine the filename</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1212,6 +1280,7 @@ annotation is a tuple of "classname" and a Polygon</dd>
     save_meta: bool = False,
     filename_prefix: str = &#34;&#34;,
     filename_suffix: str = &#34;&#34;,
+    filename_hook: Callable[[Image], Path] = lambda image: Path(image.path.name),
     **kwargs
 ):
     &#34;&#34;&#34;Write a sequence of images to disk
@@ -1226,6 +1295,7 @@ annotation is a tuple of "classname" and a Polygon</dd>
         save_meta (bool): Save image meta in json file
         filename_prefix (str): Prepend every filename with this
         filename_suffix (str): Add this suffix to every filename
+        filename_hook (Callable[[Image], Path]): Callable that is used to determine the filename
     &#34;&#34;&#34;
 
     path = __assurePath(path)
@@ -1233,17 +1303,15 @@ annotation is a tuple of "classname" and a Polygon</dd>
     if mkdir:
         path.mkdir(parents=True, exist_ok=True)
 
+    # check if meta cache exists and delete if necessary
+    cache_file = _get_meta_cache_path(path)
+    if save_meta and cache_file.is_file():
+        cache_file.unlink()
+
     for image in tqdm(sequence.images):
 
-        if isinstance(image, CellImage):
-            fn = Path(
-                &#34;{}_row{:02d}_col{:02d}{}&#34;.format(
-                    image.path.stem, image.row, image.col, image.path.suffix
-                )
-            )
-        else:
-            fn = Path(image.path.name)
-
+        # determine filename
+        fn = filename_hook(image)
         fn = Path(filename_prefix + fn.stem + filename_suffix + fn.suffix)
 
         fpath = path
@@ -1300,7 +1368,7 @@ annotation is a tuple of "classname" and a Polygon</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

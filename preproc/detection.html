@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>pvinspect.preproc.detection API documentation</title>
 <meta name="description" content="Detection, localization and segmentation of solar modules" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -226,9 +226,6 @@ def segment_module_part(
 
     last_col = first_col + cols
     last_row = first_row + rows
-    if last_row &gt; image.rows or last_col &gt; image.cols:
-        logging.error(&#34;The row or column index exceeds the module geometry&#34;)
-        exit()
 
     size = t.mean_scale() if size is None else size
     result = warp_image(
@@ -245,18 +242,18 @@ def segment_module_part(
     transform = HomographyTransform(
         np.array(
             [
-                [first_row - padding, first_col - padding],
-                [first_row - padding, last_col - padding],
-                [last_row - padding, first_col - padding],
-                [last_row - padding, last_col - padding],
+                [first_col - padding, first_row - padding],
+                [last_col + padding, first_row - padding],
+                [last_col + padding, last_row + padding],
+                [first_col - padding, last_row + padding],
             ]
         ),
         np.array(
             [
                 [0.0, 0.0],
-                [0.0, size * cols],
-                [size * rows, 0.0],
-                [size * rows, size * cols],
+                [result.shape[1], 0.0],
+                [result.shape[1], result.shape[0]],
+                [0.0, result.shape[0]],
             ]
         ),
     )
@@ -274,10 +271,10 @@ def segment_module_part(
         image,
         drop_meta_types=[Polygon],  # geometric attributes are invalid now..
         data=result,
-        cols=cols,
-        rows=rows,
-        first_col=first_col,
-        first_row=first_row,
+        cols=cols + min(first_col, 0),
+        rows=rows + min(first_row, 0),
+        first_col=first_col if first_col &gt;= 0 else None,
+        first_row=first_row if first_row &gt;= 0 else None,
         meta={&#34;transform&#34;: transform, &#34;segment_module_original&#34;: original},
     )
 
@@ -491,7 +488,8 @@ def locate_multiple_modules(
     rows: int = None,
     return_bounding_boxes: bool = False,
 ) -&gt; Tuple[ModuleImageSequence, ObjectAnnotations]:
-    &#34;&#34;&#34;Perform localization and segmentation of multiple modules
+    &#34;&#34;&#34;Perform localization and segmentation of multiple modules. The method is published in Hoffmann, Mathis, et al. 
+    &#34;Deep Learning-based Pipeline for Module Power Prediction from EL Measurements.&#34; arXiv preprint arXiv:2009.14712 (2020).
 
     Args:
         sequence (ImageOrSequence): Input images
@@ -727,7 +725,8 @@ def locate_module_and_cells(
 <span>def <span class="ident">locate_multiple_modules</span></span>(<span>sequence: Union[<a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>, <a title="pvinspect.data.image.ImageSequence" href="../data/image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>], scale: float = 0.31, reject_size_thresh: float = 0.26, reject_fill_thresh: float = 0.42, padding: float = 0.05, drop_clipped_modules: bool = True, cols: int = None, rows: int = None, return_bounding_boxes: bool = False) ‑> Tuple[<a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>, Dict[str, List[Tuple[str, shapely.geometry.polygon.Polygon]]]]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Perform localization and segmentation of multiple modules</p>
+<div class="desc"><p>Perform localization and segmentation of multiple modules. The method is published in Hoffmann, Mathis, et al.
+"Deep Learning-based Pipeline for Module Power Prediction from EL Measurements." arXiv preprint arXiv:2009.14712 (2020).</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>sequence</code></strong> :&ensp;<code>ImageOrSequence</code></dt>
@@ -767,7 +766,8 @@ def locate_multiple_modules(
     rows: int = None,
     return_bounding_boxes: bool = False,
 ) -&gt; Tuple[ModuleImageSequence, ObjectAnnotations]:
-    &#34;&#34;&#34;Perform localization and segmentation of multiple modules
+    &#34;&#34;&#34;Perform localization and segmentation of multiple modules. The method is published in Hoffmann, Mathis, et al. 
+    &#34;Deep Learning-based Pipeline for Module Power Prediction from EL Measurements.&#34; arXiv preprint arXiv:2009.14712 (2020).
 
     Args:
         sequence (ImageOrSequence): Input images
@@ -1056,9 +1056,6 @@ with less variation in size.&#34;
 
     last_col = first_col + cols
     last_row = first_row + rows
-    if last_row &gt; image.rows or last_col &gt; image.cols:
-        logging.error(&#34;The row or column index exceeds the module geometry&#34;)
-        exit()
 
     size = t.mean_scale() if size is None else size
     result = warp_image(
@@ -1075,18 +1072,18 @@ with less variation in size.&#34;
     transform = HomographyTransform(
         np.array(
             [
-                [first_row - padding, first_col - padding],
-                [first_row - padding, last_col - padding],
-                [last_row - padding, first_col - padding],
-                [last_row - padding, last_col - padding],
+                [first_col - padding, first_row - padding],
+                [last_col + padding, first_row - padding],
+                [last_col + padding, last_row + padding],
+                [first_col - padding, last_row + padding],
             ]
         ),
         np.array(
             [
                 [0.0, 0.0],
-                [0.0, size * cols],
-                [size * rows, 0.0],
-                [size * rows, size * cols],
+                [result.shape[1], 0.0],
+                [result.shape[1], result.shape[0]],
+                [0.0, result.shape[0]],
             ]
         ),
     )
@@ -1104,10 +1101,10 @@ with less variation in size.&#34;
         image,
         drop_meta_types=[Polygon],  # geometric attributes are invalid now..
         data=result,
-        cols=cols,
-        rows=rows,
-        first_col=first_col,
-        first_row=first_row,
+        cols=cols + min(first_col, 0),
+        rows=rows + min(first_row, 0),
+        first_col=first_col if first_col &gt;= 0 else None,
+        first_row=first_row if first_row &gt;= 0 else None,
         meta={&#34;transform&#34;: transform, &#34;segment_module_original&#34;: original},
     )</code></pre>
 </details>
@@ -1206,7 +1203,7 @@ with less variation in size.&#34;
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

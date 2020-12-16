@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>pvinspect.integration.pytorch.dataset API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -27,6 +27,8 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import logging
+
+from numpy.core.arrayprint import BoolFormat
 from pvinspect.data import ImageSequence, Image, DType
 from typing import Tuple, List, Optional, Callable, Any, Dict, Union, TypeVar
 import numpy as np
@@ -127,13 +129,13 @@ class Dataset(TorchDataset):
 
 class ClassificationDataset(Dataset):
 
-    ClassificationMeta = Dict[str, bool]
+    ClassificationMeta = Dict[str, Union[float, bool]]
 
     def _meta_to_tensor(self, meta: List[Any]) -&gt; t.Tensor:
         return t.tensor([meta[i] for i in self._meta_classes_idx], dtype=t.float32)
 
     def _tensor_to_meta_dict(self, tensor: t.Tensor, prefix: str) -&gt; ClassificationMeta:
-        l = tensor.to(t.bool).tolist()
+        l = tensor.tolist()
         return {prefix + k: v for k, v in zip(self._meta_classes, l)}
 
     def __init__(
@@ -178,21 +180,20 @@ class ClassificationDataset(Dataset):
         res = [x, y] + other
         return tuple(res)
 
-    def result_sequence(
-        self, results: List[t.Tensor], prefix: str = &#34;pred_&#34;
-    ) -&gt; ImageSequence:
+    def result_sequence(self, results: List[t.Tensor], prefix: str) -&gt; ImageSequence:
         &#34;&#34;&#34;Feed classification results back to obtain an ImageSequence with predictions
 
         Args:
             results (List[torch.Tensor]): List of predictions from the network. Convert to
-                boolean before calling this. The order of elements must be the same as in
+                boolean or float before calling this. The order of elements must be the same as in
                 the underlying ImageSequence.
-            prefix (str): Prefix prediction result meta attributes by this
+            prefix (str): Prefix that is appended to the corresponding meta keys
         
         Returns:
             result (ImageSequence): The ImageSequence with additional meta data
         &#34;&#34;&#34;
         assert len(results) == len(self._data)
+        assert results[0].dtype == t.float or results[0].dtype == t.bool
 
         # build an inverse map from Image to index
         imap = {k: v for v, k in enumerate(self._data.images)}
@@ -257,13 +258,13 @@ for individual meta attributes. These apply to members of meta_classes as well</
 </summary>
 <pre><code class="python">class ClassificationDataset(Dataset):
 
-    ClassificationMeta = Dict[str, bool]
+    ClassificationMeta = Dict[str, Union[float, bool]]
 
     def _meta_to_tensor(self, meta: List[Any]) -&gt; t.Tensor:
         return t.tensor([meta[i] for i in self._meta_classes_idx], dtype=t.float32)
 
     def _tensor_to_meta_dict(self, tensor: t.Tensor, prefix: str) -&gt; ClassificationMeta:
-        l = tensor.to(t.bool).tolist()
+        l = tensor.tolist()
         return {prefix + k: v for k, v in zip(self._meta_classes, l)}
 
     def __init__(
@@ -308,21 +309,20 @@ for individual meta attributes. These apply to members of meta_classes as well</
         res = [x, y] + other
         return tuple(res)
 
-    def result_sequence(
-        self, results: List[t.Tensor], prefix: str = &#34;pred_&#34;
-    ) -&gt; ImageSequence:
+    def result_sequence(self, results: List[t.Tensor], prefix: str) -&gt; ImageSequence:
         &#34;&#34;&#34;Feed classification results back to obtain an ImageSequence with predictions
 
         Args:
             results (List[torch.Tensor]): List of predictions from the network. Convert to
-                boolean before calling this. The order of elements must be the same as in
+                boolean or float before calling this. The order of elements must be the same as in
                 the underlying ImageSequence.
-            prefix (str): Prefix prediction result meta attributes by this
+            prefix (str): Prefix that is appended to the corresponding meta keys
         
         Returns:
             result (ImageSequence): The ImageSequence with additional meta data
         &#34;&#34;&#34;
         assert len(results) == len(self._data)
+        assert results[0].dtype == t.float or results[0].dtype == t.bool
 
         # build an inverse map from Image to index
         imap = {k: v for v, k in enumerate(self._data.images)}
@@ -338,6 +338,7 @@ for individual meta attributes. These apply to members of meta_classes as well</
 <ul class="hlist">
 <li><a title="pvinspect.integration.pytorch.dataset.Dataset" href="#pvinspect.integration.pytorch.dataset.Dataset">Dataset</a></li>
 <li>torch.utils.data.dataset.Dataset</li>
+<li>typing.Generic</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -349,7 +350,7 @@ for individual meta attributes. These apply to members of meta_classes as well</
 <h3>Methods</h3>
 <dl>
 <dt id="pvinspect.integration.pytorch.dataset.ClassificationDataset.result_sequence"><code class="name flex">
-<span>def <span class="ident">result_sequence</span></span>(<span>self, results: List[torch.Tensor], prefix: str = 'pred_') ‑> <a title="pvinspect.data.image.ImageSequence" href="../../data/image.html#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
+<span>def <span class="ident">result_sequence</span></span>(<span>self, results: List[torch.Tensor], prefix: str) ‑> <a title="pvinspect.data.image.ImageSequence" href="../../data/image.html#pvinspect.data.image.ImageSequence">ImageSequence</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Feed classification results back to obtain an ImageSequence with predictions</p>
@@ -357,10 +358,10 @@ for individual meta attributes. These apply to members of meta_classes as well</
 <dl>
 <dt><strong><code>results</code></strong> :&ensp;<code>List[torch.Tensor]</code></dt>
 <dd>List of predictions from the network. Convert to
-boolean before calling this. The order of elements must be the same as in
+boolean or float before calling this. The order of elements must be the same as in
 the underlying ImageSequence.</dd>
 <dt><strong><code>prefix</code></strong> :&ensp;<code>str</code></dt>
-<dd>Prefix prediction result meta attributes by this</dd>
+<dd>Prefix that is appended to the corresponding meta keys</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>result (ImageSequence): The ImageSequence with additional meta data</p></div>
@@ -368,21 +369,20 @@ the underlying ImageSequence.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def result_sequence(
-    self, results: List[t.Tensor], prefix: str = &#34;pred_&#34;
-) -&gt; ImageSequence:
+<pre><code class="python">def result_sequence(self, results: List[t.Tensor], prefix: str) -&gt; ImageSequence:
     &#34;&#34;&#34;Feed classification results back to obtain an ImageSequence with predictions
 
     Args:
         results (List[torch.Tensor]): List of predictions from the network. Convert to
-            boolean before calling this. The order of elements must be the same as in
+            boolean or float before calling this. The order of elements must be the same as in
             the underlying ImageSequence.
-        prefix (str): Prefix prediction result meta attributes by this
+        prefix (str): Prefix that is appended to the corresponding meta keys
     
     Returns:
         result (ImageSequence): The ImageSequence with additional meta data
     &#34;&#34;&#34;
     assert len(results) == len(self._data)
+    assert results[0].dtype == t.float or results[0].dtype == t.bool
 
     # build an inverse map from Image to index
     imap = {k: v for v, k in enumerate(self._data.images)}
@@ -519,6 +519,7 @@ for individual meta attributes</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>torch.utils.data.dataset.Dataset</li>
+<li>typing.Generic</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -557,7 +558,7 @@ for individual meta attributes</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>
