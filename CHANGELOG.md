@@ -1,6 +1,6 @@
 # Changelog
 
-## In development
+## 0.3.3
 
 ### New
 
