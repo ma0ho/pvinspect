@@ -1,5 +1,9 @@
 from pvinspect.data.io import *
-from pvinspect.data.io import _prepare_json_meta, _load_json_meta_hook
+from pvinspect.data.io import (
+    _prepare_json_meta,
+    _load_json_meta_hook,
+    _get_meta_cache_path,
+)
 from pvinspect.data import datasets
 import pvinspect.data as data
 from pvinspect.preproc.detection import locate_module_and_cells, segment_cells
@@ -271,3 +275,31 @@ def test_save_with_suffix(tmp_path: Path):
     for img in imgs:
         fn = img.path.stem + "_XY" + img.path.suffix
         assert (tmp_path / fn).is_file()
+
+
+def test_meta_cache_is_created(tmp_path: Path):
+    images = random_image_sequence(random_meta=True)
+    save_images(tmp_path, images, save_meta=True)
+    images_loaded = read_images(tmp_path)
+
+    # check if cache is created
+    assert _get_meta_cache_path(tmp_path).is_file()
+
+    # loading again should reveal the same meta data
+    assert images_loaded.meta_to_pandas().equals(read_images(tmp_path).meta_to_pandas())
+
+
+def test_meta_cache_is_invalidated(tmp_path: Path):
+    images = random_image_sequence(random_meta=True)
+    save_images(tmp_path, images, save_meta=True)
+    images_loaded = read_images(tmp_path)
+
+    # modify one key of a single image
+    target_image = images_loaded[0]
+    target_key = target_image.meta_to_pandas().keys()[0]
+    target_image = target_image.from_self(meta={target_key: 1})
+    save_image(target_image.path, target_image, save_meta=True)
+
+    # load and test
+    target_image_loaded = read_images(tmp_path)[0]
+    assert target_image_loaded.meta_to_pandas().equals(target_image.meta_to_pandas())

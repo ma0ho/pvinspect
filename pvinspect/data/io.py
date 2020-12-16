@@ -1,5 +1,6 @@
 """Read and write images"""
 
+from numpy.lib.npyio import save
 from .image import *
 from pathlib import Path
 import numpy as np
@@ -20,6 +21,7 @@ from datetime import date, datetime
 from pvinspect.data.image import Modality
 import urllib.parse
 from pvinspect.common import util
+import pickle
 
 
 def _prepare_json_meta(meta):
@@ -91,7 +93,8 @@ def _read_image(
     cols: int = None,
     rows: int = None,
     force_dtype: DType = None,
-):
+    meta: Optional[pd.Series] = None,
+) -> Image:
     assert (
         is_module_image
         and not is_partial_module
@@ -137,26 +140,35 @@ def _read_image(
 
     # try to read meta file
     meta_path = _get_meta_path(path)
-    if meta_path.is_file():
+    meta_series: pd.Series = None
+    if meta is not None:
+        meta_series = meta
+    elif meta_path.is_file():
         with open(meta_path, "r") as f:
-            meta = json.load(f, object_hook=_load_json_meta_hook)
-    else:
-        meta = None
+            meta_series = pd.Series(json.load(f, object_hook=_load_json_meta_hook))
 
     # merge modality, rows and cols
-    if meta is not None and "modality" in meta.keys() and modality is None:
-        modality = meta["modality"]
-    if meta is not None and "rows" in meta.keys() and rows is None:
-        rows = meta["rows"]
-    if meta is not None and "cols" in meta.keys() and cols is None:
-        cols = meta["cols"]
+    if (
+        meta_series is not None
+        and "modality" in meta_series.keys()
+        and modality is None
+    ):
+        modality = meta_series["modality"]
+    if meta_series is not None and "rows" in meta_series.keys() and rows is None:
+        rows = meta_series["rows"]
+    if meta_series is not None and "cols" in meta_series.keys() and cols is None:
+        cols = meta_series["cols"]
 
     if is_partial_module:
-        return PartialModuleImage(img, modality, path, cols, rows, meta=meta)
+        return PartialModuleImage(img, modality, path, cols, rows, meta=meta_series)
     elif is_module_image:
-        return ModuleImage(img, modality, path, cols, rows, meta=meta)
+        return ModuleImage(img, modality, path, cols, rows, meta=meta_series)
     else:
-        return Image(img, path, modality, meta=meta)
+        return Image(img, path, modality, meta=meta_series)
+
+
+def _get_meta_cache_path(sequence_path: Path) -> Path:
+    return sequence_path / ".cached_meta.pck"
 
 
 def _read_images(
@@ -172,24 +184,47 @@ def _read_images(
     pattern: Union[str, Tuple[str]] = ("*.png", "*.tif", "*.tiff", "*.bmp"),
     allow_different_dtypes=False,
     force_dtype: DType = None,
-):
+) -> ImageSequence:
     path = __assurePath(path)
 
     if isinstance(pattern, str):
         pattern = [pattern]
 
     # find files and skip if more than N
-    imgpaths = list(
+    imgpaths: List[Path] = list(
         reduce(lambda x, y: x + y, [list(path.glob(pat)) for pat in pattern])
     )
     imgpaths.sort()
     if N > 0 and N < len(imgpaths):
         imgpaths = imgpaths[:N]
 
+    # check if cached meta data is available
+    cache_file = _get_meta_cache_path(path)
+    cached_meta: pd.DataFrame = None
+    if cache_file.is_file():
+        with open(cache_file, "rb") as f:
+            try:
+                cached_meta = pd.read_pickle(f)
+            except:
+                cache_file.unlink()
+
     imgs = list()
+    missing_meta: Dict[str, pd.Series] = dict()
     for fn in tqdm(imgpaths):
-        imgs.append(
-            _read_image(
+        if cached_meta is not None and fn.name in cached_meta.keys():
+            img = _read_image(
+                fn,
+                is_module_image,
+                is_partial_module,
+                lazy,
+                modality,
+                cols,
+                rows,
+                force_dtype=force_dtype,
+                meta=cached_meta.loc[fn.name],
+            )
+        else:
+            img = _read_image(
                 fn,
                 is_module_image,
                 is_partial_module,
@@ -199,7 +234,18 @@ def _read_images(
                 rows,
                 force_dtype=force_dtype,
             )
+            missing_meta[fn.name] = img.meta_to_pandas()
+        imgs.append(img)
+
+    # update/create meta cache file
+    if len(missing_meta.keys()) > 0:
+        missing_meta_df = pd.DataFrame(missing_meta).T
+        new_meta = (
+            pd.concat([cached_meta, missing_meta_df])
+            if cached_meta is not None
+            else missing_meta_df
         )
+        new_meta.to_pickle(cache_file)
 
     # TODO: How to handle this with lazy loading?
     # if not same_camera:
@@ -230,11 +276,13 @@ def _read_images(
     #        imgs = [conv(img) for img in imgs]
 
     if is_module_image or is_partial_module:
-        return ModuleImageSequence(
+        res = ModuleImageSequence(
             imgs, same_camera=same_camera, allow_different_dtypes=allow_different_dtypes
         )
     else:
-        return ImageSequence(imgs, same_camera, allow_different_dtypes)
+        res = ImageSequence(imgs, same_camera, allow_different_dtypes)
+
+    return res
 
 
 def read_image(
@@ -471,6 +519,8 @@ def save_image(
         with_visualization (bool): Include the same visualizations as with image.show() or sequence.head()
         save_meta (bool): Save meta data to separate json file (cannot be used with visualization)
     """
+    filename = __assurePath(filename)
+
     if with_visusalization and save_meta:
         logging.error("Cannot save meta data for image with visualization")
         return
@@ -490,6 +540,13 @@ def save_image(
             meta_path = _get_meta_path(filename)
             with open(meta_path, "w") as f:
                 json.dump(meta, f)
+
+    # delete cached entry
+    cache_file = _get_meta_cache_path(filename.parent)
+    if save_meta and cache_file.is_file():
+        cached_meta: pd.DataFrame = pd.read_pickle(cache_file)
+        cached_meta.drop(filename.name, inplace=True)
+        cached_meta.to_pickle(cache_file)
 
 
 def save_images(
@@ -524,6 +581,11 @@ def save_images(
 
     if mkdir:
         path.mkdir(parents=True, exist_ok=True)
+
+    # check if meta cache exists and delete if necessary
+    cache_file = _get_meta_cache_path(path)
+    if save_meta and cache_file.is_file():
+        cache_file.unlink()
 
     for image in tqdm(sequence.images):
 
