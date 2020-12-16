@@ -1,4 +1,6 @@
 import logging
+
+from numpy.core.arrayprint import BoolFormat
 from pvinspect.data import ImageSequence, Image, DType
 from typing import Tuple, List, Optional, Callable, Any, Dict, Union, TypeVar
 import numpy as np
@@ -99,13 +101,13 @@ class Dataset(TorchDataset):
 
 class ClassificationDataset(Dataset):
 
-    ClassificationMeta = Dict[str, bool]
+    ClassificationMeta = Dict[str, Union[float, bool]]
 
     def _meta_to_tensor(self, meta: List[Any]) -> t.Tensor:
         return t.tensor([meta[i] for i in self._meta_classes_idx], dtype=t.float32)
 
     def _tensor_to_meta_dict(self, tensor: t.Tensor, prefix: str) -> ClassificationMeta:
-        l = tensor.to(t.bool).tolist()
+        l = tensor.tolist()
         return {prefix + k: v for k, v in zip(self._meta_classes, l)}
 
     def __init__(
@@ -150,21 +152,20 @@ class ClassificationDataset(Dataset):
         res = [x, y] + other
         return tuple(res)
 
-    def result_sequence(
-        self, results: List[t.Tensor], prefix: str = "pred_"
-    ) -> ImageSequence:
+    def result_sequence(self, results: List[t.Tensor], prefix: str) -> ImageSequence:
         """Feed classification results back to obtain an ImageSequence with predictions
 
         Args:
             results (List[torch.Tensor]): List of predictions from the network. Convert to
-                boolean before calling this. The order of elements must be the same as in
+                boolean or float before calling this. The order of elements must be the same as in
                 the underlying ImageSequence.
-            prefix (str): Prefix prediction result meta attributes by this
+            prefix (str): Prefix that is appended to the corresponding meta keys
         
         Returns:
             result (ImageSequence): The ImageSequence with additional meta data
         """
         assert len(results) == len(self._data)
+        assert results[0].dtype == t.float or results[0].dtype == t.bool
 
         # build an inverse map from Image to index
         imap = {k: v for v, k in enumerate(self._data.images)}

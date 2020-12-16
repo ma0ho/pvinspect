@@ -6,6 +6,7 @@
 
 * `save_images` now has an additional argument `filename_hook` that allows to modify the generation of image filenames
 * Meta data is now cached to speed up loading of long sequences
+* `ClassificationDataset.result_sequence` now accepts results of type `torch.float` as well
 
 ### Fixed
 

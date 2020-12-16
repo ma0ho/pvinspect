@@ -93,7 +93,7 @@ def test_classification_dataset_additional_meta():
             assert z == 1
 
 
-def test_classification_dataset_feed_result():
+def test_classification_dataset_feed_result_bool():
     meta = [{"c1": False, "c2": True}, {"c1": True, "c2": False}]
     seq = random_ubyte_image_sequence(lazy=True, N=2, meta=meta)
     ds = ClassificationDataset(seq, meta_classes=["c2", "c1"])
@@ -107,3 +107,19 @@ def test_classification_dataset_feed_result():
     assert seq2[0].get_meta("xx_c1") == True
     assert seq2[1].get_meta("xx_c2") == True
     assert seq2[1].get_meta("xx_c1") == False
+
+
+def test_classification_dataset_feed_result_float():
+    meta = [{"c1": False, "c2": True}, {"c1": True, "c2": False}]
+    seq = random_ubyte_image_sequence(lazy=True, N=2, meta=meta)
+    ds = ClassificationDataset(seq, meta_classes=["c2", "c1"])
+
+    result = [
+        t.tensor([0.0, 1.0], dtype=t.float),
+        t.tensor([1.0, 0.0], dtype=t.float),
+    ]
+    seq2 = ds.result_sequence(result, prefix="xx_")
+    assert seq2[0].get_meta("xx_c2") == 0.0
+    assert seq2[0].get_meta("xx_c1") == 1.0
+    assert seq2[1].get_meta("xx_c2") == 1.0
+    assert seq2[1].get_meta("xx_c1") == 0.0
