@@ -1,5 +1,13 @@
 # Changelog
 
+## In development
+
+### New
+
+* SIFT-based stitching of solar modules added
+
+### Fixed
+
 ## 0.3.3
 
 ### New
