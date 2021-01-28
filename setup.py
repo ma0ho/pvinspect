@@ -35,6 +35,7 @@ setuptools.setup(
         "pillow >= 7.2.0",
         "pandas >= 1.0.0",
         "onnxruntime",
+        "docstring_parser",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
