@@ -130,7 +130,13 @@ def get_active_show_plugins(image: Image) -> List[ShowPlugin]:
     return [p for p in this.show_plugins_sorted if p.is_active(image)]
 
 
-def _invoke_show_plugins(image: Image, ax: Axes, **kwargs):
+def invoke_show_plugins(image: Image, ax: Axes, **kwargs):
+    """Run the stack of registered and active plugins on given image
+
+    Args:
+        image (Image)
+        ax (Axes): The axes object that will be used for plotting
+    """
     _build_cache()
     for plugin in this.show_plugins_sorted:
         plugin.apply(ax, image, **kwargs)
