@@ -3,6 +3,7 @@ import numpy as np
 from pvinspect.data.image import *
 from typing import List, Tuple
 import cv2
+from skimage.exposure import rescale_intensity
 
 UP = 0
 DOWN = 1
@@ -11,11 +12,11 @@ RIGHT = 3
 
 
 def distinguish_direction(
-        img: np.ndarray,
-        kps0: np.ndarray,
-        kps1: np.ndarray,
-        matches: List[Tuple[int, int]],
-        status: np.ndarray
+    img: np.ndarray,
+    kps0: np.ndarray,
+    kps1: np.ndarray,
+    matches: List[Tuple[int, int]],
+    status: np.ndarray,
 ) -> int:
     """Find out the direction relationship between input images
 
@@ -62,9 +63,7 @@ def distinguish_direction(
     return np.argmax(vote)
 
 
-def detect_and_describe(
-        image: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
+def detect_and_describe(image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Calculate the keypoints and correspondent features
 
         Args:
@@ -73,7 +72,13 @@ def detect_and_describe(
             kps: The keypoints calculated
             features: Correspondent features(1 x 128) for each keypoints
         """
-    descriptor = cv2.xfeatures2d.SIFT_create()
+    # descriptor = cv2.xfeatures2d.SIFT_create()
+    descriptor = cv2.ORB_create()
+    image = rescale_intensity(image, out_range=np.uint8).astype(np.uint8)
+    # image = np.expand_dims(image, -1)
+    # image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    # plt.imshow(image)
+    # plt.show()
     (kps, features) = descriptor.detectAndCompute(image, None)
     kps = np.float32([kp.pt for kp in kps])
 
@@ -81,12 +86,12 @@ def detect_and_describe(
 
 
 def match_keypoints(
-        kps0: np.ndarray,
-        kps1: np.ndarray,
-        features0: np.ndarray,
-        features1: np.ndarray,
-        ratio:  float = 0.55,
-        reproj_thresh: float = 4.0
+    kps0: np.ndarray,
+    kps1: np.ndarray,
+    features0: np.ndarray,
+    features1: np.ndarray,
+    ratio: float = 0.55,
+    reproj_thresh: float = 4.0,
 ) -> Tuple[List[Tuple[int, int]], np.ndarray, np.ndarray]:
     """To match the keypoints
 
@@ -132,9 +137,7 @@ def match_keypoints(
 
 
 def stitching(
-        images: Tuple[Image, Image],
-        ratio: float = 0.55,
-        reproj_thresh: float = 4.0
+    images: Tuple[Image, Image], ratio: float = 0.55, reproj_thresh: float = 4.0
 ) -> Image:
     """To match the keypoints
 
@@ -168,25 +171,29 @@ def stitching(
     # distinguish the direction and to apply corresponding stitching
     direction = distinguish_direction(img0, kps0, kps1, matches, status)
     if direction == UP:
-        result = cv2.warpPerspective(img0, H, (img0.shape[1], img1.shape[0] + img0.shape[0]))
-        result[0:img1.shape[0], 0:img1.shape[1]] = img1
+        result = cv2.warpPerspective(
+            img0, H, (img0.shape[1], img1.shape[0] + img0.shape[0])
+        )
+        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
     elif direction == DOWN:
         # For Down direction it is required to transform it into Up direction
         M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
         H = M[1]
-        result = cv2.warpPerspective(img1, H, (img1.shape[1], img1.shape[0] + img0.shape[0]))
-        result[0:img1.shape[0], 0:img0.shape[1]] = img0
+        result = cv2.warpPerspective(
+            img1, H, (img1.shape[1], img1.shape[0] + img0.shape[0])
+        )
+        result[0 : img1.shape[0], 0 : img0.shape[1]] = img0
     elif direction == LEFT:
-        result = cv2.warpPerspective(img0, H, (img0.shape[1] + img1.shape[1], img0.shape[0]))
-        result[0:img1.shape[0], 0:img1.shape[1]] = img1
+        result = cv2.warpPerspective(
+            img0, H, (img0.shape[1] + img1.shape[1], img0.shape[0])
+        )
+        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
     else:
         # For Right direction it is required to transform it into Left direction
         M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
         H = M[1]
-        result = cv2.warpPerspective(img1, H,
-                                     (img0.shape[1] + img1.shape[1], img1.shape[0]))
-        result[0 : img0.shape[0], 0:img0.shape[1]] = img0
+        result = cv2.warpPerspective(
+            img1, H, (img0.shape[1] + img1.shape[1], img1.shape[0])
+        )
+        result[0 : img0.shape[0], 0 : img0.shape[1]] = img0
     return Image(result)
-
-
-

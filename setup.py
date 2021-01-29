@@ -17,7 +17,7 @@ setuptools.setup(
     python_requires=">=3.7, <3.9",
     install_requires=[
         "numpy >= 1.16.0",
-        "scikit-image",
+        "scikit-image >= 0.16",
         "matplotlib",
         "pathlib",
         "tqdm",
