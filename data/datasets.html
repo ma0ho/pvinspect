@@ -222,6 +222,29 @@ def caip_dataD() -&gt; Tuple[ModuleImageSequence, ObjectAnnotations]:
     return read_module_images(p / &#34;rotated&#34;, EL_IMAGE, True, 10, 6), annot
 
 
+def stitching_demo(N: int = 0) -&gt; List[Tuple[Image, Image]]:
+    &#34;&#34;&#34;Data to demonstrate stitching capabilities
+
+    Args:
+        N (int): Number of image pairs that is returened
+
+    Returns:
+        images: List of image pairs
+    &#34;&#34;&#34;
+    result = list()
+    images = poly10x6(N)
+
+    for image in images:
+        height = image.shape[0]
+
+        # split
+        img0 = Image(image.data[0 : int(height * 2 // 3)])
+        img1 = Image(image.data[int(height // 3) :])
+        result.append((img0, img1))
+
+    return result
+
+
 def calibration_ipv40CCD_FF(N: int = 0) -&gt; Dict[str, ImageSequence]:
     &#34;&#34;&#34;Flat-field calibration data for ipv40CCD (private dataset)
 
@@ -614,6 +637,48 @@ Solar Energy, Elsevier BV, 2019, 185, 455-468. </p>
     return read_module_images(p, EL_IMAGE, True, 10, 6, N=N)</code></pre>
 </details>
 </dd>
+<dt id="pvinspect.data.datasets.stitching_demo"><code class="name flex">
+<span>def <span class="ident">stitching_demo</span></span>(<span>N: int = 0) ‑> List[Tuple[<a title="pvinspect.data.image.Image" href="image.html#pvinspect.data.image.Image">Image</a>, <a title="pvinspect.data.image.Image" href="image.html#pvinspect.data.image.Image">Image</a>]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data to demonstrate stitching capabilities</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>N</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of image pairs that is returened</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>images</code></dt>
+<dd>List of image pairs</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stitching_demo(N: int = 0) -&gt; List[Tuple[Image, Image]]:
+    &#34;&#34;&#34;Data to demonstrate stitching capabilities
+
+    Args:
+        N (int): Number of image pairs that is returened
+
+    Returns:
+        images: List of image pairs
+    &#34;&#34;&#34;
+    result = list()
+    images = poly10x6(N)
+
+    for image in images:
+        height = image.shape[0]
+
+        # split
+        img0 = Image(image.data[0 : int(height * 2 // 3)])
+        img1 = Image(image.data[int(height // 3) :])
+        result.append((img0, img1))
+
+    return result</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -640,6 +705,7 @@ Solar Energy, Elsevier BV, 2019, 185, 455-468. </p>
 <li><code><a title="pvinspect.data.datasets.elpv" href="#pvinspect.data.datasets.elpv">elpv</a></code></li>
 <li><code><a title="pvinspect.data.datasets.multi_module_detection" href="#pvinspect.data.datasets.multi_module_detection">multi_module_detection</a></code></li>
 <li><code><a title="pvinspect.data.datasets.poly10x6" href="#pvinspect.data.datasets.poly10x6">poly10x6</a></code></li>
+<li><code><a title="pvinspect.data.datasets.stitching_demo" href="#pvinspect.data.datasets.stitching_demo">stitching_demo</a></code></li>
 </ul>
 </li>
 </ul>

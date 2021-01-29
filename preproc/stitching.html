@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>pvinspect.preproc.stitching API documentation</title>
+<meta name="description" content="Stitching of two images of same size" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pvinspect.preproc.stitching</code></h1>
+</header>
+<section id="section-intro">
+<p>Stitching of two images of same size</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Stitching of two images of same size&#34;&#34;&#34;
+import numpy as np
+from pvinspect.data.image import *
+from typing import List, Tuple
+import cv2
+from skimage.exposure import rescale_intensity
+
+UP = 0
+DOWN = 1
+LEFT = 2
+RIGHT = 3
+
+
+def distinguish_direction(
+    img: np.ndarray,
+    kps0: np.ndarray,
+    kps1: np.ndarray,
+    matches: List[Tuple[int, int]],
+    status: np.ndarray,
+) -&gt; int:
+    &#34;&#34;&#34;Find out the direction relationship between input images
+
+        Args:
+            img(np.ndarray): Input image that would be processed(considering that two image of the same size)
+            kps0(np.ndarray): The obtained keypoints for the first image
+            kps1(np.ndarray): The obtained keypoints for the second image
+            matches(List[Tuple[int, int]]): The matches for all matched keypoints pairs
+            status(np.ndarray): Showing if each keypoints would be regarded as correctly matched
+        Returns:
+            direction: The direction relationship between two images. From 1 - 4 means image1 (kps1) is Up/Down/Left/Right to image0 (kps0)
+        &#34;&#34;&#34;
+    # initialize the vote array which would be used to store the direction
+    vote = [0, 0, 0, 0]
+
+    (height, width) = img.shape[:2]
+    threshold_height = height // 10
+    threshold_width = width // 10
+
+    # loop over the matches
+    for ((trainIdx, queryIdx), s) in zip(matches, status):
+        # only process the match if the keypoint was successfully matched
+        if s == 1:
+            # img0 drew right and img1 left
+            pixel0 = (int(kps0[queryIdx][0] + width), int(kps0[queryIdx][1]))
+            pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
+            if np.abs(pixel1[1] - pixel0[1]) &gt; threshold_height:
+                if pixel1[1] &gt; pixel0[1]:
+                    vote[0] = vote[0] + 1
+                else:
+                    vote[1] = vote[1] + 1
+
+    for ((trainIdx, queryIdx), s) in zip(matches, status):
+        # only process the match if the keypoint was successfully matched
+        if s == 1:
+            # img0 drew down and img1 drew up
+            pixel0 = (int(kps0[queryIdx][0]), int(kps0[queryIdx][1] + height))
+            pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
+            if np.abs(pixel1[0] - pixel0[0]) &gt; threshold_width:
+                if pixel1[0] &gt; pixel0[0]:
+                    vote[2] = vote[2] + 1
+                else:
+                    vote[3] = vote[3] + 1
+    return np.argmax(vote)
+
+
+def detect_and_describe(image: np.ndarray) -&gt; Tuple[np.ndarray, np.ndarray]:
+    &#34;&#34;&#34;Calculate the keypoints and correspondent features
+
+        Args:
+            image(np.ndarray): Input image that would be calculated
+        Returns:
+            kps: The keypoints calculated
+            features: Correspondent features(1 x 128) for each keypoints
+        &#34;&#34;&#34;
+    # descriptor = cv2.xfeatures2d.SIFT_create()
+    descriptor = cv2.ORB_create()
+    image = rescale_intensity(image, out_range=np.uint8).astype(np.uint8)
+    # image = np.expand_dims(image, -1)
+    # image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    # plt.imshow(image)
+    # plt.show()
+    (kps, features) = descriptor.detectAndCompute(image, None)
+    kps = np.float32([kp.pt for kp in kps])
+
+    return (kps, features)
+
+
+def match_keypoints(
+    kps0: np.ndarray,
+    kps1: np.ndarray,
+    features0: np.ndarray,
+    features1: np.ndarray,
+    ratio: float = 0.55,
+    reproj_thresh: float = 4.0,
+) -&gt; Tuple[List[Tuple[int, int]], np.ndarray, np.ndarray]:
+    &#34;&#34;&#34;To match the keypoints
+
+        Args:
+            kps0(np.ndarray): The obtained keypoints for the first image
+            kps1(np.ndarray): The obtained keypoints for the second image
+            features0(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 0
+            features1(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 1
+            ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
+            reproj_thresh(float): A parameter used in calculate the homography matrix
+        Returns:
+            matches: The matches for all matched keypoints pairs
+            H: Homography matrix
+            status: Showing if each keypoints would be regarded as correctly matched
+        &#34;&#34;&#34;
+    # compute the raw matches and initialize the list of actual matches
+    # use BruteForce and k-NearestNeighbor to match
+    matcher = cv2.DescriptorMatcher_create(&#34;BruteForce&#34;)
+    # set k to 2
+    raw_matches = matcher.knnMatch(features0, features1, 2)
+
+    # only select those matches that meet the requirement
+    matches = []
+    # loop over the raw matches
+    for m in raw_matches:
+        # ensure the distance is within a certain ratio of each other (i.e. Lowe&#39;s ratio test)
+        if len(m) == 2 and m[0].distance &lt; m[1].distance * ratio:
+            matches.append((m[0].trainIdx, m[0].queryIdx))
+
+    # computing a homography requires at least 4 matches
+    if len(matches) &gt; 4:
+        # construct the two sets of points
+        pts0 = np.float32([kps0[i] for (_, i) in matches])
+        pts1 = np.float32([kps1[i] for (i, _) in matches])
+        # compute the homography between the two sets of points
+        # with RANSAC it would find the optimum homography matrix
+        (H, status) = cv2.findHomography(pts0, pts1, cv2.RANSAC, reproj_thresh)
+        # return the matches along with the homograpy matrix and status of each matched point
+        return (matches, H, status)
+    # otherwise, no homograpy could be computed
+    print(&#34;no matches&#34;)
+    return None
+
+
+def stitch_images(
+    images: Tuple[Image, Image], ratio: float = 0.55, reproj_thresh: float = 4.0
+) -&gt; Image:
+    &#34;&#34;&#34;Applies stitching to a pair of partial images of a solar module.
+
+        Args:
+            images (Tuple[Image, Image]): Pair of images that should be stitched together
+            ratio (float): This parameter controls the amount and quality of the matched keypoints pairs
+            reproj_thresh (float): This parameter is used in calculating the homography matrix
+        Returns:
+            result: Stitched image
+    &#34;&#34;&#34;
+    # unpack the images, then detect keypoints and extract
+    # local invariant descriptors from them
+    img1 = images[0].data
+    img0 = images[1].data
+
+    # To calculate the features
+    (kps0, features0) = detect_and_describe(img0)
+    (kps1, features1) = detect_and_describe(img1)
+
+    # match features between the two images
+    M = match_keypoints(kps0, kps1, features0, features1, ratio, reproj_thresh)
+
+    # if the match is None, then there aren&#39;t enough matched keypoints to create a panorama
+    if M is None:
+        return None
+
+    # otherwise, apply a perspective warp to stitch the images together
+    (matches, H, status) = M
+
+    # distinguish the direction and to apply corresponding stitching
+    direction = distinguish_direction(img0, kps0, kps1, matches, status)
+    if direction == UP:
+        result = cv2.warpPerspective(
+            img0, H, (img0.shape[1], img1.shape[0] + img0.shape[0])
+        )
+        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
+    elif direction == DOWN:
+        # For Down direction it is required to transform it into Up direction
+        M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
+        H = M[1]
+        result = cv2.warpPerspective(
+            img1, H, (img1.shape[1], img1.shape[0] + img0.shape[0])
+        )
+        result[0 : img1.shape[0], 0 : img0.shape[1]] = img0
+    elif direction == LEFT:
+        result = cv2.warpPerspective(
+            img0, H, (img0.shape[1] + img1.shape[1], img0.shape[0])
+        )
+        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
+    else:
+        # For Right direction it is required to transform it into Left direction
+        M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
+        H = M[1]
+        result = cv2.warpPerspective(
+            img1, H, (img0.shape[1] + img1.shape[1], img1.shape[0])
+        )
+        result[0 : img0.shape[0], 0 : img0.shape[1]] = img0
+
+    return Image.from_other(images[0], data=result)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pvinspect.preproc.stitching.detect_and_describe"><code class="name flex">
+<span>def <span class="ident">detect_and_describe</span></span>(<span>image: numpy.ndarray) ‑> Tuple[numpy.ndarray, numpy.ndarray]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate the keypoints and correspondent features</p>
+<h2 id="args">Args</h2>
+<p>image(np.ndarray): Input image that would be calculated</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>kps</code></dt>
+<dd>The keypoints calculated</dd>
+<dt><code>features</code></dt>
+<dd>Correspondent features(1 x 128) for each keypoints</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def detect_and_describe(image: np.ndarray) -&gt; Tuple[np.ndarray, np.ndarray]:
+    &#34;&#34;&#34;Calculate the keypoints and correspondent features
+
+        Args:
+            image(np.ndarray): Input image that would be calculated
+        Returns:
+            kps: The keypoints calculated
+            features: Correspondent features(1 x 128) for each keypoints
+        &#34;&#34;&#34;
+    # descriptor = cv2.xfeatures2d.SIFT_create()
+    descriptor = cv2.ORB_create()
+    image = rescale_intensity(image, out_range=np.uint8).astype(np.uint8)
+    # image = np.expand_dims(image, -1)
+    # image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    # plt.imshow(image)
+    # plt.show()
+    (kps, features) = descriptor.detectAndCompute(image, None)
+    kps = np.float32([kp.pt for kp in kps])
+
+    return (kps, features)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.stitching.distinguish_direction"><code class="name flex">
+<span>def <span class="ident">distinguish_direction</span></span>(<span>img: numpy.ndarray, kps0: numpy.ndarray, kps1: numpy.ndarray, matches: List[Tuple[int, int]], status: numpy.ndarray) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Find out the direction relationship between input images</p>
+<h2 id="args">Args</h2>
+<p>img(np.ndarray): Input image that would be processed(considering that two image of the same size)
+kps0(np.ndarray): The obtained keypoints for the first image
+kps1(np.ndarray): The obtained keypoints for the second image
+matches(List[Tuple[int, int]]): The matches for all matched keypoints pairs
+status(np.ndarray): Showing if each keypoints would be regarded as correctly matched</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>direction</code></dt>
+<dd>The direction relationship between two images. From 1 - 4 means image1 (kps1) is Up/Down/Left/Right to image0 (kps0)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def distinguish_direction(
+    img: np.ndarray,
+    kps0: np.ndarray,
+    kps1: np.ndarray,
+    matches: List[Tuple[int, int]],
+    status: np.ndarray,
+) -&gt; int:
+    &#34;&#34;&#34;Find out the direction relationship between input images
+
+        Args:
+            img(np.ndarray): Input image that would be processed(considering that two image of the same size)
+            kps0(np.ndarray): The obtained keypoints for the first image
+            kps1(np.ndarray): The obtained keypoints for the second image
+            matches(List[Tuple[int, int]]): The matches for all matched keypoints pairs
+            status(np.ndarray): Showing if each keypoints would be regarded as correctly matched
+        Returns:
+            direction: The direction relationship between two images. From 1 - 4 means image1 (kps1) is Up/Down/Left/Right to image0 (kps0)
+        &#34;&#34;&#34;
+    # initialize the vote array which would be used to store the direction
+    vote = [0, 0, 0, 0]
+
+    (height, width) = img.shape[:2]
+    threshold_height = height // 10
+    threshold_width = width // 10
+
+    # loop over the matches
+    for ((trainIdx, queryIdx), s) in zip(matches, status):
+        # only process the match if the keypoint was successfully matched
+        if s == 1:
+            # img0 drew right and img1 left
+            pixel0 = (int(kps0[queryIdx][0] + width), int(kps0[queryIdx][1]))
+            pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
+            if np.abs(pixel1[1] - pixel0[1]) &gt; threshold_height:
+                if pixel1[1] &gt; pixel0[1]:
+                    vote[0] = vote[0] + 1
+                else:
+                    vote[1] = vote[1] + 1
+
+    for ((trainIdx, queryIdx), s) in zip(matches, status):
+        # only process the match if the keypoint was successfully matched
+        if s == 1:
+            # img0 drew down and img1 drew up
+            pixel0 = (int(kps0[queryIdx][0]), int(kps0[queryIdx][1] + height))
+            pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
+            if np.abs(pixel1[0] - pixel0[0]) &gt; threshold_width:
+                if pixel1[0] &gt; pixel0[0]:
+                    vote[2] = vote[2] + 1
+                else:
+                    vote[3] = vote[3] + 1
+    return np.argmax(vote)</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.stitching.match_keypoints"><code class="name flex">
+<span>def <span class="ident">match_keypoints</span></span>(<span>kps0: numpy.ndarray, kps1: numpy.ndarray, features0: numpy.ndarray, features1: numpy.ndarray, ratio: float = 0.55, reproj_thresh: float = 4.0) ‑> Tuple[List[Tuple[int, int]], numpy.ndarray, numpy.ndarray]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>To match the keypoints</p>
+<h2 id="args">Args</h2>
+<p>kps0(np.ndarray): The obtained keypoints for the first image
+kps1(np.ndarray): The obtained keypoints for the second image
+features0(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 0
+features1(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 1
+ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
+reproj_thresh(float): A parameter used in calculate the homography matrix</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>matches</code></dt>
+<dd>The matches for all matched keypoints pairs</dd>
+<dt><code>H</code></dt>
+<dd>Homography matrix</dd>
+<dt><code>status</code></dt>
+<dd>Showing if each keypoints would be regarded as correctly matched</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def match_keypoints(
+    kps0: np.ndarray,
+    kps1: np.ndarray,
+    features0: np.ndarray,
+    features1: np.ndarray,
+    ratio: float = 0.55,
+    reproj_thresh: float = 4.0,
+) -&gt; Tuple[List[Tuple[int, int]], np.ndarray, np.ndarray]:
+    &#34;&#34;&#34;To match the keypoints
+
+        Args:
+            kps0(np.ndarray): The obtained keypoints for the first image
+            kps1(np.ndarray): The obtained keypoints for the second image
+            features0(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 0
+            features1(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 1
+            ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
+            reproj_thresh(float): A parameter used in calculate the homography matrix
+        Returns:
+            matches: The matches for all matched keypoints pairs
+            H: Homography matrix
+            status: Showing if each keypoints would be regarded as correctly matched
+        &#34;&#34;&#34;
+    # compute the raw matches and initialize the list of actual matches
+    # use BruteForce and k-NearestNeighbor to match
+    matcher = cv2.DescriptorMatcher_create(&#34;BruteForce&#34;)
+    # set k to 2
+    raw_matches = matcher.knnMatch(features0, features1, 2)
+
+    # only select those matches that meet the requirement
+    matches = []
+    # loop over the raw matches
+    for m in raw_matches:
+        # ensure the distance is within a certain ratio of each other (i.e. Lowe&#39;s ratio test)
+        if len(m) == 2 and m[0].distance &lt; m[1].distance * ratio:
+            matches.append((m[0].trainIdx, m[0].queryIdx))
+
+    # computing a homography requires at least 4 matches
+    if len(matches) &gt; 4:
+        # construct the two sets of points
+        pts0 = np.float32([kps0[i] for (_, i) in matches])
+        pts1 = np.float32([kps1[i] for (i, _) in matches])
+        # compute the homography between the two sets of points
+        # with RANSAC it would find the optimum homography matrix
+        (H, status) = cv2.findHomography(pts0, pts1, cv2.RANSAC, reproj_thresh)
+        # return the matches along with the homograpy matrix and status of each matched point
+        return (matches, H, status)
+    # otherwise, no homograpy could be computed
+    print(&#34;no matches&#34;)
+    return None</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.stitching.stitch_images"><code class="name flex">
+<span>def <span class="ident">stitch_images</span></span>(<span>images: Tuple[<a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>, <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>], ratio: float = 0.55, reproj_thresh: float = 4.0) ‑> <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Applies stitching to a pair of partial images of a solar module.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code>Tuple[Image, Image]</code></dt>
+<dd>Pair of images that should be stitched together</dd>
+<dt><strong><code>ratio</code></strong> :&ensp;<code>float</code></dt>
+<dd>This parameter controls the amount and quality of the matched keypoints pairs</dd>
+<dt><strong><code>reproj_thresh</code></strong> :&ensp;<code>float</code></dt>
+<dd>This parameter is used in calculating the homography matrix</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>result</code></dt>
+<dd>Stitched image</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stitch_images(
+    images: Tuple[Image, Image], ratio: float = 0.55, reproj_thresh: float = 4.0
+) -&gt; Image:
+    &#34;&#34;&#34;Applies stitching to a pair of partial images of a solar module.
+
+        Args:
+            images (Tuple[Image, Image]): Pair of images that should be stitched together
+            ratio (float): This parameter controls the amount and quality of the matched keypoints pairs
+            reproj_thresh (float): This parameter is used in calculating the homography matrix
+        Returns:
+            result: Stitched image
+    &#34;&#34;&#34;
+    # unpack the images, then detect keypoints and extract
+    # local invariant descriptors from them
+    img1 = images[0].data
+    img0 = images[1].data
+
+    # To calculate the features
+    (kps0, features0) = detect_and_describe(img0)
+    (kps1, features1) = detect_and_describe(img1)
+
+    # match features between the two images
+    M = match_keypoints(kps0, kps1, features0, features1, ratio, reproj_thresh)
+
+    # if the match is None, then there aren&#39;t enough matched keypoints to create a panorama
+    if M is None:
+        return None
+
+    # otherwise, apply a perspective warp to stitch the images together
+    (matches, H, status) = M
+
+    # distinguish the direction and to apply corresponding stitching
+    direction = distinguish_direction(img0, kps0, kps1, matches, status)
+    if direction == UP:
+        result = cv2.warpPerspective(
+            img0, H, (img0.shape[1], img1.shape[0] + img0.shape[0])
+        )
+        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
+    elif direction == DOWN:
+        # For Down direction it is required to transform it into Up direction
+        M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
+        H = M[1]
+        result = cv2.warpPerspective(
+            img1, H, (img1.shape[1], img1.shape[0] + img0.shape[0])
+        )
+        result[0 : img1.shape[0], 0 : img0.shape[1]] = img0
+    elif direction == LEFT:
+        result = cv2.warpPerspective(
+            img0, H, (img0.shape[1] + img1.shape[1], img0.shape[0])
+        )
+        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
+    else:
+        # For Right direction it is required to transform it into Left direction
+        M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
+        H = M[1]
+        result = cv2.warpPerspective(
+            img1, H, (img0.shape[1] + img1.shape[1], img1.shape[0])
+        )
+        result[0 : img0.shape[0], 0 : img0.shape[1]] = img0
+
+    return Image.from_other(images[0], data=result)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pvinspect.preproc" href="index.html">pvinspect.preproc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pvinspect.preproc.stitching.detect_and_describe" href="#pvinspect.preproc.stitching.detect_and_describe">detect_and_describe</a></code></li>
+<li><code><a title="pvinspect.preproc.stitching.distinguish_direction" href="#pvinspect.preproc.stitching.distinguish_direction">distinguish_direction</a></code></li>
+<li><code><a title="pvinspect.preproc.stitching.match_keypoints" href="#pvinspect.preproc.stitching.match_keypoints">match_keypoints</a></code></li>
+<li><code><a title="pvinspect.preproc.stitching.stitch_images" href="#pvinspect.preproc.stitching.stitch_images">stitch_images</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
