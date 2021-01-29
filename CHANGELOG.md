@@ -4,7 +4,7 @@
 
 ### New
 
-* SIFT-based stitching of solar modules added
+* ORB-based stitching of solar modules added
 
 ### Fixed
 
