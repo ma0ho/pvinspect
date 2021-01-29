@@ -193,6 +193,29 @@ def caip_dataD() -> Tuple[ModuleImageSequence, ObjectAnnotations]:
     return read_module_images(p / "rotated", EL_IMAGE, True, 10, 6), annot
 
 
+def stitching_demo(N: int = 0) -> List[Tuple[Image, Image]]:
+    """Data to demonstrate stitching capabilities
+
+    Args:
+        N (int): Number of image pairs that is returened
+
+    Returns:
+        images: List of image pairs
+    """
+    result = list()
+    images = poly10x6(N)
+
+    for image in images:
+        height = image.shape[0]
+
+        # split
+        img0 = Image(image.data[0 : int(height * 2 // 3)])
+        img1 = Image(image.data[int(height // 3) :])
+        result.append((img0, img1))
+
+    return result
+
+
 def calibration_ipv40CCD_FF(N: int = 0) -> Dict[str, ImageSequence]:
     """Flat-field calibration data for ipv40CCD (private dataset)
 
