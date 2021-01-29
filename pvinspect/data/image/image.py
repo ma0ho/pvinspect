@@ -1,50 +1,31 @@
 from __future__ import annotations
+
 from os import write
+
+from matplotlib.axes import Axes
 from pvinspect.data.image.show_plugin import (
     PluginOption,
     get_active_show_plugins,
     invoke_show_plugins,
 )
 
-from matplotlib.axes import Axes
-from pvinspect.data.image import TImage
-
-import matplotlib
-
 """Provides classes to store and visualize images with metadata"""
 
 import copy
 import inspect
-import logging
-import math
 import re
-import sys
+from abc import ABCMeta, abstractmethod
 from enum import Enum
-from functools import lru_cache, wraps, partial
+from functools import lru_cache, partial
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Hashable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
-from abc import ABCMeta, abstractmethod, abstractproperty
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 from matplotlib import markers as markers  # type: ignore
-from pvinspect.common._ipy_exit import exit
-from skimage import img_as_float64, img_as_int, img_as_uint
-from tqdm.autonotebook import tqdm
+from matplotlib import pyplot as plt
 
-from .type import _map_numpy_dtype, _convert_numpy_image, DType, _unify_dtypes
+from .type import DType, _convert_numpy_image, _map_numpy_dtype, _unify_dtypes
 
 # caching
 SEQUENCE_MAX_CACHE_SIZE = 5000
@@ -55,11 +36,17 @@ class Modality(Enum):
     PL_IMAGE = 1
 
 
+# Types
+LoadFnType = Callable[[], np.ndarray]
+MetaType = Union[pd.Series, Dict[str, Any]]
+DataFunction = Callable[[np.ndarray], np.ndarray]
+
+# Type vars
+TImage = TypeVar("TImage", bound="Image")
+
+
 class Image(metaclass=ABCMeta):
     """A general image"""
-
-    TImage = TypeVar("TImage", bound="Image")
-    MetaType = Union[pd.Series, Dict[str, Any]]
 
     def __init__(
         self, path: Optional[Path] = None, meta: Optional[MetaType] = None,
@@ -163,13 +150,26 @@ class Image(metaclass=ABCMeta):
         return res
 
     @abstractmethod
-    def as_type(self, dtype: DType) -> Image:
+    def apply_data(self: TImage, fn: DataFunction) -> TImage:
+        """Apply a callable to the image data returning new `Image`. This is evaluated lazyly for
+        `LazyImage`
+
+        Args:
+            fn (DataFunction): This callable is applied to the image data
+
+        Returns:
+            image (TImage): The resulting image
+        """
+        pass
+
+    def as_type(self: TImage, dtype: DType) -> TImage:
         """Return this image with the image datatype converted according to dtype
 
         Args:
             dtype (DType): Type of the resulting image
         """
-        pass
+        f = partial(_convert_numpy_image, dtype=dtype)
+        return self.apply_data(f)
 
     def __deepcopy__(self, memo) -> Image:
         # let behavior be determined by overridden attributes
@@ -282,8 +282,8 @@ class EagerImage(Image):
     def _data_ref(self) -> np.ndarray:
         return self._data
 
-    def as_type(self, dtype: DType) -> Image:
-        return self.from_self(data=_convert_numpy_image(self._data, dtype))
+    def apply_data(self: TImage, fn: DataFunction) -> TImage:
+        return self.from_self(data=fn(self.data))
 
     @property
     def data(self) -> np.ndarray:
@@ -291,16 +291,11 @@ class EagerImage(Image):
 
 
 class LazyImage(Image):
-
-    LoadFnType = Callable[[], np.ndarray]
-
     class LazyData:
         @classmethod
         @lru_cache(maxsize=SEQUENCE_MAX_CACHE_SIZE, typed=True)
         def _load(
-            cls,
-            load_fn: Image.LoadFnType,
-            checks: Tuple[Callable[[np.ndarray], np.ndarray]],
+            cls, load_fn: LoadFnType, checks: Tuple[Callable[[np.ndarray], np.ndarray]],
         ) -> np.ndarray:
             data = load_fn()
 
@@ -313,7 +308,7 @@ class LazyImage(Image):
 
             return data
 
-        def __init__(self, load_fn: Image.LoadFnType):
+        def __init__(self, load_fn: LoadFnType):
             self._load_fn = load_fn
             self._checks: List[Callable[[np.ndarray], np.ndarray]] = list()
 
@@ -354,12 +349,10 @@ class LazyImage(Image):
     def _data_ref(self) -> LazyData:
         return copy.deepcopy(self._data)
 
-    def as_type(self, dtype: DType) -> Image:
-        f = partial(_convert_numpy_image, dtype=dtype)
-
+    def apply_data(self: LazyImage, fn: DataFunction) -> LazyImage:
         # get a referencing copy
         res = self.from_self()
-        res._data.push_check(f)
+        res._data.push_check(fn)
         return res
 
     @property
