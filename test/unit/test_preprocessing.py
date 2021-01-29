@@ -240,8 +240,8 @@ def test_stitching():
     height = image.shape[0]
     width = image.shape[1]
 
-    stitched_ver = stitching(images_ver).data
-    stitched_hor = stitching(images_hor).data
+    stitched_ver = stitch_images(images_ver).data
+    stitched_hor = stitch_images(images_hor).data
 
     test_stitched_ver = stitched_ver[:height]
     test_stitched_hor = stitched_hor[:, :width]

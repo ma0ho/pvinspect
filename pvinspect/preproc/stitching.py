@@ -136,18 +136,17 @@ def match_keypoints(
     return None
 
 
-def stitching(
+def stitch_images(
     images: Tuple[Image, Image], ratio: float = 0.55, reproj_thresh: float = 4.0
 ) -> Image:
-    """To match the keypoints
+    """Applies stitching to a pair of partial images of a solar module.
 
         Args:
-            images(Tuple[Image, Image]): Tuple of to be stitched images
-            ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
-            reproj_thresh(float): A parameter used in calculate the homography matrix
+            images (Tuple[Image, Image]): Pair of images that should be stitched together
+            ratio (float): This parameter controls the amount and quality of the matched keypoints pairs
+            reproj_thresh (float): This parameter is used in calculating the homography matrix
         Returns:
-            result: Stitched images
-            result: Stitched images
+            result: Stitched image
     """
     # unpack the images, then detect keypoints and extract
     # local invariant descriptors from them
@@ -196,4 +195,5 @@ def stitching(
             img1, H, (img0.shape[1] + img1.shape[1], img1.shape[0])
         )
         result[0 : img0.shape[0], 0 : img0.shape[1]] = img0
-    return Image(result)
+
+    return Image.from_other(images[0], data=result)
