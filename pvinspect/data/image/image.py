@@ -1,5 +1,12 @@
 from __future__ import annotations
 from os import write
+from pvinspect.data.image.show_plugin import (
+    PluginOption,
+    get_active_show_plugins,
+    invoke_show_plugins,
+)
+
+from matplotlib.axes import Axes
 from pvinspect.data.image import TImage
 
 import matplotlib
@@ -126,10 +133,34 @@ class Image(metaclass=ABCMeta):
         """
         return self.from_other(self, **kwargs)
 
-    def show(self, **kwargs):
-        """Show this image"""
-        pass  # TODO
-        # _invoke_show_plugins(self, **kwargs)
+    def show(self, ax: Optional[Axes] = None, **kwargs) -> Optional[plt.Figure]:
+        """Show this image
+        
+        Args:
+            ax (Optional[Axes]): If given, image will be shown here
+
+        Returns:
+            fig (Optional[plt.Figure]): Returns the figure, if one is created
+        """
+        # create a figure, if none is given
+        fig = None
+        if ax is None:
+            fig, axs = plt.subplots(1)
+            ax = axs[0]
+
+        # invoke plugins
+        invoke_show_plugins(self, ax, **kwargs)
+
+        return fig
+
+    def show_options(self) -> List[Tuple[str, List[PluginOption]]]:
+        """Determine currently active plugin options"""
+        res: List[Tuple[str, List[PluginOption]]] = list()
+
+        for p in get_active_show_plugins(self):
+            res.append((p.title, p.options()))
+
+        return res
 
     @abstractmethod
     def as_type(self, dtype: DType) -> Image:
