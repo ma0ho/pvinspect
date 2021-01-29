@@ -2,3 +2,4 @@
 
 from . import calibration
 from . import detection
+from . import stitching

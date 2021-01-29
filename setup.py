@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pvinspect",
-    version="0.3.3",
+    version="0.4.0",
     author="Mathis Hoffmann",
     author_email="mathis.hoffmann@fau.de",
     description="Provides methods for the analysis of PV modules using different modalities",
@@ -16,8 +16,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     python_requires=">=3.7, <3.9",
     install_requires=[
-        "numpy >= 1.16.0",
-        "scikit-image",
+        "numpy >= 1.16.5",
+        "scikit-image >= 0.16",
         "matplotlib",
         "pathlib",
         "tqdm",

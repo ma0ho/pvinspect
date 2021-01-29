@@ -1,12 +1,10 @@
 # Changelog
 
-## In development
+## 0.4.0
 
 ### New
 
-* SIFT-based stitching of solar modules added
-
-### Fixed
+* ORB-based stitching of solar modules added
 
 ## 0.3.3
 
