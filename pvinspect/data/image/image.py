@@ -48,22 +48,22 @@ TImage = TypeVar("TImage", bound="Image")
 class Image(metaclass=ABCMeta):
     """A general image"""
 
-    def __init__(
-        self, path: Optional[Path] = None, meta: Optional[MetaType] = None,
-    ):
-        """Create a new image.
+    def __init__(self, meta: Optional[pd.Series] = None, **kwargs):
+        """Create a new image. Additional meta data can be given to kwargs.
 
         Args:
-            path (Optional[Path]): Path to the image
             meta (Optional[pd.Series]): Meta attributes of this image
         """
 
+        kwargs_meta = {k: v for k, v in kwargs.items()}
+
         # force meta data type
-        if isinstance(meta, dict):
-            meta = pd.Series(meta)
+        if meta:
+            meta = meta.copy() + pd.Series(kwargs_meta, copy=True)
+        else:
+            meta = pd.Series(kwargs_meta)
 
         self._meta = meta
-        self._meta.loc["path"] = path.absolute() if path is not None else None
 
     @abstractmethod
     def _data_ref(self) -> Any:
@@ -262,20 +262,14 @@ class Image(metaclass=ABCMeta):
 
 
 class EagerImage(Image):
-    def __init__(
-        self,
-        data: np.ndarray,
-        path: Optional[Path] = None,
-        meta: Optional[pd.Series] = None,
-    ):
+    def __init__(self, data: np.ndarray, meta: Optional[pd.Series] = None, **kwargs):
         """Create a new image.
 
         Args:
             data (np.ndarray): The image data
-            path (Optional[Path]): Path to the image
             meta (Optional[pd.Series]): Meta attributes of this image
         """
-        super().__init__(path, meta)
+        super().__init__(meta, **kwargs)
         self._data = _unify_dtypes(data)
         self._data.setflags(write=False)
 
@@ -327,20 +321,14 @@ class LazyImage(Image):
         def load(self) -> np.ndarray:
             return self._load(self._load_fn, tuple(self._checks))
 
-    def __init__(
-        self,
-        data: LazyData,
-        path: Optional[Path] = None,
-        meta: Optional[pd.Series] = None,
-    ):
+    def __init__(self, data: LazyData, meta: Optional[pd.Series] = None, **kwargs):
         """Create a new image.
 
         Args:
             data (LazyData): The lazy loaded image data
-            path (Optional[Path]): Path to the image
             meta (Optional[pd.Series]): Meta attributes of this image
         """
-        super().__init__(path, meta)
+        super().__init__(meta, **kwargs)
         self._data = data
 
         # make sure that data types are correctly handled after loading the data
