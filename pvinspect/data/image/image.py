@@ -214,10 +214,11 @@ class Image(metaclass=ABCMeta):
         """List avaliable meta keys"""
         return list(self._meta.index)
 
-    def meta_from_path(
+    def meta_from_meta(
         self: TImage,
         pattern: str,
-        key: str,
+        source_key: str,
+        target_key: str,
         target_type: Type,
         group_n: int = 0,
         transform: Callable[[Any], Any] = None,
@@ -227,7 +228,8 @@ class Image(metaclass=ABCMeta):
 
         Args:
             pattern (str): Regular expression used to parse meta
-            key (str): Key of the meta attribute
+            source_key (str): Key of the source meta attribute
+            target_key (str): Key of the target meta attribute
             target_type (Type): Result is converted to this datatype
             group_n (int): Index of matching group
             transform (Callable[[Any], Any]): Optional function that is applied on the value
@@ -236,13 +238,13 @@ class Image(metaclass=ABCMeta):
         Returns:
             image (Image): Resulting Image
         """
-        s = str(self.path.absolute())
+        s = str(self.get_meta(source_key).absolute())
         res = re.search(pattern, s)
         v = res.group(group_n)
         if transform is not None:
             v = transform(v)
         v = target_type(v)
-        return self.from_self(meta={key: v})
+        return self.from_self(meta={target_key: v})
 
     def meta_from_fn(self: TImage, fn: Callable[[Image], Dict[str, Any]]) -> TImage:
         """Extract meta data using given callable
