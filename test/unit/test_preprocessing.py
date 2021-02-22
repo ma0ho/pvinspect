@@ -1,13 +1,15 @@
+from test.utilities import assert_equal
+
+import cv2
+import numpy as np
+from pvinspect.data import datasets
 from pvinspect.data.image import *
+from pvinspect.data.io import save_image
 from pvinspect.preproc.calibration import *
 from pvinspect.preproc.calibration import _calibrate_flatfield, _compensate_flatfield
 from pvinspect.preproc.stitching import *
-from pvinspect.data import datasets
-import numpy as np
 from skimage.exposure import rescale_intensity
 from skimage.metrics import structural_similarity
-from test.utilities import assert_equal
-import cv2
 
 
 def _prepare_ff_data():
@@ -48,16 +50,13 @@ def _make_image_seq(imgs):
 
 
 def _prepare_stitching_test_img():
-    image = datasets.poly10x6(1)[0].data
+    image = datasets.poly10x6(1)[0].data.T[:, :1930]
     height = image.shape[0]
     width = image.shape[1]
 
-    img0 = Image(image[0 : int(height * 2 // 3)])
-    img1 = Image(image[int(height // 3) :])
-
-    img2 = Image(image[:, 0 : int(width * 2 // 3)])
-    img3 = Image(image[:, int(width // 3) :])
-    return (img0, img1, img2, img3, image)
+    img0 = Image(image[600:, 0 : int(width * 2 // 3)])
+    img1 = Image(image[600:, int(width // 3) :])
+    return img0, img1
 
 
 def test_calibrate_flatfield_linear():
@@ -227,27 +226,11 @@ def test_flatfield_sequences_input():
 
 
 def test_stitching():
-    (
-        image_ver0,
-        image_ver1,
-        image_hor0,
-        image_hor1,
-        image,
-    ) = _prepare_stitching_test_img()
-    images_ver = (image_ver0, image_ver1)
-    images_hor = (image_hor0, image_hor1)
+    (image_0, image_1,) = _prepare_stitching_test_img()
+    images = (image_0, image_1)
 
-    height = image.shape[0]
-    width = image.shape[1]
-
-    stitched_ver = stitch_images(images_ver).data
-    stitched_hor = stitch_images(images_hor).data
-
-    test_stitched_ver = stitched_ver[:height]
-    test_stitched_hor = stitched_hor[:, :width]
-
-    score_hor = structural_similarity(image, test_stitched_hor)
-    score_ver = structural_similarity(image, test_stitched_ver)
-
-    assert score_hor > 0.8
-    assert score_ver > 0.8
+    # test stitching and check size of result
+    stitched = locate_and_stitch_modules(
+        ImageSequence(images, True), 6, 6, 2, overlap_horizontal=2
+    )
+    assert_equal(stitched.shape[1] / stitched.shape[0], 10 / 6, precision=0.05)

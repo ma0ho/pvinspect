@@ -1,24 +1,26 @@
 """Detection, localization and segmentation of solar modules"""
 
-from pvinspect.preproc._mdetect.locate import apply
+import logging
+from copy import deepcopy
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy as np
+from pvinspect.common._ipy_exit import exit
 from pvinspect.common.transform import (
-    HomographyTransform,
-    warp_image,
     FullMultiTransform,
     FullTransform,
+    HomographyTransform,
+    warp_image,
 )
+from pvinspect.data.exceptions import UnsupportedModalityException
 from pvinspect.data.image import *
 from pvinspect.data.image import _sequence
-from pvinspect.data.exceptions import UnsupportedModalityException
 from pvinspect.data.io import ObjectAnnotations
-from typing import Union, List, Optional, Dict, Tuple
-from tqdm.auto import tqdm
-from copy import deepcopy
-import logging
-from pvinspect.common._ipy_exit import exit
-import numpy as np
-from skimage import measure, filters, morphology, transform
+from pvinspect.preproc._mdetect.locate import apply
 from shapely.geometry import Polygon
+from skimage import filters, measure, morphology, transform
+from skimage.filters.thresholding import threshold_otsu
+from tqdm.auto import tqdm
 
 
 @_sequence
@@ -57,8 +59,14 @@ def locate_module_and_cells(
     flags = list()
     transforms = list()
     for img in tqdm(sequence.images):
+
+        # very simple background suppression
+        data = img.data.copy()
+        thresh = threshold_otsu(data)
+        data[data < thresh] = 0
+
         t, mc, dt, f = apply(
-            img.data,
+            data,
             img.cols,
             img.rows,
             is_module_detail=isinstance(img, PartialModuleImage),
@@ -159,7 +167,7 @@ def locate_module_and_cells(
 
 
 def segment_module_part(
-    image: ModuleImage,
+    image: Image,
     first_col: int,
     first_row: int,
     cols: int,
@@ -170,7 +178,7 @@ def segment_module_part(
     """Segment a part of a module
 
     Args:
-        image (ModuleImage): The corresponding module image
+        image (Image): The corresponding image
         first_col (int): First column to appear in the segment
         first_row (int): First row to appear in the segment
         cols (int): Number of columns of the segment
