@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+### Fixed
+
+* Revert to detection-based stitching, since feature-based stitching turned out instable
+
 ## 0.4.0
 
 ### New
