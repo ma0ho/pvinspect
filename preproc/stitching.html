@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>pvinspect.preproc.stitching API documentation</title>
-<meta name="description" content="Stitching of two images of same size" />
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,210 +22,190 @@
 <h1 class="title">Module <code>pvinspect.preproc.stitching</code></h1>
 </header>
 <section id="section-intro">
-<p>Stitching of two images of same size</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Stitching of two images of same size&#34;&#34;&#34;
-import numpy as np
-from pvinspect.data.image import *
-from typing import List, Tuple
-import cv2
-from skimage.exposure import rescale_intensity
-
-UP = 0
-DOWN = 1
-LEFT = 2
-RIGHT = 3
+<pre><code class="python">import numpy as np
+from pvinspect.data import ModuleImage, ModuleImageSequence
+from pvinspect.data.image import Image, ImageSequence, Modality
+from pvinspect.preproc.detection import locate_module_and_cells, segment_module_part
 
 
-def distinguish_direction(
-    img: np.ndarray,
-    kps0: np.ndarray,
-    kps1: np.ndarray,
-    matches: List[Tuple[int, int]],
-    status: np.ndarray,
-) -&gt; int:
-    &#34;&#34;&#34;Find out the direction relationship between input images
-
-        Args:
-            img(np.ndarray): Input image that would be processed(considering that two image of the same size)
-            kps0(np.ndarray): The obtained keypoints for the first image
-            kps1(np.ndarray): The obtained keypoints for the second image
-            matches(List[Tuple[int, int]]): The matches for all matched keypoints pairs
-            status(np.ndarray): Showing if each keypoints would be regarded as correctly matched
-        Returns:
-            direction: The direction relationship between two images. From 1 - 4 means image1 (kps1) is Up/Down/Left/Right to image0 (kps0)
-        &#34;&#34;&#34;
-    # initialize the vote array which would be used to store the direction
-    vote = [0, 0, 0, 0]
-
-    (height, width) = img.shape[:2]
-    threshold_height = height // 10
-    threshold_width = width // 10
-
-    # loop over the matches
-    for ((trainIdx, queryIdx), s) in zip(matches, status):
-        # only process the match if the keypoint was successfully matched
-        if s == 1:
-            # img0 drew right and img1 left
-            pixel0 = (int(kps0[queryIdx][0] + width), int(kps0[queryIdx][1]))
-            pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
-            if np.abs(pixel1[1] - pixel0[1]) &gt; threshold_height:
-                if pixel1[1] &gt; pixel0[1]:
-                    vote[0] = vote[0] + 1
-                else:
-                    vote[1] = vote[1] + 1
-
-    for ((trainIdx, queryIdx), s) in zip(matches, status):
-        # only process the match if the keypoint was successfully matched
-        if s == 1:
-            # img0 drew down and img1 drew up
-            pixel0 = (int(kps0[queryIdx][0]), int(kps0[queryIdx][1] + height))
-            pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
-            if np.abs(pixel1[0] - pixel0[0]) &gt; threshold_width:
-                if pixel1[0] &gt; pixel0[0]:
-                    vote[2] = vote[2] + 1
-                else:
-                    vote[3] = vote[3] + 1
-    return np.argmax(vote)
-
-
-def detect_and_describe(image: np.ndarray) -&gt; Tuple[np.ndarray, np.ndarray]:
-    &#34;&#34;&#34;Calculate the keypoints and correspondent features
-
-        Args:
-            image(np.ndarray): Input image that would be calculated
-        Returns:
-            kps: The keypoints calculated
-            features: Correspondent features(1 x 128) for each keypoints
-        &#34;&#34;&#34;
-    # descriptor = cv2.xfeatures2d.SIFT_create()
-    descriptor = cv2.ORB_create()
-    image = rescale_intensity(image, out_range=np.uint8).astype(np.uint8)
-    # image = np.expand_dims(image, -1)
-    # image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    # plt.imshow(image)
-    # plt.show()
-    (kps, features) = descriptor.detectAndCompute(image, None)
-    kps = np.float32([kp.pt for kp in kps])
-
-    return (kps, features)
-
-
-def match_keypoints(
-    kps0: np.ndarray,
-    kps1: np.ndarray,
-    features0: np.ndarray,
-    features1: np.ndarray,
-    ratio: float = 0.55,
-    reproj_thresh: float = 4.0,
-) -&gt; Tuple[List[Tuple[int, int]], np.ndarray, np.ndarray]:
-    &#34;&#34;&#34;To match the keypoints
-
-        Args:
-            kps0(np.ndarray): The obtained keypoints for the first image
-            kps1(np.ndarray): The obtained keypoints for the second image
-            features0(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 0
-            features1(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 1
-            ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
-            reproj_thresh(float): A parameter used in calculate the homography matrix
-        Returns:
-            matches: The matches for all matched keypoints pairs
-            H: Homography matrix
-            status: Showing if each keypoints would be regarded as correctly matched
-        &#34;&#34;&#34;
-    # compute the raw matches and initialize the list of actual matches
-    # use BruteForce and k-NearestNeighbor to match
-    matcher = cv2.DescriptorMatcher_create(&#34;BruteForce&#34;)
-    # set k to 2
-    raw_matches = matcher.knnMatch(features0, features1, 2)
-
-    # only select those matches that meet the requirement
-    matches = []
-    # loop over the raw matches
-    for m in raw_matches:
-        # ensure the distance is within a certain ratio of each other (i.e. Lowe&#39;s ratio test)
-        if len(m) == 2 and m[0].distance &lt; m[1].distance * ratio:
-            matches.append((m[0].trainIdx, m[0].queryIdx))
-
-    # computing a homography requires at least 4 matches
-    if len(matches) &gt; 4:
-        # construct the two sets of points
-        pts0 = np.float32([kps0[i] for (_, i) in matches])
-        pts1 = np.float32([kps1[i] for (i, _) in matches])
-        # compute the homography between the two sets of points
-        # with RANSAC it would find the optimum homography matrix
-        (H, status) = cv2.findHomography(pts0, pts1, cv2.RANSAC, reproj_thresh)
-        # return the matches along with the homograpy matrix and status of each matched point
-        return (matches, H, status)
-    # otherwise, no homograpy could be computed
-    print(&#34;no matches&#34;)
-    return None
-
-
-def stitch_images(
-    images: Tuple[Image, Image], ratio: float = 0.55, reproj_thresh: float = 4.0
+def _stitch_two(
+    img1: Image, img2: Image, cell_size: int, overlap: int, direction: str
 ) -&gt; Image:
-    &#34;&#34;&#34;Applies stitching to a pair of partial images of a solar module.
-
-        Args:
-            images (Tuple[Image, Image]): Pair of images that should be stitched together
-            ratio (float): This parameter controls the amount and quality of the matched keypoints pairs
-            reproj_thresh (float): This parameter is used in calculating the homography matrix
-        Returns:
-            result: Stitched image
-    &#34;&#34;&#34;
-    # unpack the images, then detect keypoints and extract
-    # local invariant descriptors from them
-    img1 = images[0].data
-    img0 = images[1].data
-
-    # To calculate the features
-    (kps0, features0) = detect_and_describe(img0)
-    (kps1, features1) = detect_and_describe(img1)
-
-    # match features between the two images
-    M = match_keypoints(kps0, kps1, features0, features1, ratio, reproj_thresh)
-
-    # if the match is None, then there aren&#39;t enough matched keypoints to create a panorama
-    if M is None:
-        return None
-
-    # otherwise, apply a perspective warp to stitch the images together
-    (matches, H, status) = M
-
-    # distinguish the direction and to apply corresponding stitching
-    direction = distinguish_direction(img0, kps0, kps1, matches, status)
-    if direction == UP:
-        result = cv2.warpPerspective(
-            img0, H, (img0.shape[1], img1.shape[0] + img0.shape[0])
+    if direction == &#34;hor&#34;:
+        img1 = segment_module_part(
+            img1,
+            0,
+            0,
+            img1.get_meta(&#34;cols&#34;) - (overlap // 2),
+            img1.get_meta(&#34;rows&#34;),
+            cell_size,
         )
-        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
-    elif direction == DOWN:
-        # For Down direction it is required to transform it into Up direction
-        M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
-        H = M[1]
-        result = cv2.warpPerspective(
-            img1, H, (img1.shape[1], img1.shape[0] + img0.shape[0])
+        img2 = segment_module_part(
+            img2,
+            overlap // 2,
+            0,
+            img2.get_meta(&#34;cols&#34;) - (overlap // 2),
+            img2.get_meta(&#34;rows&#34;),
+            cell_size,
         )
-        result[0 : img1.shape[0], 0 : img0.shape[1]] = img0
-    elif direction == LEFT:
-        result = cv2.warpPerspective(
-            img0, H, (img0.shape[1] + img1.shape[1], img0.shape[0])
+        return img1.from_self(
+            data=np.concatenate([img1.data, img2.data], axis=1),
+            meta=dict(cols=img1.get_meta(&#34;cols&#34;) + img2.get_meta(&#34;cols&#34;) - overlap),
         )
-        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
     else:
-        # For Right direction it is required to transform it into Left direction
-        M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
-        H = M[1]
-        result = cv2.warpPerspective(
-            img1, H, (img0.shape[1] + img1.shape[1], img1.shape[0])
+        img1 = segment_module_part(
+            img1,
+            0,
+            0,
+            img1.get_meta(&#34;cols&#34;),
+            img1.get_meta(&#34;rows&#34;) - (overlap // 2),
+            cell_size,
         )
-        result[0 : img0.shape[0], 0 : img0.shape[1]] = img0
+        img2 = segment_module_part(
+            img2,
+            0,
+            overlap // 2,
+            img2.get_meta(&#34;cols&#34;),
+            img2.get_meta(&#34;rows&#34;) - (overlap // 2),
+            cell_size,
+        )
+        return img1.from_self(
+            data=np.concatenate([img1.data, img2.data], axis=0),
+            meta=dict(rows=img1.get_meta(&#34;rows&#34;) + img2.get_meta(&#34;rows&#34;) - overlap),
+        )
 
-    return Image.from_other(images[0], data=result)</code></pre>
+
+def _scale_median_brightness(x: np.ndarray, target: float) -&gt; np.ndarray:
+    source = np.median(x)
+    return (x * (target / source)).astype(x.dtype)
+
+
+def stitch_modules(
+    images: ImageSequence,
+    n_horizontal: int = 1,
+    n_vertical: int = 1,
+    overlap_horizontal: int = 0,
+    overlap_vertical: int = 0,
+    equalize_intensity: bool = False,
+) -&gt; Image:
+    &#34;&#34;&#34;Locate and stitch partial recordings of a module
+
+    Args:
+        images (ImageSequence): Partial recordings to be stitched together (needs to be order left -&gt; right / top -&gt; bottom)
+        n_horizontal (int): Number of partial recordings in horizontal direction
+        n_vertical (int): Number of partial recordings in vertical direction
+        overlap_horizontal (int): Number of fully visible cells that overlap between any two partial recordings
+            in horizontal direction
+        overlap_vertical (int): Number of fully visible cells that overlap between any two partial recordings
+            in vertical direction
+        equalize_intenity (bool): Match the median intensity of every partial recording to the median intensity of the first
+
+    Returns:
+        image (Image): The stitched image
+    &#34;&#34;&#34;
+
+    if n_horizontal &lt; 1 or n_vertical &lt; 1:
+        raise RuntimeError(
+            &#34;Number of images for stitching must not be smaller than 1 in any direction&#34;
+        )
+
+    if n_horizontal &gt; 2 or n_vertical &gt; 2:
+        raise NotImplementedError(
+            &#34;Stitching is only implemented for configurations 1x2, 2x1 and 2x2&#34;
+        )
+
+    if overlap_horizontal &lt; 0 or overlap_vertical &lt; 0:
+        raise RuntimeError(&#34;Invalid overlap&#34;)
+
+    if overlap_horizontal % 2 != 0 or overlap_vertical % 2 != 0:
+        raise NotImplementedError(&#34;Stitching is only implemented for even overlap&#34;)
+
+    # determine spacing based on first image
+    t = images[0].get_meta(&#34;transform&#34;)
+    cell_size = np.linalg.norm(
+        t(np.array([[1.0, 1.0]]))[0] - t(np.array([[0.0, 0.0]]))[0]
+    )
+
+    # equalize brightness if set
+    if equalize_intensity:
+        ref = np.median(images[0].data)  # use the first image as reference
+        images = images.apply_image_data(_scale_median_brightness, target=ref)
+
+    # stitch
+    if n_horizontal == 1 and n_vertical == 1:
+        return images[0]
+    elif n_horizontal == 2 and n_vertical == 1:
+        return _stitch_two(images[0], images[1], cell_size, overlap_horizontal, &#34;hor&#34;)
+    elif n_horizontal == 1 and n_vertical == 2:
+        return _stitch_two(images[0], images[1], cell_size, overlap_vertical, &#34;ver&#34;)
+    else:  # n_horizontal == 2 and n_vertical == 2
+        row1 = _stitch_two(images[0], images[1], cell_size, overlap_horizontal, &#34;hor&#34;)
+        row2 = _stitch_two(images[2], images[3], cell_size, overlap_horizontal, &#34;hor&#34;)
+        return row1.from_self(
+            data=np.concatenate([row1.data, row2.data], axis=0),
+            meta=dict(rows=row1.get_meta(&#34;rows&#34;) + row2.get_meta(&#34;rows&#34;)),
+        )
+
+
+# def locate_and_stitch_modules(images: ImageSequence, n_horizontal: int = 1, )
+def locate_and_stitch_modules(
+    images: ImageSequence,
+    rows: int,
+    cols: int,
+    n_horizontal: int = 1,
+    n_vertical: int = 1,
+    overlap_horizontal: int = 0,
+    overlap_vertical: int = 0,
+    equalize_intensity: bool = False,
+) -&gt; Image:
+    &#34;&#34;&#34;Locate and stitch partial recordings of a module
+
+    This method applies localization of modules followed by stitching. It relies on an exact specification
+    of the visible module geometry (by means of rows, cols, n_horizontal, n_vertical, overlap_horizontal,
+    overlap_vertical). Furthermore images need to be given in the specified order.
+
+    This method optionally provides adaptation of intensities of the partial recordings. This is turned off
+    by default, since it changes the original intensities, which might be undesirable in some cases.
+
+    Args:
+        images (ImageSequence): Partial recordings to be stitched together (needs to be order left -&gt; right / top -&gt; bottom)
+        rows (int): Number of fully visible rows of cells in every partial recording
+        cols (int): Number of fully visible columns of cells in every partial recording
+        n_horizontal (int): Number of partial recordings in horizontal direction
+        n_vertical (int): Number of partial recordings in vertical direction
+        overlap_horizontal (int): Number of fully visible cells that overlap between any two partial recordings
+            in horizontal direction
+        overlap_vertical (int): Number of fully visible cells that overlap between any two partial recordings
+            in vertical direction
+        equalize_intensity (bool): Match the median intensity of every partial recording to the median intensity of the first
+
+    Returns:
+        image (Image): The stitched image
+    &#34;&#34;&#34;
+
+    modimages = ModuleImageSequence(
+        [
+            ModuleImage(x.data, modality=Modality.EL_IMAGE, cols=cols, rows=rows)
+            for x in images
+        ]
+    )
+
+    # locate
+    modimages = locate_module_and_cells(modimages, orientation=&#34;horizontal&#34;)
+
+    # stitch
+    return stitch_modules(
+        modimages,
+        n_horizontal,
+        n_vertical,
+        overlap_horizontal,
+        overlap_vertical,
+        equalize_intensity,
+    )</code></pre>
 </details>
 </section>
 <section>
@@ -235,278 +215,192 @@ def stitch_images(
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pvinspect.preproc.stitching.detect_and_describe"><code class="name flex">
-<span>def <span class="ident">detect_and_describe</span></span>(<span>image: numpy.ndarray) ‑> Tuple[numpy.ndarray, numpy.ndarray]</span>
+<dt id="pvinspect.preproc.stitching.locate_and_stitch_modules"><code class="name flex">
+<span>def <span class="ident">locate_and_stitch_modules</span></span>(<span>images: <a title="pvinspect.data.image.ImageSequence" href="../data/image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, rows: int, cols: int, n_horizontal: int = 1, n_vertical: int = 1, overlap_horizontal: int = 0, overlap_vertical: int = 0, equalize_intensity: bool = False) ‑> <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Calculate the keypoints and correspondent features</p>
-<h2 id="args">Args</h2>
-<p>image(np.ndarray): Input image that would be calculated</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>kps</code></dt>
-<dd>The keypoints calculated</dd>
-<dt><code>features</code></dt>
-<dd>Correspondent features(1 x 128) for each keypoints</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def detect_and_describe(image: np.ndarray) -&gt; Tuple[np.ndarray, np.ndarray]:
-    &#34;&#34;&#34;Calculate the keypoints and correspondent features
-
-        Args:
-            image(np.ndarray): Input image that would be calculated
-        Returns:
-            kps: The keypoints calculated
-            features: Correspondent features(1 x 128) for each keypoints
-        &#34;&#34;&#34;
-    # descriptor = cv2.xfeatures2d.SIFT_create()
-    descriptor = cv2.ORB_create()
-    image = rescale_intensity(image, out_range=np.uint8).astype(np.uint8)
-    # image = np.expand_dims(image, -1)
-    # image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    # plt.imshow(image)
-    # plt.show()
-    (kps, features) = descriptor.detectAndCompute(image, None)
-    kps = np.float32([kp.pt for kp in kps])
-
-    return (kps, features)</code></pre>
-</details>
-</dd>
-<dt id="pvinspect.preproc.stitching.distinguish_direction"><code class="name flex">
-<span>def <span class="ident">distinguish_direction</span></span>(<span>img: numpy.ndarray, kps0: numpy.ndarray, kps1: numpy.ndarray, matches: List[Tuple[int, int]], status: numpy.ndarray) ‑> int</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Find out the direction relationship between input images</p>
-<h2 id="args">Args</h2>
-<p>img(np.ndarray): Input image that would be processed(considering that two image of the same size)
-kps0(np.ndarray): The obtained keypoints for the first image
-kps1(np.ndarray): The obtained keypoints for the second image
-matches(List[Tuple[int, int]]): The matches for all matched keypoints pairs
-status(np.ndarray): Showing if each keypoints would be regarded as correctly matched</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>direction</code></dt>
-<dd>The direction relationship between two images. From 1 - 4 means image1 (kps1) is Up/Down/Left/Right to image0 (kps0)</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def distinguish_direction(
-    img: np.ndarray,
-    kps0: np.ndarray,
-    kps1: np.ndarray,
-    matches: List[Tuple[int, int]],
-    status: np.ndarray,
-) -&gt; int:
-    &#34;&#34;&#34;Find out the direction relationship between input images
-
-        Args:
-            img(np.ndarray): Input image that would be processed(considering that two image of the same size)
-            kps0(np.ndarray): The obtained keypoints for the first image
-            kps1(np.ndarray): The obtained keypoints for the second image
-            matches(List[Tuple[int, int]]): The matches for all matched keypoints pairs
-            status(np.ndarray): Showing if each keypoints would be regarded as correctly matched
-        Returns:
-            direction: The direction relationship between two images. From 1 - 4 means image1 (kps1) is Up/Down/Left/Right to image0 (kps0)
-        &#34;&#34;&#34;
-    # initialize the vote array which would be used to store the direction
-    vote = [0, 0, 0, 0]
-
-    (height, width) = img.shape[:2]
-    threshold_height = height // 10
-    threshold_width = width // 10
-
-    # loop over the matches
-    for ((trainIdx, queryIdx), s) in zip(matches, status):
-        # only process the match if the keypoint was successfully matched
-        if s == 1:
-            # img0 drew right and img1 left
-            pixel0 = (int(kps0[queryIdx][0] + width), int(kps0[queryIdx][1]))
-            pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
-            if np.abs(pixel1[1] - pixel0[1]) &gt; threshold_height:
-                if pixel1[1] &gt; pixel0[1]:
-                    vote[0] = vote[0] + 1
-                else:
-                    vote[1] = vote[1] + 1
-
-    for ((trainIdx, queryIdx), s) in zip(matches, status):
-        # only process the match if the keypoint was successfully matched
-        if s == 1:
-            # img0 drew down and img1 drew up
-            pixel0 = (int(kps0[queryIdx][0]), int(kps0[queryIdx][1] + height))
-            pixel1 = (int(kps1[trainIdx][0]), int(kps1[trainIdx][1]))
-            if np.abs(pixel1[0] - pixel0[0]) &gt; threshold_width:
-                if pixel1[0] &gt; pixel0[0]:
-                    vote[2] = vote[2] + 1
-                else:
-                    vote[3] = vote[3] + 1
-    return np.argmax(vote)</code></pre>
-</details>
-</dd>
-<dt id="pvinspect.preproc.stitching.match_keypoints"><code class="name flex">
-<span>def <span class="ident">match_keypoints</span></span>(<span>kps0: numpy.ndarray, kps1: numpy.ndarray, features0: numpy.ndarray, features1: numpy.ndarray, ratio: float = 0.55, reproj_thresh: float = 4.0) ‑> Tuple[List[Tuple[int, int]], numpy.ndarray, numpy.ndarray]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>To match the keypoints</p>
-<h2 id="args">Args</h2>
-<p>kps0(np.ndarray): The obtained keypoints for the first image
-kps1(np.ndarray): The obtained keypoints for the second image
-features0(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 0
-features1(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 1
-ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
-reproj_thresh(float): A parameter used in calculate the homography matrix</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>matches</code></dt>
-<dd>The matches for all matched keypoints pairs</dd>
-<dt><code>H</code></dt>
-<dd>Homography matrix</dd>
-<dt><code>status</code></dt>
-<dd>Showing if each keypoints would be regarded as correctly matched</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def match_keypoints(
-    kps0: np.ndarray,
-    kps1: np.ndarray,
-    features0: np.ndarray,
-    features1: np.ndarray,
-    ratio: float = 0.55,
-    reproj_thresh: float = 4.0,
-) -&gt; Tuple[List[Tuple[int, int]], np.ndarray, np.ndarray]:
-    &#34;&#34;&#34;To match the keypoints
-
-        Args:
-            kps0(np.ndarray): The obtained keypoints for the first image
-            kps1(np.ndarray): The obtained keypoints for the second image
-            features0(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 0
-            features1(np.ndarray): Correspondent features(1 x 128) for each keypoints in image 1
-            ratio(float): A parameter to control the amount and quality of the matched keypoints pairs
-            reproj_thresh(float): A parameter used in calculate the homography matrix
-        Returns:
-            matches: The matches for all matched keypoints pairs
-            H: Homography matrix
-            status: Showing if each keypoints would be regarded as correctly matched
-        &#34;&#34;&#34;
-    # compute the raw matches and initialize the list of actual matches
-    # use BruteForce and k-NearestNeighbor to match
-    matcher = cv2.DescriptorMatcher_create(&#34;BruteForce&#34;)
-    # set k to 2
-    raw_matches = matcher.knnMatch(features0, features1, 2)
-
-    # only select those matches that meet the requirement
-    matches = []
-    # loop over the raw matches
-    for m in raw_matches:
-        # ensure the distance is within a certain ratio of each other (i.e. Lowe&#39;s ratio test)
-        if len(m) == 2 and m[0].distance &lt; m[1].distance * ratio:
-            matches.append((m[0].trainIdx, m[0].queryIdx))
-
-    # computing a homography requires at least 4 matches
-    if len(matches) &gt; 4:
-        # construct the two sets of points
-        pts0 = np.float32([kps0[i] for (_, i) in matches])
-        pts1 = np.float32([kps1[i] for (i, _) in matches])
-        # compute the homography between the two sets of points
-        # with RANSAC it would find the optimum homography matrix
-        (H, status) = cv2.findHomography(pts0, pts1, cv2.RANSAC, reproj_thresh)
-        # return the matches along with the homograpy matrix and status of each matched point
-        return (matches, H, status)
-    # otherwise, no homograpy could be computed
-    print(&#34;no matches&#34;)
-    return None</code></pre>
-</details>
-</dd>
-<dt id="pvinspect.preproc.stitching.stitch_images"><code class="name flex">
-<span>def <span class="ident">stitch_images</span></span>(<span>images: Tuple[<a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>, <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>], ratio: float = 0.55, reproj_thresh: float = 4.0) ‑> <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Applies stitching to a pair of partial images of a solar module.</p>
+<div class="desc"><p>Locate and stitch partial recordings of a module</p>
+<p>This method applies localization of modules followed by stitching. It relies on an exact specification
+of the visible module geometry (by means of rows, cols, n_horizontal, n_vertical, overlap_horizontal,
+overlap_vertical). Furthermore images need to be given in the specified order.</p>
+<p>This method optionally provides adaptation of intensities of the partial recordings. This is turned off
+by default, since it changes the original intensities, which might be undesirable in some cases.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>images</code></strong> :&ensp;<code>Tuple[Image, Image]</code></dt>
-<dd>Pair of images that should be stitched together</dd>
-<dt><strong><code>ratio</code></strong> :&ensp;<code>float</code></dt>
-<dd>This parameter controls the amount and quality of the matched keypoints pairs</dd>
-<dt><strong><code>reproj_thresh</code></strong> :&ensp;<code>float</code></dt>
-<dd>This parameter is used in calculating the homography matrix</dd>
+<dt><strong><code>images</code></strong> :&ensp;<code>ImageSequence</code></dt>
+<dd>Partial recordings to be stitched together (needs to be order left -&gt; right / top -&gt; bottom)</dd>
+<dt><strong><code>rows</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of fully visible rows of cells in every partial recording</dd>
+<dt><strong><code>cols</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of fully visible columns of cells in every partial recording</dd>
+<dt><strong><code>n_horizontal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of partial recordings in horizontal direction</dd>
+<dt><strong><code>n_vertical</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of partial recordings in vertical direction</dd>
+<dt><strong><code>overlap_horizontal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of fully visible cells that overlap between any two partial recordings
+in horizontal direction</dd>
+<dt><strong><code>overlap_vertical</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of fully visible cells that overlap between any two partial recordings
+in vertical direction</dd>
+<dt><strong><code>equalize_intensity</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Match the median intensity of every partial recording to the median intensity of the first</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>result</code></dt>
-<dd>Stitched image</dd>
-</dl></div>
+<p>image (Image): The stitched image</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def stitch_images(
-    images: Tuple[Image, Image], ratio: float = 0.55, reproj_thresh: float = 4.0
+<pre><code class="python">def locate_and_stitch_modules(
+    images: ImageSequence,
+    rows: int,
+    cols: int,
+    n_horizontal: int = 1,
+    n_vertical: int = 1,
+    overlap_horizontal: int = 0,
+    overlap_vertical: int = 0,
+    equalize_intensity: bool = False,
 ) -&gt; Image:
-    &#34;&#34;&#34;Applies stitching to a pair of partial images of a solar module.
+    &#34;&#34;&#34;Locate and stitch partial recordings of a module
 
-        Args:
-            images (Tuple[Image, Image]): Pair of images that should be stitched together
-            ratio (float): This parameter controls the amount and quality of the matched keypoints pairs
-            reproj_thresh (float): This parameter is used in calculating the homography matrix
-        Returns:
-            result: Stitched image
+    This method applies localization of modules followed by stitching. It relies on an exact specification
+    of the visible module geometry (by means of rows, cols, n_horizontal, n_vertical, overlap_horizontal,
+    overlap_vertical). Furthermore images need to be given in the specified order.
+
+    This method optionally provides adaptation of intensities of the partial recordings. This is turned off
+    by default, since it changes the original intensities, which might be undesirable in some cases.
+
+    Args:
+        images (ImageSequence): Partial recordings to be stitched together (needs to be order left -&gt; right / top -&gt; bottom)
+        rows (int): Number of fully visible rows of cells in every partial recording
+        cols (int): Number of fully visible columns of cells in every partial recording
+        n_horizontal (int): Number of partial recordings in horizontal direction
+        n_vertical (int): Number of partial recordings in vertical direction
+        overlap_horizontal (int): Number of fully visible cells that overlap between any two partial recordings
+            in horizontal direction
+        overlap_vertical (int): Number of fully visible cells that overlap between any two partial recordings
+            in vertical direction
+        equalize_intensity (bool): Match the median intensity of every partial recording to the median intensity of the first
+
+    Returns:
+        image (Image): The stitched image
     &#34;&#34;&#34;
-    # unpack the images, then detect keypoints and extract
-    # local invariant descriptors from them
-    img1 = images[0].data
-    img0 = images[1].data
 
-    # To calculate the features
-    (kps0, features0) = detect_and_describe(img0)
-    (kps1, features1) = detect_and_describe(img1)
+    modimages = ModuleImageSequence(
+        [
+            ModuleImage(x.data, modality=Modality.EL_IMAGE, cols=cols, rows=rows)
+            for x in images
+        ]
+    )
 
-    # match features between the two images
-    M = match_keypoints(kps0, kps1, features0, features1, ratio, reproj_thresh)
+    # locate
+    modimages = locate_module_and_cells(modimages, orientation=&#34;horizontal&#34;)
 
-    # if the match is None, then there aren&#39;t enough matched keypoints to create a panorama
-    if M is None:
-        return None
+    # stitch
+    return stitch_modules(
+        modimages,
+        n_horizontal,
+        n_vertical,
+        overlap_horizontal,
+        overlap_vertical,
+        equalize_intensity,
+    )</code></pre>
+</details>
+</dd>
+<dt id="pvinspect.preproc.stitching.stitch_modules"><code class="name flex">
+<span>def <span class="ident">stitch_modules</span></span>(<span>images: <a title="pvinspect.data.image.ImageSequence" href="../data/image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, n_horizontal: int = 1, n_vertical: int = 1, overlap_horizontal: int = 0, overlap_vertical: int = 0, equalize_intensity: bool = False) ‑> <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Locate and stitch partial recordings of a module</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code>ImageSequence</code></dt>
+<dd>Partial recordings to be stitched together (needs to be order left -&gt; right / top -&gt; bottom)</dd>
+<dt><strong><code>n_horizontal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of partial recordings in horizontal direction</dd>
+<dt><strong><code>n_vertical</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of partial recordings in vertical direction</dd>
+<dt><strong><code>overlap_horizontal</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of fully visible cells that overlap between any two partial recordings
+in horizontal direction</dd>
+<dt><strong><code>overlap_vertical</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of fully visible cells that overlap between any two partial recordings
+in vertical direction</dd>
+<dt><strong><code>equalize_intenity</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Match the median intensity of every partial recording to the median intensity of the first</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>image (Image): The stitched image</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stitch_modules(
+    images: ImageSequence,
+    n_horizontal: int = 1,
+    n_vertical: int = 1,
+    overlap_horizontal: int = 0,
+    overlap_vertical: int = 0,
+    equalize_intensity: bool = False,
+) -&gt; Image:
+    &#34;&#34;&#34;Locate and stitch partial recordings of a module
 
-    # otherwise, apply a perspective warp to stitch the images together
-    (matches, H, status) = M
+    Args:
+        images (ImageSequence): Partial recordings to be stitched together (needs to be order left -&gt; right / top -&gt; bottom)
+        n_horizontal (int): Number of partial recordings in horizontal direction
+        n_vertical (int): Number of partial recordings in vertical direction
+        overlap_horizontal (int): Number of fully visible cells that overlap between any two partial recordings
+            in horizontal direction
+        overlap_vertical (int): Number of fully visible cells that overlap between any two partial recordings
+            in vertical direction
+        equalize_intenity (bool): Match the median intensity of every partial recording to the median intensity of the first
 
-    # distinguish the direction and to apply corresponding stitching
-    direction = distinguish_direction(img0, kps0, kps1, matches, status)
-    if direction == UP:
-        result = cv2.warpPerspective(
-            img0, H, (img0.shape[1], img1.shape[0] + img0.shape[0])
+    Returns:
+        image (Image): The stitched image
+    &#34;&#34;&#34;
+
+    if n_horizontal &lt; 1 or n_vertical &lt; 1:
+        raise RuntimeError(
+            &#34;Number of images for stitching must not be smaller than 1 in any direction&#34;
         )
-        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
-    elif direction == DOWN:
-        # For Down direction it is required to transform it into Up direction
-        M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
-        H = M[1]
-        result = cv2.warpPerspective(
-            img1, H, (img1.shape[1], img1.shape[0] + img0.shape[0])
-        )
-        result[0 : img1.shape[0], 0 : img0.shape[1]] = img0
-    elif direction == LEFT:
-        result = cv2.warpPerspective(
-            img0, H, (img0.shape[1] + img1.shape[1], img0.shape[0])
-        )
-        result[0 : img1.shape[0], 0 : img1.shape[1]] = img1
-    else:
-        # For Right direction it is required to transform it into Left direction
-        M = match_keypoints(kps1, kps0, features1, features0, ratio, reproj_thresh)
-        H = M[1]
-        result = cv2.warpPerspective(
-            img1, H, (img0.shape[1] + img1.shape[1], img1.shape[0])
-        )
-        result[0 : img0.shape[0], 0 : img0.shape[1]] = img0
 
-    return Image.from_other(images[0], data=result)</code></pre>
+    if n_horizontal &gt; 2 or n_vertical &gt; 2:
+        raise NotImplementedError(
+            &#34;Stitching is only implemented for configurations 1x2, 2x1 and 2x2&#34;
+        )
+
+    if overlap_horizontal &lt; 0 or overlap_vertical &lt; 0:
+        raise RuntimeError(&#34;Invalid overlap&#34;)
+
+    if overlap_horizontal % 2 != 0 or overlap_vertical % 2 != 0:
+        raise NotImplementedError(&#34;Stitching is only implemented for even overlap&#34;)
+
+    # determine spacing based on first image
+    t = images[0].get_meta(&#34;transform&#34;)
+    cell_size = np.linalg.norm(
+        t(np.array([[1.0, 1.0]]))[0] - t(np.array([[0.0, 0.0]]))[0]
+    )
+
+    # equalize brightness if set
+    if equalize_intensity:
+        ref = np.median(images[0].data)  # use the first image as reference
+        images = images.apply_image_data(_scale_median_brightness, target=ref)
+
+    # stitch
+    if n_horizontal == 1 and n_vertical == 1:
+        return images[0]
+    elif n_horizontal == 2 and n_vertical == 1:
+        return _stitch_two(images[0], images[1], cell_size, overlap_horizontal, &#34;hor&#34;)
+    elif n_horizontal == 1 and n_vertical == 2:
+        return _stitch_two(images[0], images[1], cell_size, overlap_vertical, &#34;ver&#34;)
+    else:  # n_horizontal == 2 and n_vertical == 2
+        row1 = _stitch_two(images[0], images[1], cell_size, overlap_horizontal, &#34;hor&#34;)
+        row2 = _stitch_two(images[2], images[3], cell_size, overlap_horizontal, &#34;hor&#34;)
+        return row1.from_self(
+            data=np.concatenate([row1.data, row2.data], axis=0),
+            meta=dict(rows=row1.get_meta(&#34;rows&#34;) + row2.get_meta(&#34;rows&#34;)),
+        )</code></pre>
 </details>
 </dd>
 </dl>
@@ -527,10 +421,8 @@ reproj_thresh(float): A parameter used in calculate the homography matrix</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pvinspect.preproc.stitching.detect_and_describe" href="#pvinspect.preproc.stitching.detect_and_describe">detect_and_describe</a></code></li>
-<li><code><a title="pvinspect.preproc.stitching.distinguish_direction" href="#pvinspect.preproc.stitching.distinguish_direction">distinguish_direction</a></code></li>
-<li><code><a title="pvinspect.preproc.stitching.match_keypoints" href="#pvinspect.preproc.stitching.match_keypoints">match_keypoints</a></code></li>
-<li><code><a title="pvinspect.preproc.stitching.stitch_images" href="#pvinspect.preproc.stitching.stitch_images">stitch_images</a></code></li>
+<li><code><a title="pvinspect.preproc.stitching.locate_and_stitch_modules" href="#pvinspect.preproc.stitching.locate_and_stitch_modules">locate_and_stitch_modules</a></code></li>
+<li><code><a title="pvinspect.preproc.stitching.stitch_modules" href="#pvinspect.preproc.stitching.stitch_modules">stitch_modules</a></code></li>
 </ul>
 </li>
 </ul>

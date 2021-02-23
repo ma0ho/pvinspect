@@ -29,25 +29,27 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Detection, localization and segmentation of solar modules&#34;&#34;&#34;
 
-from pvinspect.preproc._mdetect.locate import apply
+import logging
+from copy import deepcopy
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy as np
+from pvinspect.common._ipy_exit import exit
 from pvinspect.common.transform import (
-    HomographyTransform,
-    warp_image,
     FullMultiTransform,
     FullTransform,
+    HomographyTransform,
+    warp_image,
 )
+from pvinspect.data.exceptions import UnsupportedModalityException
 from pvinspect.data.image import *
 from pvinspect.data.image import _sequence
-from pvinspect.data.exceptions import UnsupportedModalityException
 from pvinspect.data.io import ObjectAnnotations
-from typing import Union, List, Optional, Dict, Tuple
-from tqdm.auto import tqdm
-from copy import deepcopy
-import logging
-from pvinspect.common._ipy_exit import exit
-import numpy as np
-from skimage import measure, filters, morphology, transform
+from pvinspect.preproc._mdetect.locate import apply
 from shapely.geometry import Polygon
+from skimage import filters, measure, morphology, transform
+from skimage.filters.thresholding import threshold_otsu
+from tqdm.auto import tqdm
 
 
 @_sequence
@@ -86,8 +88,14 @@ def locate_module_and_cells(
     flags = list()
     transforms = list()
     for img in tqdm(sequence.images):
+
+        # very simple background suppression
+        data = img.data.copy()
+        thresh = threshold_otsu(data)
+        data[data &lt; thresh] = 0
+
         t, mc, dt, f = apply(
-            img.data,
+            data,
             img.cols,
             img.rows,
             is_module_detail=isinstance(img, PartialModuleImage),
@@ -188,7 +196,7 @@ def locate_module_and_cells(
 
 
 def segment_module_part(
-    image: ModuleImage,
+    image: Image,
     first_col: int,
     first_row: int,
     cols: int,
@@ -199,7 +207,7 @@ def segment_module_part(
     &#34;&#34;&#34;Segment a part of a module
 
     Args:
-        image (ModuleImage): The corresponding module image
+        image (Image): The corresponding image
         first_col (int): First column to appear in the segment
         first_row (int): First row to appear in the segment
         cols (int): Number of columns of the segment
@@ -620,8 +628,14 @@ def locate_module_and_cells(
     flags = list()
     transforms = list()
     for img in tqdm(sequence.images):
+
+        # very simple background suppression
+        data = img.data.copy()
+        thresh = threshold_otsu(data)
+        data[data &lt; thresh] = 0
+
         t, mc, dt, f = apply(
-            img.data,
+            data,
             img.cols,
             img.rows,
             is_module_detail=isinstance(img, PartialModuleImage),
@@ -986,14 +1000,14 @@ with less variation in size.&#34;
 </details>
 </dd>
 <dt id="pvinspect.preproc.detection.segment_module_part"><code class="name flex">
-<span>def <span class="ident">segment_module_part</span></span>(<span>image: <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, first_col: int, first_row: int, cols: int, rows: int, size: int = None, padding: float = 0.0) ‑> <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a></span>
+<span>def <span class="ident">segment_module_part</span></span>(<span>image: <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>, first_col: int, first_row: int, cols: int, rows: int, size: int = None, padding: float = 0.0) ‑> <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Segment a part of a module</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>image</code></strong> :&ensp;<code>ModuleImage</code></dt>
-<dd>The corresponding module image</dd>
+<dt><strong><code>image</code></strong> :&ensp;<code>Image</code></dt>
+<dd>The corresponding image</dd>
 <dt><strong><code>first_col</code></strong> :&ensp;<code>int</code></dt>
 <dd>First column to appear in the segment</dd>
 <dt><strong><code>first_row</code></strong> :&ensp;<code>int</code></dt>
@@ -1018,7 +1032,7 @@ with less variation in size.&#34;
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def segment_module_part(
-    image: ModuleImage,
+    image: Image,
     first_col: int,
     first_row: int,
     cols: int,
@@ -1029,7 +1043,7 @@ with less variation in size.&#34;
     &#34;&#34;&#34;Segment a part of a module
 
     Args:
-        image (ModuleImage): The corresponding module image
+        image (Image): The corresponding image
         first_col (int): First column to appear in the segment
         first_row (int): First row to appear in the segment
         cols (int): Number of columns of the segment
