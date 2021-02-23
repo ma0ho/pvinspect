@@ -16,7 +16,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Un
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from pvinspect.common._ipy_exit import exit
 from pvinspect.common.transform import Transform
 from skimage import img_as_float64, img_as_int, img_as_uint, io
 from tqdm.autonotebook import tqdm

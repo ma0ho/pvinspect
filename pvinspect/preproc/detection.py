@@ -5,7 +5,6 @@ from copy import deepcopy
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from pvinspect.common._ipy_exit import exit
 from pvinspect.common.transform import (
     FullMultiTransform,
     FullTransform,

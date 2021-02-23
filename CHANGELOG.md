@@ -1,5 +1,9 @@
 # Changelog
 
+## In development
+
+* Remove `_ipy_exit.py`
+
 ## 0.4.1
 
 ### Fixed
