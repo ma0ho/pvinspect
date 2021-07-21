@@ -46,7 +46,6 @@ import numpy as np
 import pandas as pd
 from matplotlib import markers as markers  # type: ignore
 from matplotlib import pyplot as plt
-from pvinspect.common._ipy_exit import exit
 from skimage import img_as_float64, img_as_int, img_as_uint
 from tqdm.autonotebook import tqdm
 

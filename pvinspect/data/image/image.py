@@ -30,12 +30,6 @@ from .type import DType, _convert_numpy_image, _map_numpy_dtype, _unify_dtypes
 # caching
 SEQUENCE_MAX_CACHE_SIZE = 5000
 
-# modality
-class Modality(Enum):
-    EL_IMAGE = (0,)
-    PL_IMAGE = 1
-
-
 # Types
 LoadFnType = Callable[[], np.ndarray]
 MetaType = Union[pd.Series, Dict[str, Any]]
