@@ -1,42 +1,22 @@
 from __future__ import annotations
 
-from os import write
-
-import matplotlib
-from matplotlib.axes import Axes
-from pandas.core.frame import DataFrame
-from pvinspect.data.image.image import Image, LoadFnType, TImage
-from pvinspect.data.image.show_plugin import (
-    PluginOption,
-    get_active_show_plugins,
-    invoke_show_plugins,
-)
+from pvinspect.data.image.image import Image
 from pvinspect.data.image.type import DType
 
 """Provides classes to store and visualize images with metadata"""
 
 import copy
-import inspect
 import logging
 import math
-import re
-import sys
-from abc import ABCMeta, abstractclassmethod, abstractmethod, abstractproperty
-from enum import Enum
-from functools import lru_cache, partial, wraps
-from pathlib import Path
+from abc import ABCMeta, abstractmethod
 from typing import (
     Any,
     Callable,
     Dict,
     Generic,
-    Hashable,
     Iterable,
     Iterator,
     List,
-    Optional,
-    Tuple,
-    Type,
     TypeVar,
     Union,
     overload,
@@ -46,8 +26,6 @@ import numpy as np
 import pandas as pd
 from matplotlib import markers as markers  # type: ignore
 from matplotlib import pyplot as plt
-from skimage import img_as_float64, img_as_int, img_as_uint
-from tqdm.autonotebook import tqdm
 
 MetaType = Union[pd.DataFrame, List[pd.Series], List[Dict[str, Any]]]
 LoadSeqItemFnType = Callable[[pd.Series], Image]
@@ -68,7 +46,7 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
         plt.figure(figsize=(6 * cols, 6 * rows * aspect))
 
         for i, img in enumerate(imgs):
-            plt.subplot(rows, cols, i + 1)
+            plt.subplot(rows, cols, i + 1)  # type: ignore
             img.show(*args, **kwargs)
 
     class _PandasHandler:
@@ -111,10 +89,10 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
             return self._Sub(self._parent, attr)
 
     """ this is used to store meta data """
-    _meta: Optional[pd.DataFrame]
+    _meta: pd.DataFrame
 
     def __init__(
-        self, meta: Optional[MetaType],
+        self, meta: MetaType,
     ):
         """Initialize an image sequence
         
@@ -123,7 +101,7 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
         """
 
         self._meta = (
-            pd.DataFrame(meta, copy=True)
+            pd.DataFrame(meta, copy=True)  # type: ignore
             if not isinstance(meta, pd.DataFrame)
             else meta.copy(deep=True)
         )
@@ -152,86 +130,64 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
         """
         self._show(self[-N:], cols, *args, **kwargs)
 
-    @abstractmethod
-    def apply(self: TImageSequence, fn: Callable[[Image], Image]) -> TImageSequence:
-        pass
+    def apply_meta(
+        self: TImageSequence, fn: Callable[[pd.Series], pd.Series]
+    ) -> TImageSequence:
+        res = copy.copy(self)
+        res._meta = self._meta.apply(fn)  # type: ignore
+        return res
 
+    @abstractmethod
     def apply_image_data(
         self: TImageSequence, fn: Callable[[np.ndarray], np.ndarray]
     ) -> TImageSequence:
-        return self.apply(lambda x: x.from_self(data=fn(x.data)))
-
-    def as_type(self: TImageSequence, dtype: DType) -> TImageSequence:
-        return self.apply(lambda x: x.as_type(dtype))
-
-    def meta_from_fn(
-        self, fn: Callable[[Image], Dict[str, Any]], **kwargs
-    ) -> ImageSequence:
-        """Extract meta information using given function
-
-        Args:
-            fn (Callable[[Image], Dict[str, Any]]): Function that is applied on every element of the sequence
-        """
-        return self.apply(fn=lambda x: x.meta_from_fn(fn), **kwargs)
-
-    def meta_from_meta(
-        self,
-        pattern: str,
-        source_key: str,
-        target_key: str,
-        target_type: Type,
-        group_n: int = 1,
-        transform: Callable[[Any], Any] = None,
-    ) -> ImageSequence:
-        """Extract meta information from path of individual aimges. The group_n'th matching group
-        from pattern is used as meta value
-
-        Args:
-            pattern (str): Regular expression used to parse meta
-            source_key (str): Key of the source meta attribute
-            target_key (str): Key of the target meta attribute
-            target_type (Type): Result is converted to this datatype
-            group_n (int): Index of matching group
-            transform (Callable[[Any], Any]): Optional function that is applied on the value
-                before datatype conversion
-
-        Returns:
-            images (ImageSequence): Resulting ImageSequence
-        """
-
-        def fn(x: Image) -> Image:
-            return x.meta_from_meta(
-                pattern=pattern,
-                source_key=source_key,
-                target_key=target_key,
-                target_type=target_type,
-                group_n=group_n,
-                transform=transform,
-            )
-
-        return self.apply(fn)
-
-    @abstractmethod
-    def __len__(self) -> int:
         pass
 
     @abstractmethod
+    def as_type(self: TImageSequence, dtype: DType) -> TImageSequence:
+        pass
+
+    def __len__(self) -> int:
+        return len(self._meta)
+
+    @abstractmethod
+    @overload
+    def _get_image(self, idx: int, meta: pd.Series) -> Image:
+        ...
+
+    @abstractmethod
+    @overload
+    def _get_image(
+        self, idx: Union[slice, List[int]], meta: pd.DataFrame
+    ) -> TImageSequence:
+        ...
+
+    @abstractmethod
+    def _get_image(
+        self, idx: Union[int, slice, List[int]], meta: Union[pd.Series, pd.DataFrame]
+    ) -> Union[Image, TImageSequence]:
+        pass
+
     @overload
     def __getitem__(self, idx: int) -> Image:
         ...
 
-    @abstractmethod
     @overload
     def __getitem__(
         self: TImageSequence, idx: Union[slice, List[int]]
     ) -> TImageSequence:
         ...
 
-    @abstractmethod
     def __getitem__(
         self: TImageSequence, idx: Union[int, slice, List[int]]
     ) -> Union[Image, TImageSequence]:
-        pass
+        if isinstance(idx, int):
+            image = self._get_image(idx, self._meta.iloc[idx])
+            return image
+        else:
+            images = self._get_image(idx, self._meta.iloc[idx])
+            images._meta = self._meta.iloc[idx]
+            return images
 
     class _Iterator(Iterator):
         def __init__(self, iterable: ImageSequence):
@@ -255,16 +211,53 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
         pass
 
     @property
-    @abstractmethod
     def meta(self) -> pd.DataFrame:
-        pass
+        return self._meta.copy(deep=True)
+
+
+class EagerImageSequence(ImageSequence):
+
+    _images: List[Image]
+
+    def __init__(self, images: List[Image], meta: MetaType):
+        super(EagerImageSequence, self).__init__(meta)
+
+        self._images = images
+
+    def apply_image_data(
+        self, fn: Callable[[np.ndarray], np.ndarray]
+    ) -> EagerImageSequence:
+        res = copy.copy(self)
+        res._images = [img.apply_data(fn) for img in res._images]
+        return res
+
+    def as_type(self, dtype: DType) -> EagerImageSequence:
+        res = copy.copy(self)
+        res._images = [img.as_type(dtype) for img in res._images]
+        return res
+
+    def _get_image(
+        self, idx: Union[int, slice, List[int]], meta: Union[pd.DataFrame, pd.Series]
+    ) -> Union[Image, EagerImageSequence]:
+        if isinstance(idx, int) and isinstance(meta, pd.Series):
+            return self._images[idx].from_self(meta=meta)
+        elif isinstance(idx, slice) and isinstance(meta, pd.DataFrame):
+            return EagerImageSequence(self._images[idx], meta)
+        elif isinstance(idx, list) and isinstance(meta, pd.DataFrame):
+            imgs = [self._images[i] for i in idx]
+            return EagerImageSequence(imgs, meta)
+        else:
+            raise RuntimeError()
+
+    def __add__(self, other: EagerImageSequence) -> EagerImageSequence:
+        imgs = self._images + other._images
+        meta = self.meta.append(other.meta)
+        return EagerImageSequence(imgs, meta)
 
 
 class LazyImageSequence(ImageSequence):
 
     """ this is used to store meta data """
-
-    _meta: pd.DataFrame
 
     """ used to load data """
     _load_fn: LoadSeqItemFnType
@@ -283,78 +276,35 @@ class LazyImageSequence(ImageSequence):
         self._load_fn = load_fn
         self._apply_fns = list()
 
-    def apply(
-        self: LazyImageSequence, fn: Callable[[Image], Image]
+    def apply_image_data(
+        self, fn: Callable[[np.ndarray], np.ndarray]
     ) -> LazyImageSequence:
         res = copy.copy(self)
-        res._apply_fns = copy.copy(self._apply_fns)
-        res._apply_fns.append(fn)
+        res._apply_fns = copy.deepcopy(self._apply_fns)
+        res._apply_fns.append(lambda x: x.apply_data(fn))
         return res
 
-    def __len__(self) -> int:
-        return len(self._meta)
+    def as_type(self, dtype: DType) -> LazyImageSequence:
+        res = copy.copy(self)
+        res._apply_fns = copy.deepcopy(self._apply_fns)
+        res._apply_fns.append(lambda x: x.as_type(dtype))
+        return res
 
-    def __getitem__(
-        self, idx: Union[int, slice, List[int]]
+    def _get_image(
+        self, idx: Union[int, slice, List[int]], meta: Union[pd.DataFrame, pd.Series]
     ) -> Union[Image, LazyImageSequence]:
-        if isinstance(idx, int):
-            return self._apply_all(self._load_fn(self._meta.iloc[idx]))
+        if isinstance(idx, int) and isinstance(meta, pd.Series):
+            return self._apply_all(self._load_fn(meta))
+        elif isinstance(meta, pd.DataFrame):
+            return LazyImageSequence(meta, self._load_fn)
         else:
-            return LazyImageSequence(self._meta.iloc[idx], self._load_fn)
+            raise RuntimeError()
 
-    def __add__(self, other: ImageSequence) -> LazyImageSequence:
-        """ Concatenate two image sequences """
-        return LazyImageSequence(
-            pd.concat([self._meta, other.meta], ignore_index=True, copy=False),
-            self._load_fn,
+    def __add__(self, other: LazyImageSequence) -> LazyImageSequence:
+        raise NotImplementedError(
+            "Concatenation of lazy image sequences not supported. Hint: Use `seq.to_eager()` to convert to an eager sequence before"
         )
 
-    @property
-    def meta(self) -> pd.DataFrame:
-        return self._meta.copy()
-
-
-class EagerImageSequence(ImageSequence):
-
-    _images: List[Image]
-
-    def __init__(self, images: List[Image], meta: Optional[MetaType]):
-        super(EagerImageSequence, self).__init__(meta)
-
-        self._images = images
-
-    @abstractmethod
-    def apply(self: TImageSequence, fn: Callable[[Image], Image]) -> TImageSequence:
-        pass
-
-    @abstractmethod
-    def __len__(self) -> int:
-        pass
-
-    @abstractmethod
-    @overload
-    def __getitem__(self, idx: int) -> Image:
-        ...
-
-    @abstractmethod
-    @overload
-    def __getitem__(
-        self: TImageSequence, idx: Union[slice, List[int]]
-    ) -> TImageSequence:
-        ...
-
-    @abstractmethod
-    def __getitem__(
-        self: TImageSequence, idx: Union[int, slice, List[int]]
-    ) -> Union[Image, TImageSequence]:
-        pass
-
-    @abstractmethod
-    def __add__(self: TImageSequence, other: TImageSequence) -> TImageSequence:
-        """ Concatenate two image sequences """
-        pass
-
-    @property
-    @abstractmethod
-    def meta(self) -> pd.DataFrame:
-        pass
+    def to_eager(self) -> EagerImageSequence:
+        imgs = [img for img in self]
+        return EagerImageSequence(imgs, self.meta)
