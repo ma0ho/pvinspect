@@ -1,26 +1,24 @@
 from __future__ import annotations
 
-
 """Provides classes to store and visualize images with metadata"""
 
-import numpy as np
-from skimage import io, img_as_uint, img_as_float64, img_as_int
-from pvinspect.common.transform import Transform
-from matplotlib import pyplot as plt
-from pathlib import Path
-from typing import List, Optional, Tuple, Union, Callable, Type, TypeVar, Any, Dict
 import copy
-import math
-from functools import wraps
-import logging
-from pvinspect.common._ipy_exit import exit
 import inspect
+import logging
+import math
+import re
 import sys
 from enum import Enum
-import re
+from functools import lru_cache, partial, wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
+
+import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
+from pvinspect.common.transform import Transform
+from skimage import img_as_float64, img_as_int, img_as_uint, io
 from tqdm.autonotebook import tqdm
-from functools import partial, lru_cache
 
 # this is a pointer to the module object instance itself
 this = sys.modules[__name__]
@@ -1026,8 +1024,9 @@ class PartialModuleImage(ModuleImage):
 
         if self.cols is not None and self.rows is not None:
             x, y = np.mgrid[0 : self.cols + 1 : 1, 0 : self.rows + 1 : 1]
-            x += self.first_col
-            y += self.first_row
+            if self.first_col and self.first_row:
+                x += self.first_col
+                y += self.first_row
             grid = np.stack([x.flatten(), y.flatten()], axis=1)
             return grid
         else:

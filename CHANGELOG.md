@@ -1,5 +1,16 @@
 # Changelog
 
+## In development
+
+* Remove `_ipy_exit.py`
+* Update default recommendation to using `virtualenv`
+
+## 0.4.1
+
+### Fixed
+
+* Revert to detection-based stitching, since feature-based stitching turned out instable
+
 ## 0.4.0
 
 ### New

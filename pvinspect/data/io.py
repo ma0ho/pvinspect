@@ -1,27 +1,29 @@
 """Read and write images"""
 
-from numpy.lib.npyio import save
-from .image import *
-from pathlib import Path
-import numpy as np
-from typing import Union, Tuple, List, Dict, Any
-from skimage import io, color, img_as_uint, img_as_float
-from .exceptions import UnsupportedModalityException
-from functools import reduce
-from tqdm.auto import tqdm
-import logging
-from shapely.geometry import Polygon, Point
-from shapely.wkt import loads as shapely_loads
-from shapely.wkt import dumps as shapely_dumps
-from shapely.errors import WKTReadingError
-from pyparsing import ParseException
 import json
-from pvinspect.common.types import PathOrStr, ObjectAnnotations
-from datetime import date, datetime
-from pvinspect.data.image import Modality
-import urllib.parse
-from pvinspect.common import util
+import logging
 import pickle
+import urllib.parse
+from datetime import date, datetime
+from functools import reduce
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
+from numpy.lib.npyio import save
+from pvinspect.common import util
+from pvinspect.common.types import ObjectAnnotations, PathOrStr
+from pvinspect.data.image import Modality
+from pyparsing import ParseException
+from shapely.errors import WKTReadingError
+from shapely.geometry import Point, Polygon
+from shapely.wkt import dumps as shapely_dumps
+from shapely.wkt import loads as shapely_loads
+from skimage import color, img_as_float, img_as_uint, io
+from tqdm.auto import tqdm
+
+from .exceptions import UnsupportedModalityException
+from .image import *
 
 
 def _prepare_json_meta(meta):
@@ -89,12 +91,14 @@ def _read_image(
     is_module_image: bool,
     is_partial_module: bool,
     lazy: bool,
-    modality: Modality = None,
-    cols: int = None,
-    rows: int = None,
-    force_dtype: DType = None,
-    meta: Optional[pd.Series] = None,
-) -> Image:
+    modality: int = None,
+    cols: Optional[int] = None,
+    rows: Optional[int] = None,
+    first_col: Optional[int] = None,
+    first_row: Optional[int] = None,
+    force_dtype: Union[DType, None] = None,
+    meta=None,
+):
     assert (
         is_module_image
         and not is_partial_module
@@ -160,7 +164,16 @@ def _read_image(
         cols = meta_series["cols"]
 
     if is_partial_module:
-        return PartialModuleImage(img, modality, path, cols, rows, meta=meta_series)
+        return PartialModuleImage(
+            img,
+            modality,
+            path,
+            cols,
+            rows,
+            first_row=first_row,
+            first_col=first_col,
+            meta=meta,
+        )
     elif is_module_image:
         return ModuleImage(img, modality, path, cols, rows, meta=meta_series)
     else:
@@ -430,8 +443,10 @@ def read_module_images(
 def read_partial_module_image(
     path: PathOrStr,
     modality: int,
-    cols: int = None,
-    rows: int = None,
+    cols: Optional[int] = None,
+    rows: Optional[int] = None,
+    first_col: Optional[int] = None,
+    first_row: Optional[int] = None,
     lazy: bool = True,
 ) -> ModuleImage:
     """Read a single partial view of a solar module and return it
@@ -455,6 +470,8 @@ def read_partial_module_image(
         modality=modality,
         cols=cols,
         rows=rows,
+        first_col=first_col,
+        first_row=first_row,
     )
 
 

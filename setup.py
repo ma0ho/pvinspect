@@ -1,12 +1,11 @@
 import setuptools
 
-
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="pvinspect",
-    version="0.4.0",
+    version="0.4.1",
     author="Mathis Hoffmann",
     author_email="mathis.hoffmann@fau.de",
     description="Provides methods for the analysis of PV modules using different modalities",
