@@ -1,21 +1,16 @@
 """Provides access to demo datasets"""
 
-from .image import (
-    ModuleImageSequence,
-    ModuleImage,
-    EL_IMAGE,
-    ImageSequence,
-    CellImage,
-    CellImageSequence,
-)
-from .io import *
-from pathlib import Path
-from google_drive_downloader import GoogleDriveDownloader as gdd
-from typing import Tuple, Dict
-import os
-import requests
-from zipfile import ZipFile
 import logging
+import os
+from pathlib import Path
+from typing import Dict, Tuple
+from zipfile import ZipFile
+
+import requests
+from google_drive_downloader import GoogleDriveDownloader as gdd
+
+from .image import Image, ImageSequence
+from .io import *
 
 _DS_PATH = Path(__file__).parent.absolute() / "datasets"
 _DS_KEYS = {

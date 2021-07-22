@@ -13,7 +13,6 @@ import numpy as np
 from numpy.lib.npyio import save
 from pvinspect.common import util
 from pvinspect.common.types import ObjectAnnotations, PathOrStr
-from pvinspect.data.image import Modality
 from pyparsing import ParseException
 from shapely.errors import WKTReadingError
 from shapely.geometry import Point, Polygon
@@ -23,7 +22,7 @@ from skimage import color, img_as_float, img_as_uint, io
 from tqdm.auto import tqdm
 
 from .exceptions import UnsupportedModalityException
-from .image import *
+from .image.image import DType
 
 
 def _prepare_json_meta(meta):

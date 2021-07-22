@@ -14,7 +14,7 @@ from pvinspect.data.image.show_plugin import (
 import copy
 import inspect
 import re
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractclassmethod, abstractmethod
 from enum import Enum
 from functools import lru_cache, partial
 from pathlib import Path
@@ -24,8 +24,12 @@ import numpy as np
 import pandas as pd
 from matplotlib import markers as markers  # type: ignore
 from matplotlib import pyplot as plt
-
-from .type import DType, _convert_numpy_image, _map_numpy_dtype, _unify_dtypes
+from pvinspect.data.image.type import (
+    DType,
+    _convert_numpy_image,
+    _map_numpy_dtype,
+    _unify_dtypes,
+)
 
 # caching
 SEQUENCE_MAX_CACHE_SIZE = 5000
@@ -42,6 +46,8 @@ TImage = TypeVar("TImage", bound="Image")
 class Image(metaclass=ABCMeta):
     """A general image"""
 
+    _meta: pd.Series
+
     def __init__(self, meta: Optional[pd.Series] = None, **kwargs):
         """Create a new image. Additional meta data can be given to kwargs.
 
@@ -52,59 +58,25 @@ class Image(metaclass=ABCMeta):
         kwargs_meta = {k: v for k, v in kwargs.items()}
 
         # force meta data type
-        if meta:
-            meta = meta.copy() + pd.Series(kwargs_meta, copy=True)
+        if meta is not None:
+            self._meta = pd.concat([meta, pd.Series(kwargs_meta)])  # type: ignore
         else:
-            meta = pd.Series(kwargs_meta)
-
-        self._meta = meta
+            self._meta = pd.Series(kwargs_meta)
 
     @abstractmethod
     def _data_ref(self) -> Any:
         pass
 
     @classmethod
-    def from_other(cls: Type[TImage], other: Image, **kwargs) -> TImage:
+    @abstractmethod
+    def from_other(cls: Type[TImage], other: TImage, **kwargs) -> TImage:
         """Create a new image by partially overwriting the properties of another. This also merges meta attributes.
 
         Args:
             other (Image): The other image
             **kwargs: Arguments that should be overwritten
         """
-        # check which arguments are required to set up cls
-        required = inspect.getfullargspec(cls.__init__)[0]
-
-        # force meta data type
-        if "meta" in kwargs.keys() and isinstance(kwargs["meta"], dict):
-            kwargs["meta"] = pd.Series(kwargs["meta"])
-
-        # arguments used to construct new Image
-        new_args = dict()
-
-        for name in required:
-            if name == "meta" and name in kwargs.keys() and other._meta:
-                # join meta dictionaries
-                kwargs["meta"] = kwargs["meta"].combine_first(other._meta)
-            else:
-                if name in kwargs.keys() and name != "self":
-                    # take from kwargs
-                    new_args[name] = kwargs[name]
-                elif name not in kwargs.keys() and name != "self":
-                    # take from other
-                    # first, try public property, then private property, then meta attribute
-                    if name == "data":
-                        new_args[name] = other._data_ref()
-                    elif hasattr(other, name):
-                        new_args[name] = getattr(other, name)
-                    elif hasattr(other, "_" + name):
-                        new_args[name] = getattr(other, "_" + name)
-                    elif other.has_meta(name):
-                        new_args[name] = other.get_meta(name)
-                else:
-                    # missing argument
-                    pass
-
-        return cls(**new_args)
+        pass
 
     def from_self(self: TImage, **kwargs) -> TImage:
         """Create a new image by partially overwriting the properties of this image. This also merges meta attributes.
@@ -112,7 +84,7 @@ class Image(metaclass=ABCMeta):
         Args:
             **kwargs: Arguments that should be overwritten
         """
-        return self.from_other(self, **kwargs)
+        return type(self).from_other(self, **kwargs)
 
     def show(self, ax: Optional[Axes] = None, **kwargs) -> Optional[plt.Figure]:
         """Show this image
@@ -234,11 +206,15 @@ class Image(metaclass=ABCMeta):
         """
         s = str(self.get_meta(source_key).absolute())
         res = re.search(pattern, s)
-        v = res.group(group_n)
-        if transform is not None:
-            v = transform(v)
-        v = target_type(v)
-        return self.from_self(meta={target_key: v})
+
+        if res is not None:
+            v = res.group(group_n)
+            if transform is not None:
+                v = transform(v)
+            v = target_type(v)
+            return self.from_self(meta={target_key: v})
+        else:
+            return self.from_self()
 
     def meta_from_fn(self: TImage, fn: Callable[[Image], Dict[str, Any]]) -> TImage:
         """Extract meta data using given callable
@@ -278,6 +254,29 @@ class EagerImage(Image):
     @property
     def data(self) -> np.ndarray:
         return self._data.view()
+
+    @classmethod
+    def from_other(
+        cls,
+        other: EagerImage,
+        data: Optional[np.ndarray] = None,
+        meta: Optional[pd.Series] = None,
+        **kwargs
+    ) -> EagerImage:
+        if not isinstance(other, EagerImage) and data is None:
+            raise NotImplementedError(
+                "Cannot create an EagerImage from a non-eager image without specifying the data"
+            )
+
+        args = dict()
+
+        args["data"] = data if data is not None else other._data
+        args["meta"] = meta.combine_first(other._meta) if meta is not None else other.meta  # type: ignore
+
+        for k, v in kwargs.items():
+            args["meta"][k] = v  # type: ignore
+
+        return EagerImage(**args)
 
 
 class LazyImage(Image):
@@ -342,3 +341,26 @@ class LazyImage(Image):
     @property
     def data(self) -> np.ndarray:
         return self._data.load()
+
+    @classmethod
+    def from_other(
+        cls,
+        other: Image,
+        data: Optional[LazyData] = None,
+        meta: Optional[pd.Series] = None,
+        **kwargs
+    ) -> LazyImage:
+        if not isinstance(other, LazyImage) and data is None:
+            raise NotImplementedError(
+                "Cannot create a LazyImage from a non-lazy image without specifying the data"
+            )
+
+        args = dict()
+
+        args["data"] = data if data is not None else other._data
+        args["meta"] = meta.combine_first(other._meta) if meta is not None else other.meta  # type: ignore
+
+        for k, v in kwargs.items():
+            args["meta"][k] = v  # type: ignore
+
+        return LazyImage(**args)

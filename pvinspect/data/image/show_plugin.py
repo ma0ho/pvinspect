@@ -1,6 +1,6 @@
 from __future__ import annotations
+
 from os import write
-from pvinspect.data.image.image import Image
 
 import matplotlib
 
@@ -12,6 +12,7 @@ import logging
 import math
 import re
 import sys
+from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import lru_cache, wraps
 from pathlib import Path
@@ -30,12 +31,11 @@ from typing import (
 
 import numpy as np
 import pandas as pd
+from docstring_parser import parse
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from skimage import img_as_float64, img_as_int, img_as_uint
 from tqdm.autonotebook import tqdm
-from abc import ABCMeta, abstractmethod
-from docstring_parser import parse
 
 
 class PluginOption(NamedTuple):
@@ -67,11 +67,11 @@ class ShowPlugin(metaclass=ABCMeta):
         return self._priority
 
     @abstractmethod
-    def apply(self, ax: Axes, image: Image, **kwargs) -> None:
+    def apply(self, ax: Axes, image, **kwargs) -> None:
         pass
 
     @abstractmethod
-    def is_active(self, image: Image) -> bool:
+    def is_active(self, image) -> bool:
         pass
 
     @classmethod
@@ -124,13 +124,13 @@ def register_show_plugin(name: str, plugin: ShowPlugin):
     this.show_plugins_sorted = None
 
 
-def get_active_show_plugins(image: Image) -> List[ShowPlugin]:
+def get_active_show_plugins(image) -> List[ShowPlugin]:
     """Get active show plugins ordered by priority"""
     _build_cache()
     return [p for p in this.show_plugins_sorted if p.is_active(image)]
 
 
-def invoke_show_plugins(image: Image, ax: Axes, **kwargs):
+def invoke_show_plugins(image, ax: Axes, **kwargs):
     """Run the stack of registered and active plugins on given image
 
     Args:

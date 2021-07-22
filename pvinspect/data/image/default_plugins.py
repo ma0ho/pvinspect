@@ -1,8 +1,7 @@
-from matplotlib.axes import Axes
-from matplotlib import pyplot as plt
 import numpy as np
-
-from pvinspect.data.image import Image
+from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
+from pvinspect.data.image.image import Image
 from pvinspect.data.image.show_plugin import ShowPlugin, register_show_plugin
 
 
