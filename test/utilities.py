@@ -3,8 +3,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+import pandas as pd
 from numpy import random
 from pvinspect.data.image.image import EagerImage, Image, LazyImage
+from pvinspect.data.image.sequence import (
+    EagerImageSequence,
+    ImageSequence,
+    LazyImageSequence,
+)
 
 RANDOM_IMAGE_SHAPE = (10, 10)
 
@@ -19,7 +25,9 @@ def assert_equal(value, target, precision=1e-3):
     ), "got value={}, target={}".format(value, target)
 
 
-def random_image(lazy: bool = False, **kwargs) -> Image:
+def random_image(lazy: bool = False, seed: int = None, **kwargs) -> Image:
+    if seed is not None:
+        np.random.seed(seed)
     if lazy:
         data = LazyImage.LazyData(lambda: np.random.rand(10, 10))
         return LazyImage(data, **kwargs)
@@ -34,3 +42,19 @@ def norandom_image(data: np.ndarray, lazy: bool = False, **kwargs) -> Image:
         return LazyImage(x, **kwargs)
     else:
         return EagerImage(data, **kwargs)
+
+
+def random_sequence(
+    seq_lazy: bool = False, imgs_lazy: bool = False, N: int = 3
+) -> ImageSequence:
+    if seq_lazy:
+
+        def load_fn(meta: pd.Series) -> Image:
+            return random_image(imgs_lazy, seed=meta["idx"], meta=meta)
+
+        meta = pd.DataFrame([{"idx": i} for i in range(N)])
+        return LazyImageSequence(meta, load_fn)
+    else:
+        meta = pd.DataFrame([{"idx": i} for i in range(N)])
+        imgs = [random_image(imgs_lazy, seed=i, idx=i) for i in range(N)]
+        return EagerImageSequence(imgs, meta=meta)
