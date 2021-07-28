@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pvinspect.data.image.image import Image
+from pvinspect.data.image.image import Image, LazyImage
 from pvinspect.data.image.type import DType
 
 """Provides classes to store and visualize images with metadata"""
@@ -8,7 +8,7 @@ from pvinspect.data.image.type import DType
 import copy
 import logging
 import math
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractclassmethod, abstractmethod
 from typing import (
     Any,
     Callable,
@@ -17,6 +17,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Type,
     TypeVar,
     Union,
     overload,
@@ -214,6 +215,11 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
     def meta(self) -> pd.DataFrame:
         return self._meta.copy(deep=True)
 
+    @classmethod
+    @abstractmethod
+    def from_images(cls: Type[TImageSequence], images: List[Image]) -> TImageSequence:
+        pass
+
 
 class EagerImageSequence(ImageSequence):
 
@@ -253,6 +259,13 @@ class EagerImageSequence(ImageSequence):
         imgs = self._images + other._images
         meta = self.meta.append(other.meta)
         return EagerImageSequence(imgs, meta)
+
+    @classmethod
+    def from_images(cls, images: List[Image]) -> EagerImageSequence:
+        meta = pd.DataFrame(
+            [img.meta if img.meta is not None else pd.Series({}) for img in images]
+        )
+        return cls(images, meta)
 
 
 class LazyImageSequence(ImageSequence):
@@ -308,3 +321,9 @@ class LazyImageSequence(ImageSequence):
     def to_eager(self) -> EagerImageSequence:
         imgs = [img for img in self]
         return EagerImageSequence(imgs, self.meta)
+
+    @classmethod
+    def from_images(cls, images: List[Image]) -> LazyImage:
+        raise NotImplementedError(
+            "Creating a LazyImageSequence from a list of images is currently not supported"
+        )

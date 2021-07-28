@@ -128,6 +128,13 @@ def test_lazy_apply_image_data():
     assert_equal(seq[0].data, original_data)
 
 
+def test_from_images():
+    imgs = [random_image(idx=i) for i in range(3)]
+    seq = EagerImageSequence.from_images(imgs)
+    assert len(seq) == 3
+    assert seq.meta["idx"].sum() == 3
+
+
 # def test_sequence_wrapper():
 #    @_sequence
 #    def _some_fn_mis(seq: ModuleImageSequence):
