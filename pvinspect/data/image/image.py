@@ -58,10 +58,16 @@ class Image(metaclass=ABCMeta):
         kwargs_meta = {k: v for k, v in kwargs.items()}
 
         # force meta data type
-        if meta is not None:
-            self._meta = pd.concat([meta, pd.Series(kwargs_meta)])  # type: ignore
+        if meta is not None and len(kwargs_meta) > 0:
+            self._meta = pd.concat([meta, pd.Series(kwargs_meta, d)])  # type: ignore
+        elif meta is not None:
+            self._meta = meta
         else:
-            self._meta = pd.Series(kwargs_meta)
+            self._meta = (
+                pd.Series(kwargs_meta)
+                if len(kwargs_meta) > 0
+                else pd.Series({}, dtype=object)
+            )
 
     @abstractmethod
     def _data_ref(self) -> Any:
