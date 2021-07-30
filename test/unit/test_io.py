@@ -1,20 +1,9 @@
-import datetime
-import json
 from pathlib import Path
 from test.utilities import *
 
 import numpy as np
-import pvinspect.data as data
-from pvinspect.data import datasets
-from pvinspect.data.image import *
+from pvinspect.data.image.image import *
 from pvinspect.data.io import *
-from pvinspect.data.io import (
-    _get_meta_cache_path,
-    _load_json_meta_hook,
-    _prepare_json_meta,
-)
-from pvinspect.preproc.detection import locate_module_and_cells, segment_cells
-from shapely.geometry import Point, Polygon
 from skimage import io as skio
 
 
@@ -28,7 +17,7 @@ def _prepare_test_data(i):
 
 
 def _prepare_test_meta(i):
-    return pd.Series({"idx": i})
+    return pd.Series({"original_filename": "{:03d}.png".format(i), "idx": i})
 
 
 def _prepare_test_imgs(path: Path, N: int = 3):
@@ -63,7 +52,7 @@ def test_read_sequence_lazy(tmp_path: Path):
 
 def test_limit(tmp_path: Path):
     _prepare_test_imgs(path=tmp_path)
-    seq = read_images(tmp_path, N=2)
+    seq = read_images(tmp_path, limit=2)
     assert len(seq) == 2
 
 
@@ -91,22 +80,39 @@ def test_save_image(tmp_path):
     img = _prepare_test_img_obj(0)
     save_image(tmp_path / "img.png", img)
     img_read = read_image(tmp_path / "img.png")
-    assert_equal(img_read, img.data)
-    assert img_read.dtype == img.data.dtype
+    assert_equal(img_read.data, img.data)
+    assert img_read.dtype == img.dtype
 
 
-def test_save_image_with_filename(tmp_path):
-    img = random_image(original_filename="test.png")
-    img_read = read_image(tmp_path / "test.png")
-    assert_equal(img_read, img.data)
+def test_save_images_with_filename(tmp_path):
+    imgs = EagerImageSequence.from_images(
+        [
+            random_image(original_filename="test1.tif"),
+            random_image(original_filename="test2.tif"),
+        ]
+    )
+    save_images(tmp_path, imgs)
+    img_read1 = read_image(tmp_path / "test1.tif")
+    img_read2 = read_image(tmp_path / "test2.tif")
+    assert_equal(img_read1.data, imgs[0].data)
+    assert_equal(img_read2.data, imgs[1].data)
 
 
 def test_save_sequence(tmp_path):
     seq = _prepare_test_seq_obj(2)
     save_images(tmp_path, seq)
-    img_read = skio.imread(tmp_path / "00000.png")
+    img_read = skio.imread(tmp_path / _prepare_test_filename(0))
     assert_equal(seq[0].data, img_read)
-    img_read = skio.imread(tmp_path / "00001.png")
+    img_read = skio.imread(tmp_path / _prepare_test_filename(1))
+    assert_equal(seq[1].data, img_read)
+
+
+def test_save_sequence_without_given_filename(tmp_path: Path):
+    seq = EagerImageSequence.from_images([random_image(), random_image()])
+    save_images(tmp_path, seq, default_filetype="tif")
+    img_read = skio.imread(tmp_path / "0.tif")
+    assert_equal(seq[0].data, img_read)
+    img_read = skio.imread(tmp_path / "1.tif")
     assert_equal(seq[1].data, img_read)
 
 
@@ -119,21 +125,30 @@ def test_read_image_with_meta(tmp_path: Path):
 def test_read_sequence_with_meta(tmp_path: Path):
     _prepare_test_imgs(path=tmp_path)
     seq = read_images(tmp_path, with_meta=True)
-    assert seq.meta.equals([_prepare_test_meta(i) for i in range(len(seq))])
+    assert seq.meta.equals(
+        pd.DataFrame([_prepare_test_meta(i) for i in range(len(seq))])
+    )
 
 
 def test_save_sequence_with_meta(tmp_path: Path):
     seq = _prepare_test_seq_obj()
-    save_images(tmp_path, seq, widt_meta=True)
+    save_images(tmp_path, seq, with_meta=True)
     seq_read = read_images(tmp_path, with_meta=True)
-    assert seq_read.meta.equals(eq.meta)
+    assert seq_read.meta.equals(seq.meta)
 
 
-def test_save_image_with_meta():
-    img = _prepare_test_img_obj(0)
-    save_image(tmp_path / "test.png", img, with_meta=True)
-    img_read = read_image(tmp_path / "test.png", with_meta=True)
-    assert img.meta.equals(img_read.meta)
+def test_save_image_with_meta(tmp_path: Path):
+    pass  # currently not supported with PandasMetaDriver
+
+
+def test_save_image_sequence_to_nonempty_dir_raises_error(tmp_path: Path):
+    (tmp_path / "x").touch()  # create some file
+
+    try:
+        save_images(tmp_path, _prepare_test_seq_obj())
+        assert False  # this should never be reached
+    except RuntimeError:
+        assert True
 
 
 # def test_filter():
