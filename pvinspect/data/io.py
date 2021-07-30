@@ -3,7 +3,7 @@ from typing import Optional, Type
 
 import pandas as pd
 from numpy import ceil, empty, log10
-from pvinspect.data.image.image import EagerImage, Image, LazyImage
+from pvinspect.data.image.image import EagerImage, Image, LazyImage, MetaType
 from pvinspect.data.image.sequence import (
     EagerImageSequence,
     ImageSequence,
@@ -38,6 +38,7 @@ def read_images(
     limit: Optional[int] = None,
     with_meta: bool = False,
     meta_driver: Type[MetaDriver] = PandasMetaDriver,
+    common_meta: Optional[MetaType] = None,
 ) -> ImageSequence:
     meta = meta_driver.read_sequence_meta(path) if with_meta else None
 
@@ -54,6 +55,10 @@ def read_images(
     # apply limit
     if limit is not None and len(meta) > limit:
         meta = meta.iloc[:limit]
+
+    # set common meta
+    if common_meta is not None:
+        meta.loc[:, common_meta.keys()] = common_meta.values  # type: ignore
 
     if not lazy:
         images = [

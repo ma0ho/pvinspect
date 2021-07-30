@@ -151,6 +151,14 @@ def test_save_image_sequence_to_nonempty_dir_raises_error(tmp_path: Path):
         assert True
 
 
+def test_read_sequence_with_common_meta(tmp_path: Path):
+    _prepare_test_imgs(tmp_path)
+    common_meta = pd.Series({"a": 1, "b": 2})
+    seq = read_images(tmp_path, common_meta=common_meta)
+    assert np.all((seq.meta["a"] == 1))
+    assert np.all((seq.meta["b"] == 2))
+
+
 # def test_filter():
 #    _check_download_demo()
 #    seq = read_module_images(EXAMPLES, EL_IMAGE, True, pattern="*.tif", N=1)
