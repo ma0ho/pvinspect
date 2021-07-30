@@ -135,7 +135,7 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
         self: TImageSequence, fn: Callable[[pd.Series], pd.Series]
     ) -> TImageSequence:
         res = copy.copy(self)
-        res._meta = self._meta.apply(fn)  # type: ignore
+        res._meta = self._meta.apply(fn, axis=1)  # type: ignore
         return res
 
     @abstractmethod

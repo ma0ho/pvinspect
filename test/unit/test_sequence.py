@@ -135,6 +135,16 @@ def test_from_images():
     assert seq.meta["idx"].sum() == 3
 
 
+def test_sequence_apply_meta_applies_rowwise():
+    seq = random_sequence()
+
+    def test(x: pd.Series) -> pd.Series:
+        assert isinstance(x.name, int)  # type: ignore
+        return x
+
+    seq.apply_meta(test)
+
+
 # def test_sequence_wrapper():
 #    @_sequence
 #    def _some_fn_mis(seq: ModuleImageSequence):
