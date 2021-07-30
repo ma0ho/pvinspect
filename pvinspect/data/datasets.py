@@ -3,11 +3,12 @@
 import logging
 import os
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 from zipfile import ZipFile
 
 import requests
 from google_drive_downloader import GoogleDriveDownloader as gdd
+from pvinspect.common.types import ObjectAnnotations
 
 from .image import Image, ImageSequence
 from .io import *
@@ -60,17 +61,20 @@ def _check_and_download_zip_ds(name: str) -> Path:
     return target
 
 
-def poly10x6(N: int = 0) -> ModuleImageSequence:
+def poly10x6(N: Optional[int] = None) -> ImageSequence:
     """Read sequence of 10x6 poly modules
     
     Args:
         N (int): Only read first N images
     """
     p = _check_and_download_ds("20191219_poly10x6")
-    return read_module_images(p, EL_IMAGE, True, 10, 6, N=N)
+    print(p)
+    return read_images(
+        p, limit=N, common_meta={"modality": "EL_IMAGE", "cols": 10, "rows": 6}
+    )
 
 
-def elpv(N: int = 0) -> ImageSequence:
+def elpv(N: Optional[int] = None) -> ImageSequence:
     """Read images from ELPV dataset
 
         Note:
@@ -88,7 +92,7 @@ def elpv(N: int = 0) -> ImageSequence:
     """
     # download and read images
     images_path = _check_and_download_zip_ds("elpv") / "elpv-dataset-master" / "images"
-    seq = read_images(images_path, same_camera=False, modality=EL_IMAGE, N=N)
+    seq = read_images(images_path, common_meta={"modality": "EL_IMAGE"}, limit=N)
 
     # download and read labels
     labels_path = _check_and_download_ds("20200728_elpv_labels") / "labels.csv"
@@ -110,17 +114,18 @@ def elpv(N: int = 0) -> ImageSequence:
     ).rename(columns={"defect probability": "defect_probability"})
 
     # associate images with labels
-    def label(img: Image):
-        l = labels.loc["images/{}".format(img.path.name)]
-        return l.to_dict()
+    def label(meta: pd.Series) -> pd.Series:
+        print(meta)
+        l = labels.loc["images/{}".format(meta["original_filename"])]
+        return pd.concat([meta, l])  # type: ignore
 
     # read images and labels
-    seq = seq.meta_from_fn(label, progress_bar=False)
+    seq = seq.apply_meta(label)
 
     return seq
 
 
-def caip_dataB() -> Tuple[ModuleImageSequence, ModuleImageSequence, ObjectAnnotations]:
+def caip_dataB() -> Tuple[ImageSequence, ImageSequence, ObjectAnnotations]:
     """Read DataB from CAIP paper (private dataset)
     
     Note:
@@ -134,27 +139,19 @@ def caip_dataB() -> Tuple[ModuleImageSequence, ModuleImageSequence, ObjectAnnota
         annot: Annotations specifying the position of modules
     """
     p = _check_and_download_ds("20200616_caip_v2")
-    images1 = read_module_images(
+    images1 = read_images(
         p / "deitsch_testset" / "10x6",
-        EL_IMAGE,
-        False,
-        10,
-        6,
-        allow_different_dtypes=True,
+        common_meta={"modality": "EL_IMAGE", "cols": 10, "rows": 6},
     )
-    images2 = read_module_images(
+    images2 = read_images(
         p / "deitsch_testset" / "9x4",
-        EL_IMAGE,
-        False,
-        9,
-        4,
-        allow_different_dtypes=True,
+        common_meta={"modality": "EL_IMAGE", "cols": 9, "rows": 4},
     )
     annot = load_json_object_masks(p / "deitsch_testset" / "module_locations.json")
     return images1, images2, annot
 
 
-def caip_dataC() -> Tuple[ModuleImageSequence, ObjectAnnotations]:
+def caip_dataC() -> Tuple[ImageSequence, ObjectAnnotations]:
     """Read DataC from CAIP paper (private dataset)
     
     Note:
@@ -168,10 +165,15 @@ def caip_dataC() -> Tuple[ModuleImageSequence, ObjectAnnotations]:
     """
     p = _check_and_download_ds("20200616_caip_v2")
     annot = load_json_object_masks(p / "multiple" / "module_locations.json")
-    return read_module_images(p / "multiple", EL_IMAGE, True, 10, 6), annot
+    imgs = read_images(
+        p / "multiple",
+        common_meta={"modality": "EL_IMAGE", "cols": 10, "rows": 6},
+        pattern="*.bmp",
+    )
+    return imgs, annot
 
 
-def caip_dataD() -> Tuple[ModuleImageSequence, ObjectAnnotations]:
+def caip_dataD() -> Tuple[ImageSequence, ObjectAnnotations]:
     """Read DataC from CAIP paper (private dataset)
     
     Note:
@@ -185,10 +187,13 @@ def caip_dataD() -> Tuple[ModuleImageSequence, ObjectAnnotations]:
     """
     p = _check_and_download_ds("20200616_caip_v2")
     annot = load_json_object_masks(p / "rotated" / "module_locations.json")
-    return read_module_images(p / "rotated", EL_IMAGE, True, 10, 6), annot
+    imgs = read_images(
+        p / "rotated", common_meta={"modality": "EL_IMAGE", "cols": 10, "rows": 6}
+    )
+    return imgs, annot
 
 
-def stitching_demo(N: int = 0) -> List[Tuple[Image, Image]]:
+def stitching_demo(N: Optional[int] = None) -> List[Tuple[Image, Image]]:
     """Data to demonstrate stitching capabilities
 
     Args:
@@ -204,14 +209,14 @@ def stitching_demo(N: int = 0) -> List[Tuple[Image, Image]]:
         height = image.shape[0]
 
         # split
-        img0 = Image(image.data[0 : int(height * 2 // 3)])
-        img1 = Image(image.data[int(height // 3) :])
+        img0 = EagerImage(image.data[0 : int(height * 2 // 3)])
+        img1 = EagerImage(image.data[int(height // 3) :])
         result.append((img0, img1))
 
     return result
 
 
-def calibration_ipv40CCD_FF(N: int = 0) -> Dict[str, ImageSequence]:
+def calibration_ipv40CCD_FF(N: Optional[int] = None) -> Dict[str, ImageSequence]:
     """Flat-field calibration data for ipv40CCD (private dataset)
 
     Args:
@@ -224,12 +229,12 @@ def calibration_ipv40CCD_FF(N: int = 0) -> Dict[str, ImageSequence]:
     res = dict()
     for d in p.glob("FF*"):
         key = d.name.split("_")[1]
-        seq = read_images(path=d, same_camera=False, N=N)
+        seq = read_images(d, limit=N)
         res[key] = seq
     return res
 
 
-def calibration_ipv40CCD_distortion(N: int = 0) -> ImageSequence:
+def calibration_ipv40CCD_distortion(N: Optional[int] = None) -> ImageSequence:
     """Lens calibration data for ipv40CCD (private dataset)
 
     Args:
@@ -239,22 +244,29 @@ def calibration_ipv40CCD_distortion(N: int = 0) -> ImageSequence:
         images: Sequence of images
     """
     p = _check_and_download_ds("20200303_calibration_iPV40CCD")
-    return read_images(path=p / "distortion", same_camera=True, N=N)
+    return read_images(path=p / "distortion", limit=N)
 
 
-def multi_module_detection(N: int = 0) -> Tuple[ObjectAnnotations, ImageSequence]:
+def multi_module_detection() -> Tuple[ObjectAnnotations, ImageSequence]:
     """Dataset for multi module detection (private dataset)
-
-    Args:
-        N (int): Number of images
 
     Returns:
         anns: Dict of annotations by image
         imgs: Sequence of images
     """
     p = _check_and_download_ds("20200331_multi_module_detection")
-    imgs = read_images(
-        path=p, same_camera=False, N=N, pattern="**/*.png", modality=EL_IMAGE
-    )
+
+    imgs = None
+
+    for sub in p.iterdir():
+        if sub.is_dir():
+            tmp = read_images(
+                path=p / sub, pattern="*.png", common_meta={"modality": "EL_IMAGE"}
+            )
+
+            if imgs is not None:
+                imgs += tmp
+            else:
+                imgs = tmp
     anns = load_json_object_masks(path=p / "labels.json")
     return anns, imgs
