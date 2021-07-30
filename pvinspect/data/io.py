@@ -1,8 +1,11 @@
+import json
+import urllib
 from pathlib import Path
-from typing import Optional, Type
+from typing import List, Optional, Type, Union
 
 import pandas as pd
 from numpy import ceil, empty, log10
+from pvinspect.common.types import ObjectAnnotations
 from pvinspect.data.image.image import EagerImage, Image, LazyImage, MetaType
 from pvinspect.data.image.sequence import (
     EagerImageSequence,
@@ -10,6 +13,7 @@ from pvinspect.data.image.sequence import (
     LazyImageSequence,
 )
 from pvinspect.data.meta import MetaDriver, PandasMetaDriver
+from shapely.geometry import Polygon
 from skimage import io as skio
 
 
@@ -39,16 +43,18 @@ def read_images(
     with_meta: bool = False,
     meta_driver: Type[MetaDriver] = PandasMetaDriver,
     common_meta: Optional[MetaType] = None,
+    pattern: Union[str, List[str]] = ["*.png", "*,jpg", "*.tif"],
 ) -> ImageSequence:
     meta = meta_driver.read_sequence_meta(path) if with_meta else None
 
     # if meta does not exist or is not loaded, we resort to listing all images from path
     if meta is None:
-        fns = (
-            list(path.glob("*.png"))
-            + list(path.glob("*.jpg"))
-            + list(path.glob("*.tif"))
-        )
+        fns = []
+        if isinstance(pattern, list):
+            for pat in pattern:
+                fns += list(path.glob(pat))
+        else:
+            fns = list(path.glob(pattern))
         fns = [fn.name for fn in fns]
         meta = pd.DataFrame({"original_filename": fns})
 
@@ -126,3 +132,51 @@ def save_image(
     # save meta
     if with_meta:
         meta_driver.save_image_meta(path, data)
+
+
+def load_json_object_masks(path: Path) -> ObjectAnnotations:
+    """Load object annotations from file
+    Args:
+        path (Path): Path to the annotations file
+    
+    Returns:
+        annotations: Dict with filenames a keys and a list of annotations, where every
+            annotation is a tuple of "classname" and a Polygon
+    """
+
+    with open(path, "r") as f:
+        js = json.load(f)
+
+    if isinstance(js, list):
+        result = dict()
+        for item in js:
+            anns = list()
+            for k, v in item["Label"].items():
+                for ann in v:
+                    poly = Polygon([(x["x"], x["y"]) for x in ann["geometry"]])
+                    anns.append((k, poly))
+            result[item["External ID"]] = anns
+        return result
+    elif isinstance(js, dict):
+        result = dict()
+        prefix_len = 124
+
+        # id -> category name
+        catbyid = dict()
+        for item in js["categories"]:
+            catbyid[item["id"]] = item["name"]
+
+        for img in js["images"]:
+            fn = urllib.parse.unquote(img["file_name"][prefix_len:])
+            result[fn] = list()
+            for item in js["annotations"]:
+                if item["image_id"] == img["id"]:
+                    x = item["segmentation"][0]
+                    poly = Polygon(
+                        [(x[2 * i + 0], x[2 * i + 1]) for i in range(len(x) // 2)]
+                    )
+                    result[fn].append((catbyid[item["category_id"]], poly))
+
+        return result
+    else:
+        raise RuntimeError("Unknown format")

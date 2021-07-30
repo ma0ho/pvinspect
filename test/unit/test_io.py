@@ -159,6 +159,34 @@ def test_read_sequence_with_common_meta(tmp_path: Path):
     assert np.all((seq.meta["b"] == 2))
 
 
+def test_read_sequence_with_str_pattern(tmp_path: Path):
+    test_imgs = EagerImageSequence.from_images(
+        [
+            random_image(original_filename="xabc.tif"),
+            random_image(original_filename="yabc.tif"),
+        ]
+    )
+    save_images(tmp_path, test_imgs)
+    read_imgs = read_images(tmp_path, pattern="y*")
+    assert len(read_imgs) == 1
+    assert read_imgs[0].get_meta("original_filename") == "yabc.tif"
+
+
+def test_read_sequence_with_list_pattern(tmp_path: Path):
+    test_imgs = EagerImageSequence.from_images(
+        [
+            random_image(original_filename="xabc.tif"),
+            random_image(original_filename="yabc.tif"),
+            random_image(original_filename="ybcd.tif"),
+        ]
+    )
+    save_images(tmp_path, test_imgs)
+    read_imgs = read_images(tmp_path, pattern="y*")
+    assert len(read_imgs) == 2
+    assert read_imgs[0].get_meta("original_filename") == "yabc.tif"
+    assert read_imgs[1].get_meta("original_filename") == "ybcd.tif"
+
+
 # def test_filter():
 #    _check_download_demo()
 #    seq = read_module_images(EXAMPLES, EL_IMAGE, True, pattern="*.tif", N=1)
