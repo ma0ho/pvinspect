@@ -4,6 +4,7 @@ from test.utilities import *
 import pandas as pd
 from pvinspect import data
 from pvinspect.data.image import *
+from pvinspect.data.image.sequence import ImageOrSequence, sequence
 
 
 def test_create_eager_sequence_eager_images():
@@ -145,55 +146,27 @@ def test_sequence_apply_meta_applies_rowwise():
     seq.apply_meta(test)
 
 
-# def test_sequence_wrapper():
-#    @_sequence
-#    def _some_fn_mis(seq: ModuleImageSequence):
-#        assert type(seq) == ModuleImageSequence
-#        return seq
-#
-#    @_sequence
-#    def _some_fn_is(seq: ImageSequence):
-#        assert type(seq) == ImageSequence
-#        return seq
-#
-#    img = random_module_image()
-#    res = _some_fn_mis(img)
-#    assert isinstance(res, ModuleImage)
-#
-#    img = random_image()
-#    res = _some_fn_is(img)
-#    assert isinstance(res, Image)
-#
-#    img_seq = random_module_image_sequence()
-#    res = _some_fn_mis(img_seq)
-#    assert isinstance(res, ModuleImageSequence)
-#
-#    img_seq = random_image_sequence()
-#    res = _some_fn_is(img_seq)
-#    assert isinstance(res, ImageSequence)
-#
-#
-# def test_sequence_wrapper_noarg():
-#    @_sequence()
-#    def _some_fn(seq: ModuleImageSequence):
-#        assert type(seq) == ModuleImageSequence
-#        return seq
-#
-#    img = random_module_image()
-#    res = _some_fn(img)
-#    assert isinstance(res, ModuleImage)
-#
-#
-# def test_sequence_wrapper_nounwrap():
-#    @_sequence(True)
-#    def _some_fn(seq: ModuleImageSequence):
-#        assert type(seq) == ModuleImageSequence
-#        return seq
-#
-#    img = random_module_image()
-#    res = _some_fn(img)
-#    assert isinstance(res, ModuleImageSequence)
-#
-#
-#
-#
+def test_sequence_wrapper():
+    @sequence
+    def _some_fn(seq: ImageOrSequence):
+        assert isinstance(seq, ImageSequence)
+        return seq
+
+    img = random_image()
+    res = _some_fn(img)
+    assert isinstance(res, Image)
+
+    seq = random_sequence()
+    res = _some_fn(seq)
+    assert isinstance(res, ImageSequence)
+
+
+def test_sequence_wrapper_nounwrap():
+    @sequence(True)
+    def _some_fn(seq: ImageOrSequence):
+        assert isinstance(seq, ImageSequence)
+        return seq
+
+    img = random_image()
+    res = _some_fn(img)
+    assert isinstance(res, ImageSequence)

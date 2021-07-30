@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import wraps
+
 from pvinspect.data.image.image import Image, LazyImage
 from pvinspect.data.image.type import DType
 
@@ -327,3 +329,37 @@ class LazyImageSequence(ImageSequence):
         raise NotImplementedError(
             "Creating a LazyImageSequence from a list of images is currently not supported"
         )
+
+
+ImageOrSequence = Union[Image, ImageSequence]
+
+
+def sequence(*args):
+    """Assure that the first argument is a sequence and handle the first return value accordingly"""
+
+    def decorator_sequence(func):
+        @wraps(func)
+        def wrapper_sequence(*args, **kwargs):
+            if not isinstance(args[0], ImageSequence):
+                args = list(args)
+                args[0] = EagerImageSequence.from_images([args[0]])
+                unwrap = True
+            else:
+                unwrap = False
+            res = func(*tuple(args), **kwargs)
+            if unwrap and not disable_unwrap:
+                if isinstance(res, tuple) and isinstance(res[0], ImageSequence):
+                    res = list(res)
+                    res[0] = res[0][0]
+                elif isinstance(res, ImageSequence):
+                    res = res[0]
+            return res
+
+        return wrapper_sequence
+
+    if len(args) == 1 and callable(args[0]):
+        disable_unwrap = False
+        return decorator_sequence(args[0])
+    else:
+        disable_unwrap = args[0] if len(args) == 1 else False
+        return decorator_sequence
