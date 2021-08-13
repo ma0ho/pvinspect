@@ -247,7 +247,7 @@ def calibration_ipv40CCD_distortion(N: Optional[int] = None) -> ImageSequence:
     return read_images(path=p / "distortion", limit=N)
 
 
-def multi_module_detection() -> Tuple[ObjectAnnotations, ImageSequence]:
+def multi_module_detection(limit=None) -> Tuple[ObjectAnnotations, ImageSequence]:
     """Dataset for multi module detection (private dataset)
 
     Returns:
@@ -261,7 +261,10 @@ def multi_module_detection() -> Tuple[ObjectAnnotations, ImageSequence]:
     for sub in p.iterdir():
         if sub.is_dir():
             tmp = read_images(
-                path=p / sub, pattern="*.png", common_meta={"modality": "EL_IMAGE"}
+                path=p / sub,
+                pattern="*.png",
+                common_meta={"modality": "EL_IMAGE"},
+                limit=limit,
             )
 
             if imgs is not None:

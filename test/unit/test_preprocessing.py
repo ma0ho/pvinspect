@@ -38,15 +38,15 @@ def _prepare_ff_test_img():
         for img in ds["{:d}A".format(ex)]:
             imgs_list.append(img)
             ex_list.append(ex / ex_max)
-    test_img = ModuleImage(
+    test_img = Image(
         ds["{:d}A".format(ex_all[1])][0]._data, EL_IMAGE, path=Path() / "test.png"
     )
     return test_img
 
 
 def _make_image_seq(imgs):
-    imgs = [ModuleImage(img, EL_IMAGE, None) for img in imgs]
-    return ModuleImageSequence(imgs, True, False)
+    imgs = [Image(img, EL_IMAGE, None) for img in imgs]
+    return ImageSequence(imgs, True, False)
 
 
 def _prepare_stitching_test_img():

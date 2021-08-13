@@ -1,26 +1,23 @@
 """Flatfield and lens calibration"""
-from pvinspect.data.image import *
-from pvinspect.data.image import _sequence
+import logging
+import os
+import pickle
+from typing import List, Tuple, Union
+
+import cv2
+import numpy as np
 from pvinspect.common.exceptions import (
-    MisconfigurationException,
     InvalidArgumentException,
+    MisconfigurationException,
 )
 from pvinspect.common.types import PathOrStr
-from typing import List, Tuple, Union
-import numpy as np
-from skimage import img_as_float
-from tqdm.autonotebook import trange, tqdm
-import numpy as np
-import cv2
-from skimage.exposure import rescale_intensity
-import os
-import logging
-import pickle
-from shapely.geometry import Polygon
+from pvinspect.data.image import *
+from pvinspect.data.image import sequence
 from shapely import affinity
-from skimage import transform, morphology, measure, filters
-from typing import Union
-import logging
+from shapely.geometry import Polygon
+from skimage import filters, img_as_float, measure, morphology, transform
+from skimage.exposure import rescale_intensity
+from tqdm.autonotebook import tqdm, trange
 
 
 def _calibrate_flatfield(
@@ -167,10 +164,10 @@ def calibrate_distortion(
     return mtx, dist, newcameramtx, roi
 
 
-@_sequence
+@sequence
 def _compensate_flatfield(
-    sequence: ModuleImageOrSequence, coeff: np.ndarray
-) -> ModuleImageOrSequence:
+    sequence: ImageOrSequence, coeff: np.ndarray
+) -> ImageOrSequence:
     """Low level method to perform flat field correction"""
 
     def fn(data, coeff):
@@ -266,14 +263,14 @@ def _do_reference_scaling(
     return image.from_other(image, data=data, meta={"calibration_reference_box": area})
 
 
-@_sequence
+@sequence
 def compensate_flatfield(
-    sequence: ModuleImageOrSequence, coeff: np.ndarray
-) -> ModuleImageOrSequence:
+    sequence: ImageOrSequence, coeff: np.ndarray
+) -> ImageOrSequence:
     """Perform flat field correction
 
     Args:
-        sequence (ModuleImageOrSequence): Sequence of images or single image
+        sequence (ImageOrSequence): Sequence of images or single image
         coeff (np.ndarray): Compensation coefficients
 
     Returns:
@@ -288,18 +285,18 @@ def compensate_flatfield(
     return sequence
 
 
-@_sequence
+@sequence
 def compensate_distortion(
-    sequence: ModuleImageOrSequence,
+    sequence: ImageOrSequence,
     mtx: np.ndarray,
     dist: np.ndarray,
     newcameramtx: np.ndarray,
     roi: Tuple[int, int, int, int],
-) -> ModuleImageOrSequence:
+) -> ImageOrSequence:
     """Perform lens distortion correction
 
     Args:
-        sequence (ModuleImageOrSequence): Sequence of images or single image
+        sequence (ImageOrSequence): Sequence of images or single image
         mtx (np.ndarray): Matrix of instrinsic camera parameters
         dist (np.ndarray): Matrix of distortion coefficients
         newcameramtx (np.ndarray): Matrix that performs additional scaling to account for black borders

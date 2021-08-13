@@ -92,6 +92,19 @@ def test_image_from_self():
     assert img2.has_meta("key")
 
 
+def test_image_from_self_meta_override_obj():
+    class Test:
+        def __init__(self):
+            super().__init__()
+
+    t1 = Test()
+    t2 = Test()
+    img = random_image(key=t1)
+    img2 = img.from_self(key=t2)
+    assert img2.get_meta("key") is t2
+    assert img.get_meta("key") is t1
+
+
 def test_image_as_type():
     img = random_image()
     img_converted = img.as_type(DType.INT)

@@ -154,12 +154,6 @@ class Image(metaclass=ABCMeta):
         pass
 
     @property
-    def path(self) -> Optional[Path]:
-        """Path to the original image"""
-        if self.has_meta("path"):
-            return self.get_meta("path")
-
-    @property
     def dtype(self) -> DType:
         """Datatype of the image"""
         return _map_numpy_dtype(self.data.dtype)

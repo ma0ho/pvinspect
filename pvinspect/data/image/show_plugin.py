@@ -144,11 +144,11 @@ def invoke_show_plugins(image, ax: Axes, **kwargs):
 
 # def _register_default_plugins():
 #    def show_cell_crossings(
-#        image: ModuleImage, show_cell_crossings: bool = True, **kwargs
+#        image: Image, show_cell_crossings: bool = True, **kwargs
 #    ):
 #        if (
 #            show_cell_crossings
-#            and isinstance(image, ModuleImage)
+#            and isinstance(image, Image)
 #            and image.has_meta("transform")
 #        ):
 #            grid = image.grid()

@@ -2,7 +2,7 @@ import onnxruntime
 import numpy as np
 from scipy import special
 from typing import List, Tuple
-from pvinspect.data.image import ImageOrSequence, _sequence, Image
+from pvinspect.data.image import ImageOrSequence, sequence, Image
 from skimage.transform import rescale
 from pathlib import Path
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import wraps
 
-from pvinspect.data.image.image import Image, LazyImage
+from pvinspect.data.image.image import EagerImage, Image, LazyImage
 from pvinspect.data.image.type import DType
 
 """Provides classes to store and visualize images with metadata"""
@@ -332,6 +332,7 @@ class LazyImageSequence(ImageSequence):
 
 
 ImageOrSequence = Union[Image, ImageSequence]
+TImageOrSequence = TypeVar("TImageOrSequence", bound=Union[ImageSequence, Image])
 
 
 def sequence(*args):
@@ -362,4 +363,24 @@ def sequence(*args):
         return decorator_sequence(args[0])
     else:
         disable_unwrap = args[0] if len(args) == 1 else False
+        return decorator_sequence
+
+
+def sequence_no_unwrap(*args):
+    """Assure that the first argument is a sequence but do not unwrap the result accordingly"""
+
+    def decorator_sequence(func):
+        @wraps(func)
+        def wrapper_sequence(*args, **kwargs):
+            if not isinstance(args[0], ImageSequence):
+                args = list(args)
+                args[0] = EagerImageSequence.from_images([args[0]])
+            res = func(*tuple(args), **kwargs)
+            return res
+
+        return wrapper_sequence
+
+    if len(args) == 1 and callable(args[0]):
+        return decorator_sequence(args[0])
+    else:
         return decorator_sequence
