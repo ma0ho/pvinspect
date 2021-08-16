@@ -73,7 +73,7 @@ def poly10x6(N: Optional[int] = None) -> ImageSequence:
     )
 
 
-def elpv(N: Optional[int] = None) -> ImageSequence:
+def elpv(N: Optional[int] = None, lazy: bool = True) -> ImageSequence:
     """Read images from ELPV dataset
 
         Note:
@@ -91,7 +91,9 @@ def elpv(N: Optional[int] = None) -> ImageSequence:
     """
     # download and read images
     images_path = _check_and_download_zip_ds("elpv") / "elpv-dataset-master" / "images"
-    seq = read_images(images_path, common_meta={"modality": "EL_IMAGE"}, limit=N)
+    seq = read_images(
+        images_path, common_meta={"modality": "EL_IMAGE"}, limit=N, lazy=lazy
+    )
 
     # download and read labels
     labels_path = _check_and_download_ds("20200728_elpv_labels") / "labels.csv"
@@ -114,7 +116,6 @@ def elpv(N: Optional[int] = None) -> ImageSequence:
 
     # associate images with labels
     def label(meta: pd.Series) -> pd.Series:
-        print(meta)
         l = labels.loc["images/{}".format(meta["original_filename"])]
         return pd.concat([meta, l])  # type: ignore
 
