@@ -11,6 +11,7 @@ from pvinspect.data.image.sequence import (
     ImageSequence,
     LazyImageSequence,
 )
+from pvinspect.data.image.type import DType
 
 RANDOM_IMAGE_SHAPE = (10, 10)
 
@@ -25,14 +26,24 @@ def assert_equal(value, target, precision=1e-3):
     ), "got value={}, target={}".format(value, target)
 
 
-def random_image(lazy: bool = False, seed: int = None, **kwargs) -> Image:
+def random_image(
+    lazy: bool = False, seed: int = None, dtype: DType = DType.FLOAT, **kwargs
+) -> Image:
+    def rnd():
+        if dtype == DType.FLOAT:
+            return np.random.rand(10, 10)
+        elif dtype == DType.UNSIGNED_BYTE:
+            return np.random.randint(0, 255, size=(10, 10)).astype(np.uint8)
+        else:
+            raise NotImplementedError()
+
     if seed is not None:
         np.random.seed(seed)
     if lazy:
-        data = LazyImage.LazyData(lambda: np.random.rand(10, 10))
+        data = LazyImage.LazyData(lambda: rnd())
         return LazyImage(data, **kwargs)
     else:
-        data = np.random.rand(10, 10)
+        data = rnd()
         return EagerImage(data, **kwargs)
 
 
@@ -45,16 +56,22 @@ def norandom_image(data: np.ndarray, lazy: bool = False, **kwargs) -> Image:
 
 
 def random_sequence(
-    seq_lazy: bool = False, imgs_lazy: bool = False, N: int = 3
+    seq_lazy: bool = False,
+    imgs_lazy: bool = False,
+    N: int = 3,
+    dtype: DType = DType.FLOAT,
+    meta: Optional[pd.DataFrame] = None,
 ) -> ImageSequence:
+
+    # create meta if not given
+    meta = pd.DataFrame([{"idx": i} for i in range(N)]) if meta is None else meta
+
     if seq_lazy:
 
         def load_fn(meta: pd.Series) -> Image:
-            return random_image(imgs_lazy, seed=meta["idx"], meta=meta)
+            return random_image(imgs_lazy, seed=meta.name, meta=meta, dtype=dtype)
 
-        meta = pd.DataFrame([{"idx": i} for i in range(N)])
         return LazyImageSequence(meta, load_fn)
     else:
-        meta = pd.DataFrame([{"idx": i} for i in range(N)])
-        imgs = [random_image(imgs_lazy, seed=i, idx=i) for i in range(N)]
+        imgs = [random_image(imgs_lazy, seed=i, idx=i, dtype=dtype) for i in range(N)]
         return EagerImageSequence(imgs, meta=meta)
