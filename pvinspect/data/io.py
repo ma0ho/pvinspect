@@ -64,7 +64,7 @@ def read_images(
 
     # set common meta
     if common_meta is not None:
-        meta.loc[:, common_meta.keys()] = common_meta.values  # type: ignore
+        meta.loc[:, common_meta.keys()] = common_meta.values()  # type: ignore
 
     if not lazy:
         images = [
