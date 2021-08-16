@@ -170,3 +170,8 @@ def test_sequence_wrapper_nounwrap():
     img = random_image()
     res = _some_fn(img)
     assert isinstance(res, ImageSequence)
+
+
+def test_getitem_resets_index():
+    seq = random_sequence()
+    assert np.all(seq[1:].meta.index == [0, 1])

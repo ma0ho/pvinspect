@@ -192,7 +192,7 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
             return image
         else:
             images = self._get_image(idx, self._meta.iloc[idx])
-            images._meta = self._meta.iloc[idx]
+            images._meta = self._meta.iloc[idx].reset_index(drop=True)
             return images
 
     class _Iterator(Iterator):
