@@ -107,7 +107,7 @@ def _build_cache():
     # conditionally build cache
     if this.show_plugins_sorted is None:
         this.show_plugins_sorted = sorted(
-            this.show_plugins.keys(), key=lambda x: x.priority
+            this.show_plugins.values(), key=lambda x: x.priority
         )
 
 
@@ -119,6 +119,7 @@ def register_show_plugin(name: str, plugin: ShowPlugin):
         plugin (ShowPlugin):
     """
     this.show_plugins[name] = plugin
+    # print(this.show_plugins)
 
     # reset cache
     this.show_plugins_sorted = None
@@ -138,6 +139,7 @@ def invoke_show_plugins(image, ax: Axes, **kwargs):
         ax (Axes): The axes object that will be used for plotting
     """
     _build_cache()
+    # print(this.show_plugins)
     for plugin in this.show_plugins_sorted:
         plugin.apply(ax, image, **kwargs)
 

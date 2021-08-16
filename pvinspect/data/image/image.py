@@ -92,25 +92,19 @@ class Image(metaclass=ABCMeta):
         """
         return type(self).from_other(self, **kwargs)
 
-    def show(self, ax: Optional[Axes] = None, **kwargs) -> Optional[plt.Figure]:
+    def show(self, ax: Optional[Axes] = None, **kwargs):
         """Show this image
         
         Args:
             ax (Optional[Axes]): If given, image will be shown here
-
-        Returns:
-            fig (Optional[plt.Figure]): Returns the figure, if one is created
         """
         # create a figure, if none is given
         fig = None
         if ax is None:
-            fig, axs = plt.subplots(1)
-            ax = axs[0]
+            fig, ax = plt.subplots(1)
 
         # invoke plugins
         invoke_show_plugins(self, ax, **kwargs)
-
-        return fig
 
     def show_options(self) -> List[Tuple[str, List[PluginOption]]]:
         """Determine currently active plugin options"""

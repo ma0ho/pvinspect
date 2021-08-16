@@ -31,9 +31,9 @@ class ShowImage(ShowPlugin):
         clip_high = clip_high if clip_high is not None else 100.0
         p = np.percentile(image.data, q=[clip_low, clip_high])  # type: ignore    # TODO: Check why this gives type error
         d = np.clip(image.data, p[0], p[1])
-        ax.imshow(d, cmap="gray")
+        mappable = ax.imshow(d, cmap="gray")
         if colorbar:
-            plt.colorbar(ax=ax)
+            plt.colorbar(mappable, ax=ax)
 
     def is_active(self, image: Image) -> bool:
         super().is_active(image)
@@ -64,8 +64,8 @@ class AxisOptions(ShowPlugin):
         if not show_axis:
             ax.set_axis_off()
         if show_title:
-            if image.path is not None:
-                t = str(image.path.name)
+            if image.has_meta("original_filename"):
+                t = str(image.get_meta("original_filename"))
             else:
                 t = ""
 

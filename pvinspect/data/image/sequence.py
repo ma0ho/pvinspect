@@ -46,11 +46,13 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
         # adjust the figure size
         shape = imgs[0].shape
         aspect = shape[0] / shape[1]
-        plt.figure(figsize=(6 * cols, 6 * rows * aspect))
+        # plt.figure(figsize=(6 * cols, 6 * rows * aspect))
+        fig, axs = plt.subplots(rows, cols, figsize=(6 * cols, 6 * rows * aspect))
 
         for i, img in enumerate(imgs):
-            plt.subplot(rows, cols, i + 1)  # type: ignore
-            img.show(*args, **kwargs)
+            x = i // cols
+            y = i % cols
+            img.show(axs[x][y], *args, **kwargs)
 
     class _PandasHandler:
         def __init__(self, parent: ImageSequence):
