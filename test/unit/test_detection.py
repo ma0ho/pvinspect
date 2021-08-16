@@ -94,16 +94,6 @@ def test_segment_modules():
     assert isinstance(modules[0], Image)
     assert len(modules) == 2
 
-    x = modules[0].get_meta("transform")(np.array([[0.0, 0.0]])).flatten()
-    assert_equal(x[0], 0.0)
-    assert_equal(x[1], 0.0)
-    x = modules[0].get_meta("transform")(np.array([[10.0, 0.0]])).flatten()
-    assert_equal(x[0], modules[0].shape[1])
-    assert_equal(x[1], 0.0)
-    x = modules[0].get_meta("transform")(np.array([[10.0, 6.0]])).flatten()
-    assert_equal(x[0], modules[0].shape[1])
-    assert_equal(x[1], modules[0].shape[0])
-
 
 def test_segment_module_part():
     mod = data.datasets.poly10x6(1)[0]
@@ -144,42 +134,6 @@ def test_segment_padding():
     )
     part = detection.segment_module_part(img, 0, 0, 3, 2, padding=0.5)
     assert_equal(part.shape[1] / part.shape[0], 8 / 6)
-
-
-def test_segment_padding_transform():
-    img = detection.locate_module_and_cells(
-        data.datasets.poly10x6(1)[0], rows=6, cols=10
-    )
-    part = detection.segment_module_part(img, 0, 0, 3, 2, padding=0.5, size=20)
-    x1 = part.get_meta("transform")(np.array([[0.0, 1.0]])).flatten()
-    x2 = part.get_meta("transform")(np.array([[2.0, 3.0]])).flatten()
-    assert_equal(x1[0], 10)
-    assert_equal(x1[1], 30)
-    assert_equal(x2[0], 50)
-    assert_equal(x2[1], 70)
-
-
-def test_locate_partial_module():
-    img = detection.locate_module_and_cells(
-        data.datasets.poly10x6(1)[0], rows=6, cols=10, estimate_distortion=False
-    )
-    part = detection.segment_module_part(img, 0, 0, 3, 2, padding=0.5)
-    part_det = detection.locate_module_and_cells(
-        part, estimate_distortion=False, rows=3, cols=2, is_partial_module=True
-    )
-
-    x1_true = [part_det.shape[1] * 1 / 8, part_det.shape[0] * 1 / 6]
-    x2_true = [part_det.shape[1] * 7 / 8, part_det.shape[0] * 5 / 6]
-    x1 = part_det.get_meta("transform")(np.array([[0.0, 0.0]])).flatten()
-    x2 = part_det.get_meta("transform")(np.array([[3.0, 2.0]])).flatten()
-    eps = 0.05 * part_det.shape[1]
-    print(img.get_meta("transform"))
-    print(part_det.get_meta("transform"))
-
-    assert_equal(x1[0], x1_true[0], eps)
-    assert_equal(x1[1], x1_true[1], eps)
-    assert_equal(x2[0], x2_true[0], eps)
-    assert_equal(x2[1], x2_true[1], eps)
 
 
 def test_detect_multiple_modules():
