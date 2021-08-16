@@ -45,7 +45,7 @@ def read_images(
     common_meta: Optional[MetaType] = None,
     pattern: Union[str, List[str]] = ["*.png", "*,jpg", "*.tif"],
 ) -> ImageSequence:
-    meta = meta_driver.readsequence_meta(path) if with_meta else None
+    meta = meta_driver.read_sequence_meta(path) if with_meta else None
 
     # if meta does not exist or is not loaded, we resort to listing all images from path
     if meta is None:
@@ -64,7 +64,9 @@ def read_images(
 
     # set common meta
     if common_meta is not None:
-        meta.loc[:, common_meta.keys()] = common_meta.values()  # type: ignore
+        if isinstance(common_meta, dict):
+            common_meta = pd.Series(common_meta)
+        meta.loc[:, common_meta.keys()] = common_meta.values  # type: ignore
 
     if not lazy:
         images = [
@@ -113,7 +115,7 @@ def save_images(
 
     # save meta
     if with_meta:
-        meta_driver.savesequence_meta(path, data)
+        meta_driver.save_sequence_meta(path, data)
 
 
 def save_image(

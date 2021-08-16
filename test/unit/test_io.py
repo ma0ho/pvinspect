@@ -159,6 +159,14 @@ def test_read_sequence_with_common_meta(tmp_path: Path):
     assert np.all((seq.meta["b"] == 2))
 
 
+def test_read_sequence_with_common_meta_dict(tmp_path: Path):
+    _prepare_test_imgs(tmp_path)
+    common_meta = {"a": 1, "b": 2}
+    seq = read_images(tmp_path, common_meta=common_meta)
+    assert np.all((seq.meta["a"] == 1))
+    assert np.all((seq.meta["b"] == 2))
+
+
 def test_read_sequence_with_str_pattern(tmp_path: Path):
     test_imgs = EagerImageSequence.from_images(
         [
