@@ -68,7 +68,6 @@ def poly10x6(N: Optional[int] = None) -> ImageSequence:
         N (int): Only read first N images
     """
     p = _check_and_download_ds("20191219_poly10x6")
-    print(p)
     return read_images(
         p, limit=N, common_meta={"modality": "EL_IMAGE", "cols": 10, "rows": 6}
     )
