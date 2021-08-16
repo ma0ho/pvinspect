@@ -159,6 +159,13 @@ def test_read_sequence_with_common_meta(tmp_path: Path):
     assert np.all((seq.meta["b"] == 2))
 
 
+def test_read_sequence_with_one_common_meta_item(tmp_path: Path):
+    _prepare_test_imgs(tmp_path)
+    common_meta = pd.Series({"a": 1})
+    seq = read_images(tmp_path, common_meta=common_meta)
+    assert np.all((seq.meta["a"] == 1))
+
+
 def test_read_sequence_with_common_meta_dict(tmp_path: Path):
     _prepare_test_imgs(tmp_path)
     common_meta = {"a": 1, "b": 2}

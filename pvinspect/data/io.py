@@ -66,7 +66,10 @@ def read_images(
     if common_meta is not None:
         if isinstance(common_meta, dict):
             common_meta = pd.Series(common_meta)
-        meta.loc[:, common_meta.keys()] = common_meta.values  # type: ignore
+        if len(common_meta.values) > 1:
+            meta.loc[:, common_meta.keys()] = common_meta.values  # type: ignore
+        else:
+            meta.loc[:, common_meta.keys()[0]] = common_meta.values[0]  # type: ignore
 
     if not lazy:
         images = [
