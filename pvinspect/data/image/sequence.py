@@ -114,8 +114,9 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
             logging.error("Creation of an empty sequence is not supported")
             exit()
 
-        # namespace for accessing pandas methods
-        self.pandas = self._PandasHandler(self)
+    @property
+    def pandas(self):
+        return self._PandasHandler(self)
 
     def head(self, N: int = 4, cols: int = 2, *args, **kwargs):
         """Show the first N images
