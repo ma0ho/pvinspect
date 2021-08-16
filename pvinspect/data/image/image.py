@@ -265,7 +265,11 @@ class EagerImage(Image):
         args = dict()
 
         args["data"] = data if data is not None else other._data
-        args["meta"] = meta.combine_first(other._meta) if meta is not None else other.meta  # type: ignore
+
+        args["meta"] = other.meta
+        if meta is not None:
+            for k, v in meta.item:
+                args["meta"][k] = v  # type: ignore
 
         for k, v in kwargs.items():
             args["meta"][k] = v  # type: ignore
@@ -352,7 +356,11 @@ class LazyImage(Image):
         args = dict()
 
         args["data"] = data if data is not None else other._data
-        args["meta"] = meta.combine_first(other._meta) if meta is not None else other.meta  # type: ignore
+
+        args["meta"] = other.meta
+        if meta is not None:
+            for k, v in meta.item:
+                args["meta"][k] = v  # type: ignore
 
         for k, v in kwargs.items():
             args["meta"][k] = v  # type: ignore

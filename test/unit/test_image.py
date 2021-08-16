@@ -94,15 +94,16 @@ def test_image_from_self():
 
 def test_image_from_self_meta_override_obj():
     class Test:
-        def __init__(self):
+        def __init__(self, x):
+            self.x = x
             super().__init__()
 
-    t1 = Test()
-    t2 = Test()
+    t1 = Test("x")
+    t2 = Test("y")
     img = random_image(key=t1)
     img2 = img.from_self(key=t2)
-    assert img2.get_meta("key") is t2
-    assert img.get_meta("key") is t1
+    assert img2.get_meta("key").x == "y"
+    assert img.get_meta("key").x == "x"
 
 
 def test_image_as_type():
