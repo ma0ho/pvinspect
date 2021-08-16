@@ -141,7 +141,8 @@ def invoke_show_plugins(image, ax: Axes, **kwargs):
     _build_cache()
     # print(this.show_plugins)
     for plugin in this.show_plugins_sorted:
-        plugin.apply(ax, image, **kwargs)
+        if plugin.is_active(image):
+            plugin.apply(ax, image, **kwargs)
 
 
 # def _register_default_plugins():

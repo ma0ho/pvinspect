@@ -273,24 +273,6 @@ def segment_module_part(
         rows + 2 * padding,
     )
     result = result.astype(image.data.dtype)  # type: ignore
-    transform = HomographyTransform(
-        np.array(
-            [
-                [first_col - padding, first_row - padding],
-                [last_col + padding, first_row - padding],
-                [last_col + padding, last_row + padding],
-                [first_col - padding, last_row + padding],
-            ]
-        ),
-        np.array(
-            [
-                [0.0, 0.0],
-                [result.shape[1], 0.0],
-                [result.shape[1], result.shape[0]],
-                [0.0, result.shape[0]],
-            ]
-        ),
-    )
 
     # bounding box in original image coords
     bb = [
@@ -307,7 +289,7 @@ def segment_module_part(
         rows=rows + min(first_row, 0),
         first_col=first_col if first_col >= 0 else None,
         first_row=first_row if first_row >= 0 else None,
-        transform=transform,
+        transform=None,
         segment_module_original=original,
     )
 
