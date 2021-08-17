@@ -4,6 +4,8 @@
 
 * Remove `_ipy_exit.py`
 * Update default recommendation to using `virtualenv`
+* Rework ``data`` subpackage
+* Add defects analysis
 
 ## 0.4.1
 
