@@ -268,7 +268,7 @@ class EagerImage(Image):
 
         args["meta"] = other.meta
         if meta is not None:
-            for k, v in meta.item:
+            for k, v in meta.iteritems():
                 args["meta"][k] = v  # type: ignore
 
         for k, v in kwargs.items():
