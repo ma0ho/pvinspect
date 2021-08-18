@@ -10,7 +10,7 @@ jobs:
     if: tag IS present
     python: 3.8
     install:
-    - pip install . torch
+    - pip install . torch pytorch_lightning
     - pip install pdoc3
     script:
     - pdoc3 --html pvinspect
