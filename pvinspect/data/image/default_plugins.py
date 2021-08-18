@@ -74,7 +74,7 @@ class AxisOptions(ShowPlugin):
                 l2 = max_title_length - l1 - 2
                 t = t[:l1] + ".." + t[len(t) - l2 :]
 
-            ax.set_title(t)
+            ax.set_title(t, fontsize=10)
 
     def is_active(self, image: Image) -> bool:
         super().is_active(image)

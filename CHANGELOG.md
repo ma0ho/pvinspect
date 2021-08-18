@@ -2,6 +2,7 @@
 
 ## In development
 
+* Add `figscale` argument to show-methods
 * Remove `_ipy_exit.py`
 * Update default recommendation to using `virtualenv`
 * Rework ``data`` subpackage

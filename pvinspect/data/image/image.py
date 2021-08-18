@@ -101,7 +101,10 @@ class Image(metaclass=ABCMeta):
         # create a figure, if none is given
         fig = None
         if ax is None:
-            fig, ax = plt.subplots(1)
+            shape = self.shape
+            aspect = shape[0] / shape[1]
+            scale = kwargs["figscale"] if "figscale" in kwargs.keys() else 3
+            fig, ax = plt.subplots(1, figsize=(scale, scale * aspect))
 
         # invoke plugins
         invoke_show_plugins(self, ax, **kwargs)

@@ -46,8 +46,10 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
         # adjust the figure size
         shape = imgs[0].shape
         aspect = shape[0] / shape[1]
-        # plt.figure(figsize=(6 * cols, 6 * rows * aspect))
-        fig, axs = plt.subplots(rows, cols, figsize=(6 * cols, 6 * rows * aspect))
+        scale = kwargs["figscale"] if "figscale" in kwargs.keys() else 3
+        fig, axs = plt.subplots(
+            rows, cols, figsize=(scale * cols, scale * rows * aspect)
+        )
 
         for i, img in enumerate(imgs):
             x = i // cols
