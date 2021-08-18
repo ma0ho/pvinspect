@@ -11,8 +11,8 @@ import skimage
 import torch as t
 import torchvision as tv
 from albumentations.pytorch.transforms import ToTensorV2
-from pvinspect.analysis.model import InspectModel
 from pvinspect.data.image.sequence import ImageSequence, sequence
+from pvinspect.integration.pytorch_lightning import InspectModel
 from pytorch_lightning.core.mixins.hparams_mixin import HyperparametersMixin
 from scipy.special import expit
 from skimage import img_as_ubyte
