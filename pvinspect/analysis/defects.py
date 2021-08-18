@@ -19,6 +19,14 @@ from skimage import img_as_ubyte
 from skimage.color import gray2rgb
 from sklearn.metrics import f1_score
 
+try:
+    import albumentations as A
+except ImportError as e:
+    logging.error(
+        "Package albumentations missing. Please install: pip install albumentations"
+    )
+    raise e
+
 
 class DefectModule(pl.LightningModule):
 
