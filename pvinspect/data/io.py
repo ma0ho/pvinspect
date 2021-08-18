@@ -21,7 +21,7 @@ def read_image(
     path: Path,
     lazy: bool = False,
     with_meta: bool = False,
-    meta_driver: Type[MetaDriver] = PandasMetaDriver,
+    meta_driver: MetaDriver = PandasMetaDriver(),
 ) -> Image:
     meta = meta_driver.read_image_meta(path) if with_meta else None
 
@@ -41,7 +41,7 @@ def read_images(
     lazy: bool = False,
     limit: Optional[int] = None,
     with_meta: bool = False,
-    meta_driver: Type[MetaDriver] = PandasMetaDriver,
+    meta_driver: MetaDriver = PandasMetaDriver(),
     common_meta: Optional[MetaType] = None,
     pattern: Union[str, List[str]] = ["*.png", "*,jpg", "*.tif"],
 ) -> ImageSequence:
@@ -90,7 +90,7 @@ def save_images(
     path: Path,
     data: ImageSequence,
     with_meta: bool = False,
-    meta_driver: Type[MetaDriver] = PandasMetaDriver,
+    meta_driver: MetaDriver = PandasMetaDriver(),
     default_filetype: str = "tif",
 ) -> None:
     # check if directory is empty
@@ -125,7 +125,7 @@ def save_image(
     path: Path,
     data: Image,
     with_meta: bool = False,
-    meta_driver: Type[MetaDriver] = PandasMetaDriver,
+    meta_driver: MetaDriver = PandasMetaDriver(),
 ) -> None:
     # check if file exists
     if path.is_file():
