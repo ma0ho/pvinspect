@@ -240,13 +240,9 @@ class DefectModel(InspectModel):
         data_transform = self.get_default_test_albumentations(
             [0.59675165], [0.16061852]
         )
-        data_transform_wrap = (
-            lambda x: data_transform(image=np.expand_dims(img_as_ubyte(x), axis=-1))[
-                "image"
-            ]
-            .repeat_interleave(3, axis=0)
-            .unsqueeze(0)
-        )
+        data_transform_wrap = lambda x: data_transform(image=img_as_ubyte(x), axis=-1)[
+            "image"
+        ].repeat_interleave(3, axis=0)
         result_names = ["class", "cam"]
         wrapped_module = DefectModule
         hparams = (
@@ -279,10 +275,10 @@ class DefectModel(InspectModel):
 
         def label(x: pd.Series) -> pd.Series:
             x = x.copy()
-            x[self.prefix + "crack_p"] = expit(x[self.prefix + "class"][0][0])
-            x[self.prefix + "inactive_p"] = expit(x[self.prefix + "class"][0][1])
-            x[self.prefix + "crack_cam"] = x[self.prefix + "cam"][0][0]
-            x[self.prefix + "inactive_cam"] = x[self.prefix + "cam"][0][1]
+            x[self.prefix + "crack_p"] = expit(x[self.prefix + "class"][0])
+            x[self.prefix + "inactive_p"] = expit(x[self.prefix + "class"][1])
+            x[self.prefix + "crack_cam"] = x[self.prefix + "cam"][0]
+            x[self.prefix + "inactive_cam"] = x[self.prefix + "cam"][1]
             del x[self.prefix + "class"]
             del x[self.prefix + "cam"]
             return x

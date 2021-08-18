@@ -58,14 +58,14 @@ class InspectModel:
         with t.no_grad():
             for itm in tqdm(ds):
                 if self.use_cuda:
-                    itm = itm.cuda()
+                    itm = itm.cuda().unsqueeze(0)
                 results.append(self.module.forward(itm))
 
         def apply_label(x: pd.Series):
             x = x.copy()
             res = results[x.name]
             for r, n in zip(list(res), self.result_names):
-                x[self.prefix + n] = r.detach().cpu().numpy()
+                x[self.prefix + n] = r.detach().cpu().squeeze(0).numpy()
             return x
 
         return data.apply_meta(apply_label)
