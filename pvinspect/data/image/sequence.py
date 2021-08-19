@@ -54,7 +54,10 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
         for i, img in enumerate(imgs):
             x = i // cols
             y = i % cols
-            img.show(axs[x][y], *args, **kwargs)
+            if rows > 1:
+                img.show(axs[x][y], *args, **kwargs)
+            else:
+                img.show(axs[y], *args, **kwargs)
 
     class _PandasHandler:
         def __init__(self, parent: ImageSequence):
