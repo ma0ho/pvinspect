@@ -1,6 +1,8 @@
 # Changelog
 
-## In development
+## 0.4.2
+
+### Fixed/Improved
 
 * Remove `_ipy_exit.py`
 * Update default recommendation to using `virtualenv`
