@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.3
+
+### Fixed
+
+* Remove unnecessary dependencies
+
 ## 0.4.2
 
 ### Fixed/Improved
