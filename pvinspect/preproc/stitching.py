@@ -132,6 +132,7 @@ def locate_and_stitch_modules(
     n_vertical: int = 1,
     overlap_horizontal: int = 0,
     overlap_vertical: int = 0,
+    enable_background_suppression: bool = True,
     equalize_intensity: bool = False,
 ) -> Image:
     """Locate and stitch partial recordings of a module
@@ -153,6 +154,8 @@ def locate_and_stitch_modules(
             in horizontal direction
         overlap_vertical (int): Number of fully visible cells that overlap between any two partial recordings
             in vertical direction
+        enable_background_suppression (bool): Enable the background suppression for the module detection. This sometimes causes
+            problems with PL images and disabling it might help.
         equalize_intensity (bool): Match the median intensity of every partial recording to the median intensity of the first
 
     Returns:
@@ -167,7 +170,11 @@ def locate_and_stitch_modules(
     )
 
     # locate
-    modimages = locate_module_and_cells(modimages, orientation="horizontal")
+    modimages = locate_module_and_cells(
+        modimages,
+        orientation="horizontal",
+        enable_background_suppresion=enable_background_suppression,
+    )
 
     # stitch
     return stitch_modules(
