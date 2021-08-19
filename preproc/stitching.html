@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>pvinspect.preproc.stitching API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -160,6 +160,7 @@ def locate_and_stitch_modules(
     n_vertical: int = 1,
     overlap_horizontal: int = 0,
     overlap_vertical: int = 0,
+    enable_background_suppression: bool = True,
     equalize_intensity: bool = False,
 ) -&gt; Image:
     &#34;&#34;&#34;Locate and stitch partial recordings of a module
@@ -181,6 +182,8 @@ def locate_and_stitch_modules(
             in horizontal direction
         overlap_vertical (int): Number of fully visible cells that overlap between any two partial recordings
             in vertical direction
+        enable_background_suppression (bool): Enable the background suppression for the module detection. This sometimes causes
+            problems with PL images and disabling it might help.
         equalize_intensity (bool): Match the median intensity of every partial recording to the median intensity of the first
 
     Returns:
@@ -195,7 +198,11 @@ def locate_and_stitch_modules(
     )
 
     # locate
-    modimages = locate_module_and_cells(modimages, orientation=&#34;horizontal&#34;)
+    modimages = locate_module_and_cells(
+        modimages,
+        orientation=&#34;horizontal&#34;,
+        enable_background_suppresion=enable_background_suppression,
+    )
 
     # stitch
     return stitch_modules(
@@ -216,7 +223,7 @@ def locate_and_stitch_modules(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pvinspect.preproc.stitching.locate_and_stitch_modules"><code class="name flex">
-<span>def <span class="ident">locate_and_stitch_modules</span></span>(<span>images: <a title="pvinspect.data.image.ImageSequence" href="../data/image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, rows: int, cols: int, n_horizontal: int = 1, n_vertical: int = 1, overlap_horizontal: int = 0, overlap_vertical: int = 0, equalize_intensity: bool = False) ‑> <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a></span>
+<span>def <span class="ident">locate_and_stitch_modules</span></span>(<span>images: <a title="pvinspect.data.image.ImageSequence" href="../data/image.html#pvinspect.data.image.ImageSequence">ImageSequence</a>, rows: int, cols: int, n_horizontal: int = 1, n_vertical: int = 1, overlap_horizontal: int = 0, overlap_vertical: int = 0, enable_background_suppression: bool = True, equalize_intensity: bool = False) ‑> <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Locate and stitch partial recordings of a module</p>
@@ -243,6 +250,9 @@ in horizontal direction</dd>
 <dt><strong><code>overlap_vertical</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of fully visible cells that overlap between any two partial recordings
 in vertical direction</dd>
+<dt><strong><code>enable_background_suppression</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Enable the background suppression for the module detection. This sometimes causes
+problems with PL images and disabling it might help.</dd>
 <dt><strong><code>equalize_intensity</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Match the median intensity of every partial recording to the median intensity of the first</dd>
 </dl>
@@ -260,6 +270,7 @@ in vertical direction</dd>
     n_vertical: int = 1,
     overlap_horizontal: int = 0,
     overlap_vertical: int = 0,
+    enable_background_suppression: bool = True,
     equalize_intensity: bool = False,
 ) -&gt; Image:
     &#34;&#34;&#34;Locate and stitch partial recordings of a module
@@ -281,6 +292,8 @@ in vertical direction</dd>
             in horizontal direction
         overlap_vertical (int): Number of fully visible cells that overlap between any two partial recordings
             in vertical direction
+        enable_background_suppression (bool): Enable the background suppression for the module detection. This sometimes causes
+            problems with PL images and disabling it might help.
         equalize_intensity (bool): Match the median intensity of every partial recording to the median intensity of the first
 
     Returns:
@@ -295,7 +308,11 @@ in vertical direction</dd>
     )
 
     # locate
-    modimages = locate_module_and_cells(modimages, orientation=&#34;horizontal&#34;)
+    modimages = locate_module_and_cells(
+        modimages,
+        orientation=&#34;horizontal&#34;,
+        enable_background_suppresion=enable_background_suppression,
+    )
 
     # stitch
     return stitch_modules(
@@ -429,7 +446,7 @@ in vertical direction</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

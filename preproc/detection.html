@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>pvinspect.preproc.detection API documentation</title>
 <meta name="description" content="Detection, localization and segmentation of solar modules" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -34,7 +34,6 @@ from copy import deepcopy
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from pvinspect.common._ipy_exit import exit
 from pvinspect.common.transform import (
     FullMultiTransform,
     FullTransform,
@@ -58,6 +57,7 @@ def locate_module_and_cells(
     estimate_distortion: bool = True,
     orientation: str = None,
     return_bounding_boxes: bool = False,
+    enable_background_suppresion: bool = True,
 ) -&gt; Union[Tuple[ModuleImageOrSequence, ObjectAnnotations], ModuleImageSequence]:
     &#34;&#34;&#34;Locate a single module and its cells
 
@@ -72,6 +72,8 @@ def locate_module_and_cells(
         orientation (str): Orientation of the module (&#39;horizontal&#39; or &#39;vertical&#39; or None).
             If set to None (default), orientation is automatically determined
         return_bounding_boxes (bool): Indicates, if bounding boxes of returned modules are returned
+        enable_background_suppression (bool): Indicate, if background suppresion is enabled. This sometimes causes
+            problems with PL images and disabling it may help.
 
     Returns:
         images: The same image/sequence with location information added
@@ -89,10 +91,12 @@ def locate_module_and_cells(
     transforms = list()
     for img in tqdm(sequence.images):
 
-        # very simple background suppression
         data = img.data.copy()
-        thresh = threshold_otsu(data)
-        data[data &lt; thresh] = 0
+
+        # very simple background suppression
+        if enable_background_suppresion:
+            thresh = threshold_otsu(data)
+            data[data &lt; thresh] = 0
 
         t, mc, dt, f = apply(
             data,
@@ -563,7 +567,7 @@ def locate_multiple_modules(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pvinspect.preproc.detection.locate_module_and_cells"><code class="name flex">
-<span>def <span class="ident">locate_module_and_cells</span></span>(<span>sequence: Union[<a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>, <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a>, <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>], estimate_distortion: bool = True, orientation: str = None, return_bounding_boxes: bool = False) ‑> Union[Tuple[Union[<a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>, <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a>, <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>], Dict[str, List[Tuple[str, shapely.geometry.polygon.Polygon]]]], <a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>]</span>
+<span>def <span class="ident">locate_module_and_cells</span></span>(<span>sequence: Union[<a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>, <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a>, <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>], estimate_distortion: bool = True, orientation: str = None, return_bounding_boxes: bool = False, enable_background_suppresion: bool = True) ‑> Union[Tuple[Union[<a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>, <a title="pvinspect.data.image.ModuleImage" href="../data/image.html#pvinspect.data.image.ModuleImage">ModuleImage</a>, <a title="pvinspect.data.image.PartialModuleImage" href="../data/image.html#pvinspect.data.image.PartialModuleImage">PartialModuleImage</a>, <a title="pvinspect.data.image.Image" href="../data/image.html#pvinspect.data.image.Image">Image</a>], Dict[str, List[Tuple[str, shapely.geometry.polygon.Polygon]]]], <a title="pvinspect.data.image.ModuleImageSequence" href="../data/image.html#pvinspect.data.image.ModuleImageSequence">ModuleImageSequence</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Locate a single module and its cells</p>
@@ -582,6 +586,9 @@ International Conference on Computer Analysis of Images and Patterns. Springer, 
 If set to None (default), orientation is automatically determined</dd>
 <dt><strong><code>return_bounding_boxes</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Indicates, if bounding boxes of returned modules are returned</dd>
+<dt><strong><code>enable_background_suppression</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Indicate, if background suppresion is enabled. This sometimes causes
+problems with PL images and disabling it may help.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -598,6 +605,7 @@ def locate_module_and_cells(
     estimate_distortion: bool = True,
     orientation: str = None,
     return_bounding_boxes: bool = False,
+    enable_background_suppresion: bool = True,
 ) -&gt; Union[Tuple[ModuleImageOrSequence, ObjectAnnotations], ModuleImageSequence]:
     &#34;&#34;&#34;Locate a single module and its cells
 
@@ -612,6 +620,8 @@ def locate_module_and_cells(
         orientation (str): Orientation of the module (&#39;horizontal&#39; or &#39;vertical&#39; or None).
             If set to None (default), orientation is automatically determined
         return_bounding_boxes (bool): Indicates, if bounding boxes of returned modules are returned
+        enable_background_suppression (bool): Indicate, if background suppresion is enabled. This sometimes causes
+            problems with PL images and disabling it may help.
 
     Returns:
         images: The same image/sequence with location information added
@@ -629,10 +639,12 @@ def locate_module_and_cells(
     transforms = list()
     for img in tqdm(sequence.images):
 
-        # very simple background suppression
         data = img.data.copy()
-        thresh = threshold_otsu(data)
-        data[data &lt; thresh] = 0
+
+        # very simple background suppression
+        if enable_background_suppresion:
+            thresh = threshold_otsu(data)
+            data[data &lt; thresh] = 0
 
         t, mc, dt, f = apply(
             data,
@@ -1217,7 +1229,7 @@ with less variation in size.&#34;
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
