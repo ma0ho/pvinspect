@@ -28,7 +28,7 @@ def locate_module_and_cells(
     estimate_distortion: bool = True,
     orientation: str = None,
     return_bounding_boxes: bool = False,
-    enable_background_suppresion: bool = False,
+    enable_background_suppresion: bool = True,
 ) -> Union[Tuple[ModuleImageOrSequence, ObjectAnnotations], ModuleImageSequence]:
     """Locate a single module and its cells
 
