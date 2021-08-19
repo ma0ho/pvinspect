@@ -9,6 +9,7 @@ from zipfile import ZipFile
 import requests
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from pvinspect.common.types import ObjectAnnotations
+from skimage.color import rgb2gray
 
 from .image import Image, ImageSequence
 from .io import *
@@ -142,11 +143,11 @@ def caip_dataB() -> Tuple[ImageSequence, ImageSequence, ObjectAnnotations]:
     images1 = read_images(
         p / "deitsch_testset" / "10x6",
         common_meta={"modality": "EL_IMAGE", "cols": 10, "rows": 6},
-    )
+    ).apply_image_data(rgb2gray)
     images2 = read_images(
         p / "deitsch_testset" / "9x4",
         common_meta={"modality": "EL_IMAGE", "cols": 9, "rows": 4},
-    )
+    ).apply_image_data(rgb2gray)
     annot = load_json_object_masks(p / "deitsch_testset" / "module_locations.json")
     return images1, images2, annot
 
@@ -169,7 +170,7 @@ def caip_dataC() -> Tuple[ImageSequence, ObjectAnnotations]:
         p / "multiple",
         common_meta={"modality": "EL_IMAGE", "cols": 10, "rows": 6},
         pattern="*.bmp",
-    )
+    ).apply_image_data(rgb2gray)
     return imgs, annot
 
 
@@ -189,7 +190,7 @@ def caip_dataD() -> Tuple[ImageSequence, ObjectAnnotations]:
     annot = load_json_object_masks(p / "rotated" / "module_locations.json")
     imgs = read_images(
         p / "rotated", common_meta={"modality": "EL_IMAGE", "cols": 10, "rows": 6}
-    )
+    ).apply_image_data(rgb2gray)
     return imgs, annot
 
 
