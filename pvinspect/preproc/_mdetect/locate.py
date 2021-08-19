@@ -1,17 +1,13 @@
-from . import locate_corners
-from . import locate_module
-from pvinspect.common import transform
-from .config import (
-    CORNER_DETECTION_PATCH_SIZE,
-    RANSAC_THRES,
-    PREPROC_LOWER_PERCENTILE,
-    PREPROC_UPPER_PERCENTILE,
-)
-import numpy as np
 from typing import Tuple
-from skimage import exposure
-from scipy.ndimage.filters import median_filter
+
+import numpy as np
 from matplotlib import pyplot as plt
+from pvinspect.common import transform
+from scipy.ndimage.filters import median_filter
+from skimage import exposure
+
+from . import locate_corners, locate_module
+from .config import CORNER_DETECTION_PATCH_SIZE, RANSAC_THRES
 
 
 def apply(
@@ -36,10 +32,10 @@ def apply(
 
     # preprocessing
     img = img.copy()
-    x = np.percentile(img.flatten(), PREPROC_UPPER_PERCENTILE, interpolation="lower")
-    img[img > x] = x
-    x = np.percentile(img.flatten(), PREPROC_LOWER_PERCENTILE, interpolation="lower")
-    img[img < x] = x
+    # x = np.percentile(img.flatten(), PREPROC_UPPER_PERCENTILE, interpolation="lower")
+    # img[img > x] = x
+    # x = np.percentile(img.flatten(), PREPROC_LOWER_PERCENTILE, interpolation="lower")
+    # img[img < x] = x
     img = exposure.rescale_intensity(img)
     img = img / np.max(img)
 

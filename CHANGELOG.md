@@ -4,6 +4,7 @@
 
 * Remove `_ipy_exit.py`
 * Update default recommendation to using `virtualenv`
+* Make background suppression for module detection configurable
 
 ## 0.4.1
 

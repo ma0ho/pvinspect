@@ -28,6 +28,7 @@ def locate_module_and_cells(
     estimate_distortion: bool = True,
     orientation: str = None,
     return_bounding_boxes: bool = False,
+    enable_background_suppresion: bool = False,
 ) -> Union[Tuple[ModuleImageOrSequence, ObjectAnnotations], ModuleImageSequence]:
     """Locate a single module and its cells
 
@@ -42,6 +43,8 @@ def locate_module_and_cells(
         orientation (str): Orientation of the module ('horizontal' or 'vertical' or None).
             If set to None (default), orientation is automatically determined
         return_bounding_boxes (bool): Indicates, if bounding boxes of returned modules are returned
+        enable_background_suppression (bool): Indicate, if background suppresion is enabled. This sometimes causes
+            problems with PL images and disabling it may help.
 
     Returns:
         images: The same image/sequence with location information added
@@ -59,10 +62,12 @@ def locate_module_and_cells(
     transforms = list()
     for img in tqdm(sequence.images):
 
-        # very simple background suppression
         data = img.data.copy()
-        thresh = threshold_otsu(data)
-        data[data < thresh] = 0
+
+        # very simple background suppression
+        if enable_background_suppresion:
+            thresh = threshold_otsu(data)
+            data[data < thresh] = 0
 
         t, mc, dt, f = apply(
             data,

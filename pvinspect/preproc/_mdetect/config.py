@@ -1,7 +1,3 @@
-# preprocessing
-PREPROC_LOWER_PERCENTILE = 10
-PREPROC_UPPER_PERCENTILE = 80
-
 # module/cell detection
 GAUSSIAN_RELATIVE_SIGMA = 0.01
 RANSAC_THRES = 0.1  # 10% of cell size
