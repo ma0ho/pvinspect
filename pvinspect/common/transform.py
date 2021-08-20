@@ -1,10 +1,13 @@
-import numpy as np
-from copy import copy, deepcopy
-import scipy.optimize
-import scipy.interpolate
 from abc import ABC, abstractmethod, abstractproperty
+from copy import copy, deepcopy
 from functools import reduce
+from typing import Type, TypeVar
+
 import cv2
+import numpy as np
+import scipy.interpolate
+import scipy.optimize
+
 from . import util
 
 
@@ -575,6 +578,19 @@ class FullMultiTransform(MultiTransform):
                 self._Rt = _solve_PnP_wrap(src, dest, self._A, self._dist, n_dist_coeff)
         self._is_inverse = False
         self._success = True
+
+    TSelf = TypeVar("TSelf")
+
+    @classmethod
+    def from_parameters(cls: Type[TSelf], Rt, A, dist, is_inverse=False) -> TSelf:
+        res = FullMultiTransform.__new__(FullMultiTransform)
+        res._Rt = Rt
+        res._A = A
+        res._dist = dist
+        res._is_inverse = is_inverse
+        res._mask = None
+        res._success = True
+        return res
 
     def __call__(self, coords):
         if self._success:

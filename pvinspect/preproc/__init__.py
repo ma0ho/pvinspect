@@ -1,6 +1,6 @@
 """Methods for preprocessing data"""
 
-from . import detection, stitching
+from . import detection, registration, stitching
 
 # from . import calibration
 from .default_plugins import _register_default_plugins

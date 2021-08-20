@@ -7,6 +7,7 @@
 * Update default recommendation to using `virtualenv`
 * Rework ``data`` subpackage
 * Add defects analysis
+* Add intensity-based registration for solar modules
 
 ## 0.4.1
 
