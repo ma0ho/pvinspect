@@ -167,7 +167,7 @@ class Image(metaclass=ABCMeta):
             v.setflags(write=False)
             return v
         else:
-            return copy.copy(self._meta[key])
+            return copy.deepcopy(self._meta[key])
 
     def has_meta(self, key: str) -> bool:
         """Check if a meta attribute is set"""

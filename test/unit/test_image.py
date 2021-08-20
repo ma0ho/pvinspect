@@ -140,6 +140,12 @@ def test_image_meta_is_immutable():
     assert img_with_meta.get_meta("othermeta") is not othermeta
 
 
+def test_image_get_meta_returns_deep_copy():
+    x = [np.empty(10)]
+    img = random_image(some_meta=x)
+    assert img.get_meta("some_meta")[0] is not x[0]
+
+
 def test_lazy_image_apply_data():
     img = random_image(lazy=True)
     img2 = img.apply_data(lambda x: np.zeros_like(x))
