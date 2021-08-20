@@ -148,6 +148,16 @@ class ImageSequence(Generic[TImageSequence], Iterable, metaclass=ABCMeta):
         res._meta = self._meta.apply(fn, axis=1)  # type: ignore
         return res
 
+    def apply_meta_list(
+        self: TImageSequence, column_name: str, meta_list: List[Any]
+    ) -> TImageSequence:
+        def fn(x: pd.Series) -> pd.Series:
+            x = x.copy()
+            x[column_name] = meta_list[x.name]
+            return x
+
+        return self.apply_meta(fn)
+
     @abstractmethod
     def apply_image_data(
         self: TImageSequence, fn: Callable[[np.ndarray], np.ndarray]

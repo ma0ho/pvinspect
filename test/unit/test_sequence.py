@@ -146,6 +146,15 @@ def test_sequence_apply_meta_applies_rowwise():
     seq.apply_meta(test)
 
 
+def test_sequence_apply_meta_list():
+    seq = random_sequence()
+    meta = list(range(len(seq)))
+    seq2 = seq.apply_meta_list("new_meta", meta)
+
+    for i, img, in enumerate(seq2):
+        assert img.get_meta("new_meta") == i
+
+
 def test_sequence_wrapper():
     @sequence
     def _some_fn(seq: ImageOrSequence):
