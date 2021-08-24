@@ -35,6 +35,7 @@ setuptools.setup(
         "pandas >= 1.0.0",
         "onnxruntime",
         "docstring_parser",
+        "typing_extensions",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -2,7 +2,7 @@
 
 import logging
 from copy import deepcopy
-from typing import Dict, List, Literal, Optional, Tuple, Union, overload
+from typing import Dict, List, Optional, Tuple, Union, overload
 
 import numpy as np
 import pandas as pd
@@ -21,6 +21,7 @@ from shapely.geometry import Polygon
 from skimage import filters, measure, morphology, transform
 from skimage.filters.thresholding import threshold_otsu
 from tqdm.auto import tqdm
+from typing_extensions import Literal
 
 
 @overload
