@@ -257,7 +257,7 @@ class DefectModel(InspectModel):
             result_names,
             prefix=prefix,
             data_transform=data_transform_wrap,
-            use_cuda=True,
+            use_cuda=use_cuda,
             hparams=hparams,
         )
 

@@ -59,6 +59,8 @@ class InspectModel:
             for itm in tqdm(ds):
                 if self.use_cuda:
                     itm = itm.cuda().unsqueeze(0)
+                else:
+                    itm = itm.unsqueeze(0)
                 results.append(self.module.forward(itm))
 
         def apply_label(x: pd.Series):
