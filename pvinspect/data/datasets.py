@@ -53,7 +53,7 @@ def _check_and_download_zip_ds(name: str) -> Path:
 
     if not target.is_dir():
         logging.info("Data is being downloaded..")
-        target.mkdir()
+        target.mkdir(parents=True)
         r = requests.get(url, allow_redirects=True)
         open(target / "data.zip", "wb").write(r.content)
         zipf = ZipFile(target / "data.zip")
