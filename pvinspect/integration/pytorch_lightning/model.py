@@ -13,7 +13,7 @@ from pvinspect.data.image.sequence import (
     sequence,
 )
 from pvinspect.integration.pytorch.dataset import Dataset
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
 try:
     import pytorch_lightning as pl
