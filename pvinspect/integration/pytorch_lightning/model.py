@@ -10,6 +10,7 @@ from pvinspect.data.image.sequence import (
     ImageOrSequence,
     ImageSequence,
     TImageOrSequence,
+    TImageSequence,
     sequence,
 )
 from pvinspect.integration.pytorch.dataset import Dataset
@@ -50,7 +51,7 @@ class InspectModel:
         if self.use_cuda:
             self.module = self.module.cuda()
 
-    def apply(self, data: ImageSequence) -> ImageSequence:
+    def apply(self, data: TImageSequence) -> TImageSequence:
 
         ds = Dataset(data, self.data_transform)
         results = list()

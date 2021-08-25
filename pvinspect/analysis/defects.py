@@ -11,7 +11,7 @@ import skimage
 import torch as t
 import torchvision as tv
 from albumentations.pytorch.transforms import ToTensorV2
-from pvinspect.data.image.sequence import ImageSequence, sequence
+from pvinspect.data.image.sequence import ImageSequence, TImageSequence, sequence
 from pvinspect.integration.pytorch_lightning import InspectModel
 from pytorch_lightning.core.mixins.hparams_mixin import HyperparametersMixin
 from scipy.special import expit
@@ -270,7 +270,7 @@ class DefectModel(InspectModel):
             ]
         )
 
-    def apply(self, data: ImageSequence) -> ImageSequence:
+    def apply(self, data: TImageSequence) -> TImageSequence:
         data = super().apply(data)
 
         def label(x: pd.Series) -> pd.Series:
