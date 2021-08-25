@@ -1,4 +1,4 @@
 """Data loading and viewing"""
 
-from . import datasets, io, meta
+from . import io, meta
 from .image import *

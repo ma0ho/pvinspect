@@ -1,6 +1,6 @@
 from pvinspect.common.types import ObjectAnnotations
-from pvinspect.data.datasets import *
 from pvinspect.data.image import *
+from pvinspect.datasets import *
 
 
 def test_poly10x6():

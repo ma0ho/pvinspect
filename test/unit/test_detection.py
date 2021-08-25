@@ -6,11 +6,12 @@ from pvinspect import data
 from pvinspect.common.transform import FullTransform, HomographyTransform
 from pvinspect.common.util import objdetect_metrics
 from pvinspect.data.image import *
+from pvinspect.datasets import *
 from pvinspect.preproc import detection
 
 
 def test_locate_homography():
-    seq = data.datasets.poly10x6(2)
+    seq = poly10x6(2)
     seq = detection.locate_module_and_cells(
         seq, rows=6, cols=10, estimate_distortion=False
     )
@@ -30,7 +31,7 @@ def test_locate_homography():
 
 
 def test_locate_full():
-    seq = data.datasets.poly10x6(2)
+    seq = poly10x6(2)
     seq = detection.locate_module_and_cells(
         seq, rows=6, cols=10, estimate_distortion=True
     )
@@ -50,7 +51,7 @@ def test_locate_full():
 
 
 def test_segment_cells():
-    seq = data.datasets.poly10x6(2)
+    seq = poly10x6(2)
     seq = detection.locate_module_and_cells(
         seq, rows=6, cols=10, estimate_distortion=True
     )
@@ -72,7 +73,7 @@ def test_segment_cells():
 
 
 def test_segment_cells_single_image():
-    seq = data.datasets.poly10x6(1)
+    seq = poly10x6(1)
     seq = detection.locate_module_and_cells(
         seq, rows=6, cols=10, estimate_distortion=True
     )
@@ -84,7 +85,7 @@ def test_segment_cells_single_image():
 
 
 def test_segment_modules():
-    seq = data.datasets.poly10x6(2)
+    seq = poly10x6(2)
     seq = detection.locate_module_and_cells(
         seq, rows=6, cols=10, estimate_distortion=True
     )
@@ -96,7 +97,7 @@ def test_segment_modules():
 
 
 def test_segment_module_part():
-    mod = data.datasets.poly10x6(1)[0]
+    mod = poly10x6(1)[0]
     mod = detection.locate_module_and_cells(mod, rows=6, cols=10)
     part = detection.segment_module_part(mod, 1, 2, 2, 3)
 
@@ -108,7 +109,7 @@ def test_segment_module_part():
 
 
 def test_segment_module_part_padding():
-    mod = data.datasets.poly10x6(1)[0]
+    mod = poly10x6(1)[0]
     mod = detection.locate_module_and_cells(mod, rows=6, cols=10)
     part = detection.segment_module_part(mod, -1, -2, 2, 3)
 
@@ -120,24 +121,20 @@ def test_segment_module_part_padding():
 
 
 def test_segment_size():
-    img = detection.locate_module_and_cells(
-        data.datasets.poly10x6(1)[0], rows=6, cols=10
-    )
+    img = detection.locate_module_and_cells(poly10x6(1)[0], rows=6, cols=10)
     part = detection.segment_module_part(img, 1, 3, 2, 1, size=20)
     assert_equal(part.shape[1], 2 * 20)
     assert_equal(part.shape[0], 1 * 20)
 
 
 def test_segment_padding():
-    img = detection.locate_module_and_cells(
-        data.datasets.poly10x6(1)[0], rows=6, cols=10
-    )
+    img = detection.locate_module_and_cells(poly10x6(1)[0], rows=6, cols=10)
     part = detection.segment_module_part(img, 0, 0, 3, 2, padding=0.5)
     assert_equal(part.shape[1] / part.shape[0], 8 / 6)
 
 
 def test_detect_multiple_modules():
-    anns, imgs = data.datasets.multi_module_detection(limit=2)
+    anns, imgs = multi_module_detection(limit=2)
     _, boxes = detection.locate_multiple_modules(
         imgs, return_bounding_boxes=True, padding=0.0
     )  # type: ignore

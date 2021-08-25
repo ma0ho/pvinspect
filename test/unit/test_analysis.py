@@ -1,12 +1,13 @@
 import pandas as pd
 import pvinspect as pv
 from pvinspect import analysis
+from pvinspect.datasets import elpv
 from sklearn.metrics import classification_report
 
 
 def test_defect_classification():
     model = analysis.factory_models.defects()
-    data = pv.data.datasets.elpv().pandas.query("testset == True")[:10]
+    data = elpv().pandas.query("testset == True")[:10]
     res = model.apply(data)
     report = pd.DataFrame(
         classification_report(

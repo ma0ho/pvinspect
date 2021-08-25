@@ -9,10 +9,9 @@ from zipfile import ZipFile
 import requests
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from pvinspect.common.types import ObjectAnnotations
+from pvinspect.data import Image, ImageSequence
+from pvinspect.data.io import *
 from skimage.color import rgb2gray
-
-from .image import Image, ImageSequence
-from .io import *
 
 _DS_PATH = Path(__file__).parent.absolute() / "datasets"
 _DS_KEYS = {
