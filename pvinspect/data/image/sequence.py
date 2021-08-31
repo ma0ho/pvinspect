@@ -284,7 +284,7 @@ class EagerImageSequence(ImageSequence):
     def from_images(cls, images: List[Image]) -> EagerImageSequence:
         meta = pd.DataFrame(
             [img.meta if img.meta is not None else pd.Series({}) for img in images]
-        )
+        ).reset_index(drop=True)
         return cls(images, meta)
 
 
