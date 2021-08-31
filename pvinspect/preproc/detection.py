@@ -34,6 +34,7 @@ def locate_module_and_cells(
     joint_distortion_estimation: bool = True,
     orientation: str = None,
     return_bounding_boxes: Literal[False] = False,
+    drop_failed: bool = False,
 ) -> TImageOrSequence:
     ...
 
@@ -48,6 +49,7 @@ def locate_module_and_cells(
     joint_distortion_estimation: bool = True,
     orientation: str = None,
     return_bounding_boxes: Literal[True] = True,
+    drop_failed: bool = False,
 ) -> Tuple[TImageOrSequence, ObjectAnnotations]:
     ...
 
@@ -62,6 +64,7 @@ def locate_module_and_cells(
     joint_distortion_estimation: bool = True,
     orientation: str = None,
     return_bounding_boxes: bool = False,
+    drop_failed: bool = False,
 ) -> Union[Tuple[TImageOrSequence, ObjectAnnotations], TImageOrSequence]:
     ...
 
@@ -76,6 +79,7 @@ def locate_module_and_cells(
     joint_distortion_estimation: bool = True,
     orientation: str = None,
     return_bounding_boxes: bool = False,
+    drop_failed: bool = False,
 ) -> Union[Tuple[TImageOrSequence, ObjectAnnotations], TImageOrSequence]:
     """Locate a single module and its cells
 
@@ -186,11 +190,16 @@ def locate_module_and_cells(
             if cols is not None:
                 img_res = img_res.from_self(cols=cols)
             result.append(img_res)
-        else:
+        elif not drop_failed:
             result.append(deepcopy(img))
             failures += 1
+        else:
+            failures += 1
     if failures > 0:
-        logging.warning("Module localization falied for {:d} images".format(failures))
+        msg = "Module localization falied for {:d} images".format(failures)
+        if drop_failed == False:
+            msg += " You may drop failed images from the resulting sequence by setting drop_failed=True."
+        logging.warning(msg)
 
     result = EagerImageSequence.from_images(result)
 

@@ -2,6 +2,7 @@
 
 ## In development
 
+* Add `drop_failed` argument to `locate_module_and_cells`
 * Add `figscale` argument to show-methods
 * Remove `_ipy_exit.py`
 * Update default recommendation to using `virtualenv`
