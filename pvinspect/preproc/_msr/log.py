@@ -17,6 +17,18 @@ def no_debug(func):
     return wrapper
 
 
+# a logger that does nothing
+class DummyLogger:
+    def dummymethod(self, *args, **kwargs):
+        return
+
+    def __init__(self):
+        super(DummyLogger).__init__()
+
+    def __getattr__(self, name):
+        return self.dummymethod
+
+
 class Logger:
 
     logs: Dict[int, Dict[str, List[Any]]]

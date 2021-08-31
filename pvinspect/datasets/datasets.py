@@ -10,8 +10,10 @@ import requests
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from pvinspect.common.types import ObjectAnnotations
 from pvinspect.data import Image, ImageSequence
+from pvinspect.data.image.type import DType
 from pvinspect.data.io import *
 from skimage.color import rgb2gray
+from skimage.transform import rescale
 
 _DS_PATH = Path(__file__).parent.absolute() / "datasets"
 _DS_KEYS = {
@@ -273,3 +275,32 @@ def multi_module_detection(limit=None) -> Tuple[ObjectAnnotations, ImageSequence
                 imgs = tmp
     anns = load_json_object_masks(path=p / "labels.json")
     return anns, imgs
+
+
+def sr_demo(N: int, magnification: int, poly_idx: int = 5) -> ImageSequence:
+    try:
+        import torchvision as tv
+    except ImportError as e:
+        logging.error("You need to have torchvision installed: pip install torchvision")
+        raise e
+
+    # get image
+    img = poly10x6(poly_idx - 1)[-1]
+
+    # transforms
+    tfms = tv.transforms.Compose(
+        [
+            tv.transforms.ToPILImage(),
+            tv.transforms.RandomAffine(3, (0.05, 0.05), (0.7, 0.9), 3),
+            tv.transforms.ToTensor(),
+        ]
+    )
+
+    # apply
+    return (
+        EagerImageSequence.from_images([img for _ in range(N)])
+        .as_type(DType.FLOAT)
+        .apply_image_data(lambda x: tfms(x).squeeze().numpy())
+        .apply_image_data(lambda x: rescale(x, 1 / magnification, order=0))
+        .as_type(DType.UNSIGNED_INT)
+    )

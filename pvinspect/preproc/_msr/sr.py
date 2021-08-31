@@ -5,7 +5,7 @@ from math import log
 from os import rmdir
 from pathlib import Path
 from shutil import rmtree
-from typing import Union
+from typing import Optional, Union
 
 import pandas as pd
 import torch as t
@@ -14,25 +14,13 @@ from torch.nn.modules.loss import L1Loss, MSELoss
 from .cv import run_cv
 from .data import prepare_data
 from .forward_model import ForwardModel
-from .log import Logger
+from .log import DummyLogger, Logger
 from .loss import WeightedL1Loss, WeightedMSELoss
 from .modelparams import *
 from .prior import WeightedBTV
 from .reconstruction import RecoParams, run_reconstruction
 from .thirdpary.resize_right.resize_right import resize
 from .util import *
-
-
-# a logger that does nothing
-class DummyLogger:
-    def dummymethod(self, *args, **kwargs):
-        return
-
-    def __init__(self):
-        super(DummyLogger).__init__()
-
-    def __getattr__(self, name):
-        return self.dummymethod
 
 
 class SRParams:
@@ -46,7 +34,6 @@ class SRParams:
         blur_std: float = 0.5,
         image_loss_type: str = "WeightedL1",
         motion_loss_type: str = "L1",
-        use_cuda: bool = True,
         image_reg_strength: float = None,
         max_reco_iter: int = 30,
         lr_image: float = 50.0,
@@ -54,8 +41,7 @@ class SRParams:
         max_motion_iter: int = 180,
         lr_motion: float = 1e-1,
         motion_min_diff: float = 0.0005,
-        magnification: int = 4,
-        initial_magnification: int = 1,
+        initial_magnification: Optional[int] = 1,
         enable_bias_compensation: bool = True,
         max_iter: int = 10,
     ):
@@ -66,6 +52,8 @@ def superresolve(
     lr_images: t.Tensor,
     motion: t.Tensor,
     ref: t.Tensor,
+    use_cuda: bool,
+    magnification: int,
     params: SRParams = SRParams(),
     log_level=logging.INFO,
     results_logger=DummyLogger(),
@@ -130,7 +118,7 @@ def superresolve(
         )
 
         # use cuda?
-        if params.use_cuda:
+        if use_cuda:
             logger.info("Using CUDA")
             model.cuda()
             prior.cuda()
@@ -168,36 +156,38 @@ def superresolve(
 
         # timing
         start_t = datetime.now()
-        reco_params = run_cv(
-            model,
-            prior,
-            image_loss,
-            sr,
-            lr_images,
-            motion + motion_diff,
-            reco_params,
-            -12,
-            0,
-            cv_iter,
-            params.cv_val_image_p,
-            search_lambda=False,
-            search_lr=True,
-        )
-        reco_params = run_cv(
-            model,
-            prior,
-            image_loss,
-            sr,
-            lr_images,
-            motion + motion_diff,
-            reco_params,
-            -12,
-            0,
-            cv_iter,
-            params.cv_val_image_p,
-            search_lambda=True,
-            search_lr=False,
-        )
+
+        if cv_iter > 0:
+            reco_params = run_cv(
+                model,
+                prior,
+                image_loss,
+                sr,
+                lr_images,
+                motion + motion_diff,
+                reco_params,
+                -12,
+                0,
+                cv_iter,
+                params.cv_val_image_p,
+                search_lambda=False,
+                search_lr=True,
+            )
+            reco_params = run_cv(
+                model,
+                prior,
+                image_loss,
+                sr,
+                lr_images,
+                motion + motion_diff,
+                reco_params,
+                -12,
+                0,
+                cv_iter,
+                params.cv_val_image_p,
+                search_lambda=True,
+                search_lr=False,
+            )
 
         if params.enable_bias_compensation:
             logger.info("Estimate and compensate sensor bias..")
@@ -223,17 +213,24 @@ def superresolve(
         results_logger.log_image(lr_est[0], "lr_estim_initial_first", 0)
         results_logger.log_image(lr_est[-1], "lr_estim_initial_last", 0)
 
+        # set initial magnification
+        initial_magnification = (
+            magnification
+            if params.initial_magnification is None
+            else params.initial_magnification
+        )
+
         # BEGIN OUTER LOOP ==================================================================================
         for i in range(params.max_iter):
 
             # set magnification and rescale sr
             if (
-                current_magnification < params.magnification
+                current_magnification < magnification
                 and i > 0
-                or current_magnification < params.magnification
-                and params.initial_magnification > 1
+                or current_magnification < magnification
+                and initial_magnification > 1
             ):
-                increment = max(params.initial_magnification - current_magnification, 1)
+                increment = max(initial_magnification - current_magnification, 1)
                 sr_previous = sr
                 factor = (current_magnification + increment) / current_magnification
                 sr = resize(sr, scale_factors=t.tensor(factor).to(sr))
