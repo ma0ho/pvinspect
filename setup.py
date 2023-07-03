@@ -25,7 +25,7 @@ setuptools.setup(
         "opencv-python",
         "shapely",
         "optuna",
-        "sklearn",
+        "scikit-learn",
         "pillow >= 7.2.0",
         "pandas >= 1.0.0",
         "docstring_parser",

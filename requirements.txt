@@ -1,0 +1,15 @@
+numpy >= 1.16.5
+scikit-image >= 0.16
+matplotlib
+tqdm
+scipy
+requests
+googledrivedownloader
+opencv-python
+shapely
+optuna
+scikit-learn
+pillow >= 7.2.0
+pandas >= 1.0.0
+docstring_parser
+typing_extensions
