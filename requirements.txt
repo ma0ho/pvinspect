@@ -15,3 +15,5 @@ docstring_parser
 typing_extensions
 torch ~= 1.0
 torchvision ~= 0.0
+albumentations ~= 1.0
+pytorch_lightning ~= 1.0

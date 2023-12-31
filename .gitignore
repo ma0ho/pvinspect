@@ -10,4 +10,4 @@ html
 dist
 build
 private_examples
-.venv
+.venv*

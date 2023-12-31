@@ -33,6 +33,7 @@ def _get_model_key(name: str):
 
 def _check_and_download_model(name: str):
     model_path = _MODEL_PATH / name
+    print(model_path)
     if not model_path.is_dir():
         logging.info("Data is being downloaded..")
         k = _get_model_key(name)
