@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ma0ho/pvinspect",
     packages=setuptools.find_packages(),
-    python_requires=">=3.7, <3.10",
+    python_requires=">=3.7, <3.11",
     install_requires=[
         "numpy >= 1.16.5",
         "scikit-image >= 0.16",

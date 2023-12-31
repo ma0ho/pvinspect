@@ -10,6 +10,8 @@ shapely
 optuna
 scikit-learn
 pillow >= 7.2.0
-pandas >= 1.0.0
+pandas ~= 1.0
 docstring_parser
 typing_extensions
+torch ~= 1.0
+torchvision ~= 0.0
