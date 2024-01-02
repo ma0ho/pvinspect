@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+
+* Entire rework of the pvinspect core
+
 ## 0.4.3
 
 ### Fixed
