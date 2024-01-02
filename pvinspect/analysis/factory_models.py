@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 from zipfile import ZipFile
 
 import requests
-from google_drive_downloader import GoogleDriveDownloader as gdd
+import gdown
 from pvinspect.analysis.defects import DefectModel
 from pvinspect.common.types import ObjectAnnotations
 
@@ -38,7 +38,7 @@ def _check_and_download_model(name: str):
         logging.info("Data is being downloaded..")
         k = _get_model_key(name)
         model_path.mkdir(parents=True, exist_ok=False)
-        gdd.download_file_from_google_drive(k, str(model_path / "data.zip"), unzip=True)
+        gdown.cached_download(f"https://drive.google.com/uc?id={k}", str(model_path / "data.zip"), postprocess=gdown.extractall)
     return model_path
 
 

@@ -11,3 +11,4 @@ dist
 build
 private_examples
 .venv*
+.DS_store

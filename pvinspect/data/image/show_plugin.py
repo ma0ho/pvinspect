@@ -35,7 +35,7 @@ from docstring_parser import parse
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from skimage import img_as_float64, img_as_int, img_as_uint
-from tqdm.autonotebook import tqdm
+from tqdm import tqdm
 
 
 class PluginOption(NamedTuple):

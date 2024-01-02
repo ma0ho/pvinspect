@@ -21,7 +21,7 @@ setuptools.setup(
         "tqdm",
         "scipy",
         "requests",
-        "googledrivedownloader",
+        "gdown",
         "opencv-python",
         "shapely",
         "optuna",

@@ -17,7 +17,7 @@ from shapely import affinity
 from shapely.geometry import Polygon
 from skimage import filters, img_as_float, measure, morphology, transform
 from skimage.exposure import rescale_intensity
-from tqdm.autonotebook import tqdm, trange
+from tqdm import tqdm, trange
 
 
 def _calibrate_flatfield(

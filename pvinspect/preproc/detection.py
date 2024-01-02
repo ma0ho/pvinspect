@@ -20,7 +20,7 @@ from pvinspect.preproc._mdetect.locate import apply
 from shapely.geometry import Polygon
 from skimage import filters, measure, morphology, transform
 from skimage.filters.thresholding import threshold_otsu
-from tqdm.auto import tqdm
+from tqdm import tqdm
 from typing_extensions import Literal
 
 
