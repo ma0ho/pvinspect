@@ -37,7 +37,7 @@ Please note that the procedure depends on the type of shell that you are using. 
 **3. Install pvinspect:**
 
 ```bash
-pip install https://github.com/ma0ho/pvinspect@master
+pip install git+https://github.com/ma0ho/pvinspect.git@master
 ```
 
 This installs the `pvinspect` package in the currently active environment (which is normally indicated in the shell). So please make sure to have the correct environment activated. After installation, you can use `pvinspect` at any time from within that environment.
