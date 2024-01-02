@@ -35,6 +35,7 @@ def locate_module_and_cells(
     orientation: str = None,
     return_bounding_boxes: Literal[False] = False,
     drop_failed: bool = False,
+    enable_background_suppresion = True
 ) -> TImageOrSequence:
     ...
 
@@ -50,6 +51,7 @@ def locate_module_and_cells(
     orientation: str = None,
     return_bounding_boxes: Literal[True] = True,
     drop_failed: bool = False,
+    enable_background_suppresion = True
 ) -> Tuple[TImageOrSequence, ObjectAnnotations]:
     ...
 
@@ -65,6 +67,7 @@ def locate_module_and_cells(
     orientation: str = None,
     return_bounding_boxes: bool = False,
     drop_failed: bool = False,
+    enable_background_suppresion = True
 ) -> Union[Tuple[TImageOrSequence, ObjectAnnotations], TImageOrSequence]:
     ...
 
@@ -80,6 +83,7 @@ def locate_module_and_cells(
     orientation: str = None,
     return_bounding_boxes: bool = False,
     drop_failed: bool = False,
+    enable_background_suppresion = True
 ) -> Union[Tuple[TImageOrSequence, ObjectAnnotations], TImageOrSequence]:
     """Locate a single module and its cells
 

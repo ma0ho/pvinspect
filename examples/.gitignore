@@ -1,3 +1,7 @@
 .ipynb_checkpoints
 *.itf
 *tmp
+*.zip
+*.tif
+*.png
+*.csv
