@@ -1,0 +1,19 @@
+numpy >= 1.16.5
+scikit-image >= 0.16
+matplotlib
+tqdm
+scipy
+requests
+gdown
+opencv-python
+shapely
+optuna
+scikit-learn
+pillow >= 7.2.0
+pandas ~= 1.0
+docstring_parser
+typing_extensions
+torch ~= 1.0
+torchvision ~= 0.0
+albumentations ~= 1.0
+pytorch_lightning ~= 1.0

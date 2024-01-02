@@ -73,7 +73,7 @@ def matrix2rodrigues(R):
 
 
 def ransac(n_samples, n_required, model_f, err_f, p=0.99):
-    is_inlier = np.zeros(n_samples, dtype=np.bool)
+    is_inlier = np.zeros(n_samples, dtype=bool)
     num_inlier = 0
     N = np.inf
     n = 0

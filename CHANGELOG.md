@@ -10,9 +10,15 @@
 
 ### Fixed/Improved
 
+* Add superresolution
+* Add `drop_failed` argument to `locate_module_and_cells`
+* Add `figscale` argument to show-methods
 * Remove `_ipy_exit.py`
 * Update default recommendation to using `virtualenv`
 * Make background suppression for module detection configurable
+* Rework ``data`` subpackage
+* Add defects analysis
+* Add intensity-based registration for solar modules
 
 ## 0.4.1
 

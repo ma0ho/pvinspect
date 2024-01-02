@@ -1,6 +1,6 @@
 import numpy as np
-from pvinspect.data import ModuleImage, ModuleImageSequence
-from pvinspect.data.image import Image, ImageSequence, Modality
+from pvinspect.data import Image, ImageSequence
+from pvinspect.data.image import Image, ImageSequence
 from pvinspect.preproc.detection import locate_module_and_cells, segment_module_part
 
 
@@ -162,9 +162,9 @@ def locate_and_stitch_modules(
         image (Image): The stitched image
     """
 
-    modimages = ModuleImageSequence(
+    modimages = ImageSequence(
         [
-            ModuleImage(x.data, modality=Modality.EL_IMAGE, cols=cols, rows=rows)
+            Image(x.data, modality=Modality.EL_IMAGE, cols=cols, rows=rows)
             for x in images
         ]
     )

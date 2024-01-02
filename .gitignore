@@ -2,6 +2,7 @@ __pycache__
 *.egg-info
 .vscode
 .pytest_cache
+.mypy_cache
 .ipynb_checkpoints
 .mypy_cache
 results
@@ -9,3 +10,5 @@ html
 dist
 build
 private_examples
+.venv*
+.DS_store

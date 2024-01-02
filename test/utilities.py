@@ -1,16 +1,19 @@
-import numpy as np
-from pathlib import Path
-
-from numpy import random
-from pvinspect.data import (
-    Image,
-    ModuleImage,
-    ImageSequence,
-    ModuleImageSequence,
-    EL_IMAGE,
-)
-from typing import List, Dict, Any, Optional
 import uuid
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+from numpy import random
+from pvinspect.data.image.image import EagerImage, Image, LazyImage
+from pvinspect.data.image.sequence import (
+    EagerImageSequence,
+    ImageSequence,
+    LazyImageSequence,
+)
+from pvinspect.data.image.type import DType
+
+RANDOM_IMAGE_SHAPE = (10, 10)
 
 
 def random_filename(ext: str = ".tif") -> str:
@@ -23,99 +26,52 @@ def assert_equal(value, target, precision=1e-3):
     ), "got value={}, target={}".format(value, target)
 
 
-def random_image(lazy: bool = False, **kwargs) -> Image:
+def random_image(
+    lazy: bool = False, seed: int = None, dtype: DType = DType.FLOAT, **kwargs
+) -> Image:
+    def rnd():
+        if dtype == DType.FLOAT:
+            return np.random.rand(10, 10)
+        elif dtype == DType.UNSIGNED_BYTE:
+            return np.random.randint(0, 255, size=(10, 10)).astype(np.uint8)
+        else:
+            raise NotImplementedError()
+
+    if seed is not None:
+        np.random.seed(seed)
     if lazy:
-        data = Image.LazyData(lambda: np.random.random((10, 10)))
+        data = LazyImage.LazyData(lambda: rnd())
+        return LazyImage(data, **kwargs)
     else:
-        data = np.random.random((10, 10))
-
-    if "modality" not in kwargs.keys():
-        kwargs["modality"] = EL_IMAGE
-    if "path" not in kwargs.keys():
-        kwargs["path"] = Path() / random_filename()
-
-    return Image(data, **kwargs)
+        data = rnd()
+        return EagerImage(data, **kwargs)
 
 
-def random_uint_image(lazy: bool = False, **kwargs) -> Image:
+def norandom_image(data: np.ndarray, lazy: bool = False, **kwargs) -> Image:
     if lazy:
-        data = Image.LazyData(
-            lambda: (np.random.random((10, 10)) * 100).astype(np.uint32)
-        )
+        x = LazyImage.LazyData(lambda: data)
+        return LazyImage(x, **kwargs)
     else:
-        data = (np.random.random((10, 10)) * 100).astype(np.uint32)
-
-    if "modality" not in kwargs.keys():
-        kwargs["modality"] = EL_IMAGE
-    if "path" not in kwargs.keys():
-        kwargs["path"] = Path() / random_filename()
-
-    return Image(data, **kwargs)
+        return EagerImage(data, **kwargs)
 
 
-def random_ubyte_image(lazy: bool = False, **kwargs) -> Image:
-    if lazy:
-        data = Image.LazyData(
-            lambda: (np.random.random((10, 10)) * 100).astype(np.uint8)
-        )
-    else:
-        data = (np.random.random((10, 10)) * 100).astype(np.uint32)
-
-    if "modality" not in kwargs.keys():
-        kwargs["modality"] = EL_IMAGE
-    if "path" not in kwargs.keys():
-        kwargs["path"] = Path() / random_filename()
-
-    return Image(data, **kwargs)
-
-
-def random_module_image() -> ModuleImage:
-    data = np.random.random((10, 10))
-    return ModuleImage(data, modality=EL_IMAGE, path=Path() / random_filename())
-
-
-def random_image_sequence(
+def random_sequence(
+    seq_lazy: bool = False,
+    imgs_lazy: bool = False,
     N: int = 3,
-    meta: Optional[List[Dict[str, Any]]] = None,
-    random_meta: bool = False,
-    **kwargs
+    dtype: DType = DType.FLOAT,
+    meta: Optional[pd.DataFrame] = None,
 ) -> ImageSequence:
-    if random_meta and meta is None:
-        random_keys = [uuid.uuid4().hex for _ in range(10)]
-        meta = list()
-        for _ in range(N):
-            meta.append({k: random.randint(0, 10000) for k in random_keys})
 
-    if meta is None:
-        imgs = [random_image(**kwargs) for i in range(N)]
+    # create meta if not given
+    meta = pd.DataFrame([{"idx": i} for i in range(N)]) if meta is None else meta
+
+    if seq_lazy:
+
+        def load_fn(meta: pd.Series) -> Image:
+            return random_image(imgs_lazy, seed=meta.name, meta=meta, dtype=dtype)
+
+        return LazyImageSequence(meta, load_fn)
     else:
-        assert len(meta) == N
-        imgs = [random_image(meta=m, **kwargs) for m in meta]
-    return ImageSequence(imgs, False)
-
-
-def random_uint_image_sequence(
-    N: int = 3, meta: Optional[List[Dict[str, Any]]] = None, **kwargs
-) -> ImageSequence:
-    if meta is None:
-        imgs = [random_uint_image(**kwargs) for i in range(N)]
-    else:
-        assert len(meta) == N
-        imgs = [random_uint_image(meta=m, **kwargs) for m in meta]
-    return ImageSequence(imgs, False)
-
-
-def random_ubyte_image_sequence(
-    N: int = 3, meta: Optional[List[Dict[str, Any]]] = None, **kwargs
-) -> ImageSequence:
-    if meta is None:
-        imgs = [random_ubyte_image(**kwargs) for i in range(N)]
-    else:
-        assert len(meta) == N
-        imgs = [random_ubyte_image(meta=m, **kwargs) for m in meta]
-    return ImageSequence(imgs, False)
-
-
-def random_module_image_sequence() -> ModuleImageSequence:
-    imgs = [random_module_image() for x in range(3)]
-    return ModuleImageSequence(imgs, False)
+        imgs = [random_image(imgs_lazy, seed=i, idx=i, dtype=dtype) for i in range(N)]
+        return EagerImageSequence(imgs, meta=meta)

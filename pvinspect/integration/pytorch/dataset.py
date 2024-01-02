@@ -1,9 +1,11 @@
 import logging
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 
-from numpy.core.arrayprint import BoolFormat
-from pvinspect.data import ImageSequence, Image, DType
-from typing import Tuple, List, Optional, Callable, Any, Dict, Union, TypeVar
 import numpy as np
+import pandas as pd
+from numpy.core.arrayprint import BoolFormat
+from pvinspect.data import DType, Image, ImageSequence
+from pvinspect.data.image.image import LazyImage
 
 try:
     import torch as t
@@ -13,15 +15,11 @@ except ImportError as e:
     raise e
 
 
-# return type of data transform
-D = TypeVar("D")
-
-
 class Dataset(TorchDataset):
     def __init__(
         self,
         data: ImageSequence,
-        data_transform: Optional[Callable[[np.ndarray], D]] = None,
+        data_transform: Optional[Callable[[np.ndarray], Any]] = None,
         meta_attrs: List[str] = list(),
         meta_transforms: Dict[str, Callable[[Any], Any]] = dict(),
     ):
@@ -59,19 +57,13 @@ class Dataset(TorchDataset):
         else:
             self._meta_transforms = []
 
-        if not data[0].lazy:
+        if not isinstance(data[0], LazyImage):
             logging.warn(
                 "The ImageSequence used to construct this Dataset is not lazy loaded. "
                 "We recommend using lazy loaded data in combination with PyTorch."
             )
 
-        if not data.dtype == DType.UNSIGNED_BYTE and not data.dtype == DType.FLOAT:
-            logging.warn(
-                "Image datatype is incompatible to PyTorch. "
-                "Please consider converting them in advance"
-            )
-
-    def __getitem__(self, index: int) -> Union[D, Tuple[Any, ...]]:
+    def __getitem__(self, index: int) -> Union[Any, Tuple[Any, ...]]:
         # PyTorch does not like uint>8 -> perform automatic conversion
         array = self._data[index].data
         if array.dtype == np.float64:
@@ -114,7 +106,7 @@ class ClassificationDataset(Dataset):
         self,
         data: ImageSequence,
         meta_classes: List[str],
-        data_transform: Optional[Callable[[np.ndarray], D]] = None,
+        data_transform: Optional[Callable[[np.ndarray], Any]] = None,
         meta_attrs: List[str] = list(),
         meta_transforms: Dict[str, Callable[[Any], Any]] = dict(),
     ):
@@ -141,7 +133,9 @@ class ClassificationDataset(Dataset):
         self._meta_classes = meta_classes
         self._meta_classes_idx = [self._meta_attrs.index(k) for k in meta_classes]
 
-    def __getitem__(self, index: int) -> Union[D, Tuple[D, t.Tensor], Tuple[Any, ...]]:
+    def __getitem__(
+        self, index: int
+    ) -> Union[Any, Tuple[Any, t.Tensor], Tuple[Any, ...]]:
         res = list(super().__getitem__(index))
         x = res[0]
         y = self._meta_to_tensor(res[1:])
@@ -168,11 +162,13 @@ class ClassificationDataset(Dataset):
         assert results[0].dtype == t.float or results[0].dtype == t.bool
 
         # build an inverse map from Image to index
-        imap = {k: v for v, k in enumerate(self._data.images)}
+        imap = {k: v for v, k in enumerate(self._data)}
 
         # assign meta data
-        def meta_fn(x: Image) -> ClassificationDataset.ClassificationMeta:
-            idx = imap[x]
-            return self._tensor_to_meta_dict(results[idx], prefix=prefix)
+        def meta_fn(x: pd.Series) -> pd.Series:
+            idx = x.name
+            for k, v in self._tensor_to_meta_dict(results[idx], prefix=prefix).items():
+                x[k] = v
+            return x
 
-        return self._data.meta_from_fn(meta_fn)
+        return self._data.apply_meta(meta_fn)
