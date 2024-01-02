@@ -1,13 +1,6 @@
 # PVInspect
 
-[![travis status](https://travis-ci.com/ma0ho/pvinspect.svg?branch=master "travis status")](https://travis-ci.com/github/ma0ho/pvinspect)
-[![Downloads](https://pepy.tech/badge/pvinspect)](https://pepy.tech/project/pvinspect)
-
 This package provides methods for the analysis of solar modules using different imaging modalities. We put huge efforts into providing a clean and easy to use API and additional tooling like the wrapper classes for module images that bundle image with meta data in an expressive way. You are invited to publish you own methods using this API and hence contribute to building a consistent and open tooling that might be useful to others. If you like to integrate your methods directly, please create a merge request.
-
-## Package status
-
-This package is in an early stage of development. Please be aware that the API might change regularily within the next months.
 
 ## Installation
 
@@ -19,7 +12,7 @@ We recommend to install `pvinspect` in a Python virtual environment using Python
 python --version
 ```
 
-Depending on the OS and configuration of your machine, `python` needs to be substituted with `python3`, `python3.exe` or even the absolute path to the Python interpreter. In any case, the displayed version should be compatible to `pvinspect`. At the moment, `pvinspect` requires `Python 3.7` or `Python 3.8`.
+Depending on the OS and configuration of your machine, `python` needs to be substituted with `python3`, `python3.exe` or even the absolute path to the Python interpreter. In any case, the displayed version should be compatible to `pvinspect`. At the moment, `pvinspect` requires `Python 3.10`.
 
 **1. Create a new virtual environment:**
 
@@ -36,7 +29,7 @@ This initializes a new virtual environement in `/path/to/your/venv` (which you s
 /path/to/your/venv/Scripts/Activate.ps1
 
 # For Linux users:
-/path/to/your/vent/Scripts/activate
+source /path/to/your/vent/Scripts/activate
 ```
 
 Please note that the procedure depends on the type of shell that you are using. We've given example for Powershell and Linux-shell users.
@@ -44,7 +37,7 @@ Please note that the procedure depends on the type of shell that you are using. 
 **3. Install pvinspect:**
 
 ```bash
-pip install pvinspect
+pip install https://github.com/ma0ho/pvinspect@master
 ```
 
 This installs the `pvinspect` package in the currently active environment (which is normally indicated in the shell). So please make sure to have the correct environment activated. After installation, you can use `pvinspect` at any time from within that environment.
@@ -59,15 +52,7 @@ conda install -c conda-forge shapely
 
 ## Usage
 
-This package contains [example notebooks](examples) that demonstate the most common use cases (to be extended soon). For more details, please refer to the [API docs](https://ma0ho.github.io/pvinspect/).
-
-## Update
-
-You can update `pvinspect` to the newest version simply using `pip`:
-
-```bash
-pip install --upgrade pvinspect
-```
+This package contains [example notebooks](examples) that demonstate the most common use cases.
 
 ## Issues
 
@@ -82,10 +67,6 @@ conda install shapely
 ```
 
 This is reported as a bug to shapely: [#1032](https://github.com/Toblerity/Shapely/issues/1032)
-
-## Citations
-
-In case you use methods from this package for research purposes, please make sure to cite the the corresponding papers correctly. Please refer to the [documentation](https://ma0ho.github.io/pvinspect/) for the correct references.
 
 ## Acknowledgement
 
